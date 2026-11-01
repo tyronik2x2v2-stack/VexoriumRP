@@ -4441,7 +4441,12 @@ public OnPlayerPickUpPickup(playerid, pickupid)
     if (pickupid == gPassportPickup)
     {
         if (gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "� ��� ��� ���� �������."), 1;
-        ShowPlayerDialog(playerid, DIALOG_PASSPORT, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | ���������� ��������", "��� ���������� �� ������ � ������� � ��������� ������� ���������� �������� �������.\n\n���������� ����������. �������� �������?", "��������", "������");
+        new passportDialogText[512];
+        passportDialogText[0] = '\0';
+        strcat(passportDialogText, "��� ���������� �� ������ � ������� � ��������� ������� ���������� �������� �������.\n", sizeof passportDialogText);
+        strcat(passportDialogText, "\n", sizeof passportDialogText);
+        strcat(passportDialogText, "���������� ����������. �������� �������?", sizeof passportDialogText);
+        ShowPlayerDialog(playerid, DIALOG_PASSPORT, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | ���������� ��������", passportDialogText, "��������", "������");
         return 1;
     }
     if (pickupid == gMarketInteriorExitPickup)
@@ -5332,7 +5337,15 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
         {
             if (gLicenseDriver[playerid]) SendClientMessage(playerid, COLOR_GREEN, "� ��� ��� ���� ������������ ��������." );
             else if (gDrivingTestStage[playerid] > 0) SendClientMessage(playerid, COLOR_YELLOW, "�� ��� ����� �������. �������� �� ����������� ������." );
-            else ShowPlayerDialog(playerid, DIALOG_AUTOSCHOOL, DIALOG_STYLE_MSGBOX, "��������� | ����������", "������������! ���������� ������� ���������� � ������ �������?\n������� �������� �� ������� ���-������.\n������ 15000 ���. ������ ����� �������� �����.", "������", "������");
+            else
+            {
+                new drivingSchoolDialogText[1024];
+                drivingSchoolDialogText[0] = '\0';
+                strcat(drivingSchoolDialogText, "������������! ���������� ������� ���������� � ������ �������?\n", sizeof drivingSchoolDialogText);
+                strcat(drivingSchoolDialogText, "������� �������� �� ������� ���-������.\n", sizeof drivingSchoolDialogText);
+                strcat(drivingSchoolDialogText, "������ 15000 ���. ������ ����� �������� �����.", sizeof drivingSchoolDialogText);
+                ShowPlayerDialog(playerid, DIALOG_AUTOSCHOOL, DIALOG_STYLE_MSGBOX, "��������� | ����������", drivingSchoolDialogText, "������", "������");
+            }
         }
     }
     return 1;
@@ -6054,7 +6067,14 @@ public OnPlayerCommandText(playerid, cmdtext[])
     }
     if (!strcmp(cmdtext, "/rules", true))
     {
-        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | �������", "1. ���������� ������� RolePlay.\n2. �� ����������� ���� � ��������� ���������.\n3. �� ����������� ������� � �������������.\n4. �� ��������������� ��������� � ������.\n5. �������� ������������� � �������� ������ �������.", "�������", "");
+        new rulesDialogText[1024];
+        rulesDialogText[0] = '\0';
+        strcat(rulesDialogText, "1. ���������� ������� RolePlay.\n", sizeof rulesDialogText);
+        strcat(rulesDialogText, "2. �� ����������� ���� � ��������� ���������.\n", sizeof rulesDialogText);
+        strcat(rulesDialogText, "3. �� ����������� ������� � �������������.\n", sizeof rulesDialogText);
+        strcat(rulesDialogText, "4. �� ��������������� ��������� � ������.\n", sizeof rulesDialogText);
+        strcat(rulesDialogText, "5. �������� ������������� � �������� ������ �������.", sizeof rulesDialogText);
+        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | �������", rulesDialogText, "�������", "");
         return 1;
     }
     if (!strcmp(cmdtext, "/gang", true))
@@ -6237,7 +6257,16 @@ public OnPlayerCommandText(playerid, cmdtext[])
             GetPlayerInterior(playerid) != VX_MARKET_INTERIOR ||
             !IsPlayerInRangeOfPoint(playerid, 7.0, VX_MARKET_COUNTER_X, VX_MARKET_COUNTER_Y, VX_MARKET_COUNTER_Z))
             return SendClientMessage(playerid, COLOR_YELLOW, "[������] ������� ����� ������ �������� � ��������� � �����."), 1;
-        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, "VEXORIUM | ������ 24/7", "������� �������� - 750 ���.\n��� - 150 ���.\n���� - 100 ���.\n�����: ��� + ���� - 200 ���.\n��������� �������� - 2 000 ���.\nSIM-����� - 1 000 ���.\n������� ��� ��������� - 5 000 ���.", "������", "�������");
+        new shopDialogList[1024];
+        shopDialogList[0] = '\0';
+        strcat(shopDialogList, "������� �������� - 750 ���.\n", sizeof shopDialogList);
+        strcat(shopDialogList, "��� - 150 ���.\n", sizeof shopDialogList);
+        strcat(shopDialogList, "���� - 100 ���.\n", sizeof shopDialogList);
+        strcat(shopDialogList, "�����: ��� + ���� - 200 ���.\n", sizeof shopDialogList);
+        strcat(shopDialogList, "��������� �������� - 2 000 ���.\n", sizeof shopDialogList);
+        strcat(shopDialogList, "SIM-����� - 1 000 ���.\n", sizeof shopDialogList);
+        strcat(shopDialogList, "������� ��� ��������� - 5 000 ���.", sizeof shopDialogList);
+        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, "VEXORIUM | ������ 24/7", shopDialogList, "������", "�������");
         return 1;
     }
     if (!strcmp(cmdtext, "/balance", true) || !strcmp(cmdtext, "/������", true))
@@ -7266,7 +7295,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     {
         if (!response)
         {
-            ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | REGISTRATION", "Create a password with 4-64 characters to continue.", "CREATE", "CANCEL");
+            new registerValidationText[1024];
+            registerValidationText[0] = '\0';
+            strcat(registerValidationText, "Create a password with 4-64 characters to continue.", sizeof registerValidationText);
+            ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | REGISTRATION", registerValidationText, "CREATE", "CANCEL");
             return 1;
         }
         if (strlen(inputtext) < 4 || strlen(inputtext) > 64)
@@ -8815,7 +8847,15 @@ stock VX_ShowBiz(playerid,id)
     db_get_field(r,0,name,sizeof name);db_get_field(r,1,owner,sizeof owner);
     if (!strlen(owner)) format(owner,sizeof owner,"��������");
     format(title,sizeof title,"%s | ��������: %s",name,owner);
-    format(body,sizeof body,"������ ������: %d\n������ ����� / ������: %d\n������� �������: %d\n�������� 50 ������: 5000\n������� ������ �� 70% ����\n�������� ����: /bizprice %d [100-10000]\nGPS � ������� | �������: %d",db_get_field_int(r,2),db_get_field_int(r,5),db_get_field_int(r,3),id,db_get_field_int(r,4));
+    body[0] = '\0';
+    format(body, sizeof body, "������ ������: %d\n������ ����� / ������: %d\n", db_get_field_int(r, 2), db_get_field_int(r, 5));
+    new bizInfoPart[256];
+    format(bizInfoPart, sizeof bizInfoPart, "������� �������: %d\n�������� 50 ������: 5000\n", db_get_field_int(r, 3));
+    strcat(body, bizInfoPart, sizeof body);
+    format(bizInfoPart, sizeof bizInfoPart, "������� ������ �� 70%% ����\n�������� ����: /bizprice %d [100-10000]\n", id);
+    strcat(body, bizInfoPart, sizeof body);
+    format(bizInfoPart, sizeof bizInfoPart, "GPS � ������� | �������: %d", db_get_field_int(r, 4));
+    strcat(body, bizInfoPart, sizeof body);
     db_free_result(r);gVXSelectedBiz[playerid]=id;return VX_Show(playerid,VX_BIZ,DIALOG_STYLE_LIST,title,body);
 }
 stock VX_BizAction(playerid,id,action,priceInput=0)
