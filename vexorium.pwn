@@ -3339,7 +3339,6 @@ stock VQ_ShowFarmStats(playerid)
     new farmStatsPart[256];
     format(farmStatsPart, sizeof farmStatsPart, "{FFFFFF}������ �� ������ ������: {33CC66}%d ���.\n{AAAAAA}������ ����� � ������� (�� 10 ������). ������ 3-� ������ ��� +1 ����.", VQ_FarmPay(gLevel[playerid]));
     strcat(text, farmStatsPart, sizeof text);
-        gVQRuns[playerid], gVQCrates[playerid], VQ_FarmPay(gLevel[playerid]));
     ShowPlayerDialog(playerid, VQ_DLG_TEXT, DIALOG_STYLE_MSGBOX, "VEXORIUM | ���������� �������", text, "�������", "");
     return 1;
 }
@@ -7154,7 +7153,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (GetPlayerDistanceFromPoint(playerid, weaponBaseX, weaponBaseY, weaponBaseZ) > 12.0 || GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0)
             return SendClientMessage(playerid, COLOR_RED, "��������� ����� �������� ������ �� ���� ����� �����."), 1;
         new weaponIds[6] = {22,24,25,29,30,31};
-        new weaponNames[6][24] = {"�������� 9��", "Desert Eagle", "��������", "MP5", "AK-47", "M4"};
+        new weaponNames[6][48] = {"�������� 9��", "Desert Eagle", "��������", "MP5", "AK-47", "M4"};
         new weaponid = weaponIds[listitem];
         new ammo = GetGangWeaponAmmo(gGang[playerid], weaponid);
         new msg[144];
@@ -8103,6 +8102,14 @@ stock VX_ItemsSQL(playerid)
 {
     new q[320];format(q,sizeof q,"UPDATE accounts SET medkits=%d,food=%d,water=%d,repairkits=%d,simcards=%d,lockpicks=%d WHERE name='%q'",gMedkits[playerid],gFood[playerid],gWater[playerid],gRepairKits[playerid],gSimCards[playerid],gLockpicks[playerid],gName[playerid]);return VX_SQL(q);
 }
+new gVX3Can10[MAX_PLAYERS], gVX3Can20[MAX_PLAYERS];
+new gVX3FishingRod[MAX_PLAYERS], gVX3Bait[MAX_PLAYERS], gVX3Fish[MAX_PLAYERS];
+new bool:gVX3ItemsLoaded[MAX_PLAYERS];
+new gVX3FishState[MAX_PLAYERS], gVX3FishSeconds[MAX_PLAYERS];
+new gVX3JobType[MAX_PLAYERS], gVX3JobVehicle[MAX_PLAYERS], gVX3JobStage[MAX_PLAYERS];
+new gVX3JobDestination[MAX_PLAYERS];
+new gVX3CarOfferFrom[MAX_PLAYERS], gVX3CarOfferPrice[MAX_PLAYERS], gVX3CarOfferUntil[MAX_PLAYERS];
+
 stock VX_ShowInventory(playerid)
 {
     new body[1024],row[96],title[96];
@@ -11049,13 +11056,6 @@ stock VX_WardInfo(playerid)
 // Uses existing SQLite, inventory, vehicle, faction, and fuel systems.
 // ============================================================================
 
-new gVX3Can10[MAX_PLAYERS], gVX3Can20[MAX_PLAYERS];
-new gVX3FishingRod[MAX_PLAYERS], gVX3Bait[MAX_PLAYERS], gVX3Fish[MAX_PLAYERS];
-new bool:gVX3ItemsLoaded[MAX_PLAYERS];
-new gVX3FishState[MAX_PLAYERS], gVX3FishSeconds[MAX_PLAYERS];
-new gVX3JobType[MAX_PLAYERS], gVX3JobVehicle[MAX_PLAYERS], gVX3JobStage[MAX_PLAYERS];
-new gVX3JobDestination[MAX_PLAYERS];
-new gVX3CarOfferFrom[MAX_PLAYERS], gVX3CarOfferPrice[MAX_PLAYERS], gVX3CarOfferUntil[MAX_PLAYERS];
 
 new const Float:gVX3PizzaRoute[4][3] =
 {
@@ -11232,7 +11232,10 @@ stock VX3_StorageTransfer(playerid, kind, action, item, amount)
     VX_SQL(q);
     if (!VX_Commit()) { VX_SetItem(playerid, item, inventory); return VX_Error(playerid); }
     new message[128];
-    format(message, sizeof message, "[CAR] %s x%d %s.", action == 0 ? "Stored" : "Removed", amount, gVXItemName[item]);
+    new actionText[16];
+    if (action == 0) format(actionText, sizeof actionText, "Stored");
+    else format(actionText, sizeof actionText, "Removed");
+    format(message, sizeof message, "[CAR] %s x%d %s.", actionText, amount, gVXItemName[item]);
     SendClientMessage(playerid, COLOR_GREEN, message);
     return VX3_StorageShow(playerid, kind);
 }
