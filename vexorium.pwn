@@ -2554,7 +2554,15 @@ stock SetGangWeaponAmmo(gang, weaponid, amount)
 
 stock ShowGangWeaponMenu(playerid)
 {
-    ShowPlayerDialog(playerid, DIALOG_GANG_WEAPONS, DIALOG_STYLE_LIST, "��������� ����� �����", "�������� 9�� � �����/��������\n�������� Desert Eagle � �����/��������\n�������� � �����/��������\nMP5 � �����/��������\nAK-47 � �����/��������\nM4 � �����/��������", "�������", "�����");
+    new gangList[1024];
+    gangList[0] = '\0';
+    strcat(gangList, "�������� 9�� � �����/��������\n", sizeof gangList);
+    strcat(gangList, "�������� Desert Eagle � �����/��������\n", sizeof gangList);
+    strcat(gangList, "�������� � �����/��������\n", sizeof gangList);
+    strcat(gangList, "MP5 � �����/��������\n", sizeof gangList);
+    strcat(gangList, "AK-47 � �����/��������\n", sizeof gangList);
+    strcat(gangList, "M4 � �����/��������\n", sizeof gangList);
+    ShowPlayerDialog(playerid, DIALOG_GANG_WEAPONS, DIALOG_STYLE_LIST, "��������� ����� �����", gangList, "�������", "�����");
     return 1;
 }
 
