@@ -382,6 +382,45 @@ new gTaxiOrderDriver[MAX_PLAYERS];       // driver ID currently assigned to this
 new bool:gTaxiRequestActive[MAX_PLAYERS];
 new bool:gTaxiAtPickup[MAX_PLAYERS];
 new Float:gTaxiPickupPos[MAX_PLAYERS][3];
+
+new gVX4MechPickup = INVALID_PICKUP;
+new gVX4BusPickup = INVALID_PICKUP;
+new gVX4TaxiRequestAt[MAX_PLAYERS];
+new bool:gVX4MechDuty[MAX_PLAYERS];
+new bool:gVX4MechRequested[MAX_PLAYERS];
+new gVX4MechRequestedAt[MAX_PLAYERS];
+new gVX4MechAssignedTo[MAX_PLAYERS];
+new gVX4MechTargetOf[MAX_PLAYERS];
+new gVX4MechVehicle[MAX_PLAYERS];
+new Float:gVX4MechPos[MAX_PLAYERS][3];
+new gVX4BusVehicle[MAX_PLAYERS];
+new gVX4BusStage[MAX_PLAYERS];
+new const Float:gVX4BusStops[6][3] =
+{
+    {1090.0, -1750.0, 13.4},
+    {1182.0, -1323.0, 13.6},
+    {1479.0, -1739.0, 13.5},
+    {1685.0, -2333.0, 13.5},
+    {2195.0, -2254.0, 13.5},
+    {852.0, 850.0, 12.0}
+};
+new gVX4BizShiftActive[MAX_PLAYERS];
+new gVX4BizShiftBusiness[MAX_PLAYERS];
+new gVX4BizShiftStarted[MAX_PLAYERS];
+new bool:gVX4EventActive;
+new bool:gVX4EventStarted;
+new gVX4EventHost = INVALID_PLAYER_ID;
+new gVX4EventTitle[48];
+new Float:gVX4EventPos[3];
+new gVX4EventInterior;
+new gVX4EventWorld;
+new bool:gVX4EventJoined[MAX_PLAYERS];
+new Float:gVX4EventReturnPos[MAX_PLAYERS][4];
+new gVX4EventReturnInterior[MAX_PLAYERS];
+new gVX4EventReturnWorld[MAX_PLAYERS];
+new gVX4EventPickup = INVALID_PICKUP;
+new Text3D:gVX4EventLabel = Text3D:0xFFFF;
+
 new bool:gSpawnMenuShown[MAX_PLAYERS];
 new bool:gIsJailed[MAX_PLAYERS];
 new gWantedLevel[MAX_PLAYERS];
@@ -3001,6 +3040,10 @@ public OnGameModeInit()
     Create3DTextLabel("{FFD700}Диспетчер грузоперевозок\n{FFFFFF}/job — выбрать работу, /work — начать маршрут", COLOR_WHITE, 2195.0, -2254.0, 14.5, 15.0, 0, 1);
     CreateActor(17, 1810.0, -1900.0, 13.4, 0.0);
     Create3DTextLabel("{FFD700}Диспетчер автобусов\n{FFFFFF}/job — выбрать работу, /work — начать маршрут", COLOR_WHITE, 1810.0, -1900.0, 14.4, 15.0, 0, 1);
+    gVX4BusPickup = CreatePickup(1239, 1, 1810.0, -1900.0, 13.4, 0);
+    Create3DTextLabel("{33CC66}VEXORIUM | АВТОБУСНЫЙ МАРШРУТ\n{FFFFFF}/busroute — начать городской маршрут", COLOR_WHITE, 1810.0, -1900.0, 15.0, 18.0, 0, 1);
+    gVX4MechPickup = CreatePickup(1239, 1, 1940.0, -1772.0, 13.4, 0);
+    Create3DTextLabel("{FFAA33}VEXORIUM | АВТОСЕРВИС\n{FFFFFF}/mechonduty — выйти на смену\n/mechcall — вызвать механика", COLOR_WHITE, 1940.0, -1772.0, 14.8, 18.0, 0, 1);
     CreateActor(61, 1479.0, -1739.0, 13.5, 90.0);
     Create3DTextLabel("{FFD700}Диспетчер такси\n{FFFFFF}/job — выбрать работу, /work — начать маршрут", COLOR_WHITE, 1479.0, -1739.0, 14.5, 15.0, 0, 1);
     CreateActor(277, 1771.5, -1706.0, 13.5, 90.0);
@@ -3413,6 +3456,7 @@ public PvpRespawn(playerid)
 public OnPlayerConnect(playerid)
 {
     VX_Connect(playerid);
+    VX4_PlayerConnect(playerid);
     RP_Reset(playerid);
     gFBIPendingEnter[playerid] = false;
     gLastTeleportTick[playerid] = 0;
@@ -3527,6 +3571,7 @@ public OnPlayerDisconnect(playerid, reason)
     gHousePending[playerid] = 0;
 
     VX_TaxiDisconnect(playerid);
+    VX4_PlayerDisconnect(playerid);
     gOrgInviteFrom[playerid] = INVALID_PLAYER_ID;
     RP_Disconnect(playerid);
     VX_Disconnect(playerid);
@@ -3881,10 +3926,14 @@ public OnPlayerPickUpPickup(playerid, pickupid)
     // Ignore pickup callbacks for a short period after one interaction; prevents teleport loops.
     new tick = GetTickCount();
     if (pickupid != gLicenseMarketPickup && pickupid != gPassportPickup && pickupid != gHospitalMarketPickup &&
-        pickupid != gMarketInteriorCounterPickup && gLastPickupTick[playerid] != 0 &&
+        pickupid != gMarketInteriorCounterPickup && pickupid != gVX4MechPickup && pickupid != gVX4BusPickup &&
+        pickupid != gVX4EventPickup && gLastPickupTick[playerid] != 0 &&
         tick - gLastPickupTick[playerid] < PICKUP_TELEPORT_COOLDOWN) return 1;
     gLastPickupTick[playerid] = tick;
     if(gVXHospital[playerid]) return 1;
+    if (pickupid == gVX4MechPickup) return VX4_MechDuty(playerid, true);
+    if (pickupid == gVX4BusPickup) return VX4_BusStart(playerid);
+    if (gVX4EventActive && pickupid == gVX4EventPickup) return VX4_EventJoin(playerid);
     if (pickupid == gHospitalMarketPickup)
     {
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || !IsPlayerInRangeOfPoint(playerid, 3.0, 1180.2, -1322.5, 13.5)) return 1;
@@ -4461,6 +4510,7 @@ public OnPlayerEnterCheckpoint(playerid)
     if(gIsJailed[playerid] || gHandcuffed[playerid] || gTaserStunned[playerid]
         || gRPStretcherBy[playerid]!=INVALID_PLAYER_ID) return 1;
     if (!gLogged[playerid]) return 1;
+    if (VX4_Checkpoint(playerid)) return 1;
     if (gDrivingTestStage[playerid] > 0)
     {
         if (!IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != gDrivingTestVehicle[playerid] || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -5146,6 +5196,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (GetPlayerInterior(targetid) != 0 || GetPlayerVirtualWorld(targetid) != 0)
             return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Заказ из интерьера недоступен. Попросите пассажира выйти на улицу."), 1;
         gTaxiRequestActive[targetid] = false;
+        gVX4TaxiRequestAt[targetid] = 0;
         gTaxiOrderTarget[playerid] = targetid;
         gTaxiOrderDriver[targetid] = playerid;
         gTaxiAtPickup[playerid] = false;
@@ -5229,6 +5280,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (drivers == 0) return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Сейчас нет свободных таксистов на смене. Попробуйте позже."), 1;
         gTaxiPickupPos[playerid][0] = px; gTaxiPickupPos[playerid][1] = py; gTaxiPickupPos[playerid][2] = pz;
         gTaxiRequestActive[playerid] = true;
+        gVX4TaxiRequestAt[playerid] = gettime();
         new dispatchMessage[144];
         format(dispatchMessage, sizeof dispatchMessage, "[ТАКСИ] Новый вызов от %s (ID %d). Принять: /taxiaccept %d", gName[playerid], playerid, playerid);
         for (new d = 0; d < MAX_PLAYERS; d++) if (VX_TaxiOnDuty(d)) SendClientMessage(d, COLOR_YELLOW, dispatchMessage);
@@ -8405,6 +8457,7 @@ stock VX_Init()
     VX_SQL("CREATE TABLE IF NOT EXISTS vx_families (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL COLLATE NOCASE, owner TEXT UNIQUE NOT NULL, balance INTEGER NOT NULL DEFAULT 0)");
     VX_SQL("CREATE TABLE IF NOT EXISTS vx_family_members (name TEXT PRIMARY KEY, family INTEGER NOT NULL, rank INTEGER NOT NULL DEFAULT 1)");
     VX_SQL("CREATE TABLE IF NOT EXISTS vx_businesses (id INTEGER PRIMARY KEY, name TEXT NOT NULL, owner TEXT NOT NULL DEFAULT '', price INTEGER NOT NULL, till INTEGER NOT NULL DEFAULT 0, stock INTEGER NOT NULL DEFAULT 100, unitprice INTEGER NOT NULL DEFAULT 250)");
+    VX_SQL("CREATE TABLE IF NOT EXISTS vx4_biz_staff (employee TEXT PRIMARY KEY, business_id INTEGER NOT NULL, salary INTEGER NOT NULL DEFAULT 500)");
     VX_SQL("INSERT OR IGNORE INTO vx_businesses(id,name,price,unitprice) VALUES(1,'Market 24/7',250000,250)");
     VX_SQL("INSERT OR IGNORE INTO vx_businesses(id,name,price,unitprice) VALUES(2,'Vexorium Cafe',350000,400)");
     VX_SQL("INSERT OR IGNORE INTO vx_businesses(id,name,price,unitprice) VALUES(3,'Auto service',500000,2000)");
@@ -8418,6 +8471,10 @@ stock VX_Init()
     VX_SQL("CREATE TABLE IF NOT EXISTS vx_report_messages(id INTEGER PRIMARY KEY AUTOINCREMENT, report INTEGER NOT NULL, author TEXT NOT NULL, body TEXT NOT NULL, created INTEGER NOT NULL)");
     VX_SQL("UPDATE vx_reports SET status=0,admin='' WHERE status=1");
     VX_BuildWard();
+    VX_SQL("CREATE TABLE IF NOT EXISTS vx4_biz_staff (employee TEXT PRIMARY KEY, business_id INTEGER NOT NULL, salary INTEGER NOT NULL DEFAULT 500)");
+    gVX4EventActive = false;
+    gVX4EventStarted = false;
+    gVX4EventHost = INVALID_PLAYER_ID;
     if(gLockerPickup[FACTION_HOSPITAL]!=INVALID_PICKUP)DestroyPickup(gLockerPickup[FACTION_HOSPITAL]);
     gLockerPickup[FACTION_HOSPITAL]=CreatePickup(1275,1,2005.0,1997.0,1001.0,VX_HOSPITAL_WORLD);
     if (gOrgEnterPickup[FACTION_HOSPITAL] != INVALID_PICKUP) DestroyPickup(gOrgEnterPickup[FACTION_HOSPITAL]);
@@ -8868,11 +8925,17 @@ stock VX_PickupItem(playerid)
 }
 stock VX_ShowPhone(playerid)
 {
-    new title[96], phoneStatus[8];
+    new title[96], phoneStatus[8], body[512];
     if (gVXPhoneOn[playerid]) format(phoneStatus,sizeof phoneStatus,"ВКЛ");
     else format(phoneStatus,sizeof phoneStatus,"ВЫКЛ");
     format(title,sizeof title,"VEXORIUM | Телефон %d | %s",gVXPhone[playerid],phoneStatus);
-    return VX_Show(playerid,VX_PHONE,DIALOG_STYLE_LIST,title,"Позвонить по номеру\nОтправить SMS\nВходящие SMS (последние 15)\nContacts\nBank\nGPS\nВызвать скорую: 103\nВызвать полицию: 112\nВключить / выключить\nОтветить / завершить звонок\nВызвать такси");
+    body[0] = '\0';
+    strcat(body, "Позвонить по номеру\nОтправить SMS\nВходящие SMS (последние 15)\n", sizeof body);
+    strcat(body, "Контакты\nБанк\nGPS\nВызвать скорую: 103\n", sizeof body);
+    strcat(body, "Вызвать полицию: 112\nВключить / выключить\nОтветить / завершить звонок\n", sizeof body);
+    strcat(body, "Вызвать такси\nВызвать механика\nМаршрут автобуса\n", sizeof body);
+    strcat(body, "Каталог бизнесов\nГородские мероприятия", sizeof body);
+    return VX_Show(playerid,VX_PHONE,DIALOG_STYLE_LIST,title,body);
 }
 stock VX_FindPhone(number)
 {
@@ -9521,7 +9584,7 @@ stock VX_BizList(playerid)
 {
     new q[128],body[1600],row[160],name[33],owner[25];
     format(q,sizeof q,"SELECT id,name,owner,price FROM vx_businesses ORDER BY id LIMIT 5");new DBResult:r=db_query(gDatabase,q);
-    strcat(body,"ID\tBusiness\tOwner\tPrice\n");gVXListCount[playerid]=0;
+    strcat(body,"ID\tБизнес\tВладелец\tЦена\n");gVXListCount[playerid]=0;
     if(r)for(new i=0;i<db_num_rows(r) && i<5;i++)
     {
         new id=db_get_field_int(r,0);db_get_field(r,1,name,sizeof name);db_get_field(r,2,owner,sizeof owner);
@@ -9532,7 +9595,7 @@ stock VX_BizList(playerid)
 }
 stock VX_ShowBiz(playerid,id)
 {
-    if(id<1 || id>5)return SendClientMessage(playerid,COLOR_YELLOW,"Usage: /biz [1-5] or /businesses"),1;
+    if(id<1 || id>5)return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /biz [1-5] или /businesses"),1;
     new q[192],title[128],name[33],owner[25],body[700];format(q,sizeof q,"SELECT name,owner,price,till,stock,unitprice FROM vx_businesses WHERE id=%d",id);new DBResult:r=db_query(gDatabase,q);
     if(!r || !db_num_rows(r)){if(r)db_free_result(r);return VX_Error(playerid);}
     db_get_field(r,0,name,sizeof name);db_get_field(r,1,owner,sizeof owner);
@@ -9589,6 +9652,7 @@ stock VX_Command(playerid,const cmdtext[])
     new cmd[32],params[160],a[32],b[32],c[32],n=-1,n2=-1,n3=-1;
     GetToken(cmdtext,0,cmd,sizeof cmd);GetParams(cmdtext,params,sizeof params);
     GetToken(params,0,a,sizeof a);GetToken(params,1,b,sizeof b);GetToken(params,2,c,sizeof c);
+    if (VX4_Command(playerid, cmdtext)) return 1;
     if(!VX_Number(a,n))n=-1;if(!VX_Number(b,n2))n2=-1;if(!VX_Number(c,n3))n3=-1;
     if(gVXHospital[playerid] && strcmp(cmd,"/me",true) && strcmp(cmd,"/do",true)
         && strcmp(cmd,"/try",true) && strcmp(cmd,"/n",true) && strcmp(cmd,"/b",true))
@@ -9613,6 +9677,12 @@ stock VX_Command(playerid,const cmdtext[])
         strcat(systemsText,"/spec ID /specoff - только администрация\n",sizeof systemsText);
         strcat(systemsText,"/103 /mduty /mcalls /maccept ID /heal ID /hgarage\n",sizeof systemsText);
         strcat(systemsText,"/taxi - вызов; /taxiaccept ID - принять заказ; /taxidone - завершить; /taxicancel - отменить\n",sizeof systemsText);
+        strcat(systemsText,"/mechonduty /mechoff /mechcall /mechaccept ID /mechfix\n",sizeof systemsText);
+        strcat(systemsText,"/busroute /busstop - городской автобусный маршрут\n",sizeof systemsText);
+        strcat(systemsText,"/bizhire ID зарплата /bizfire ID /bizstaff /bizsalary ID сумма\n",sizeof systemsText);
+        strcat(systemsText,"/bizclockin /bizclockout /bizquit - работа в бизнесе\n",sizeof systemsText);
+        strcat(systemsText,"/event /eventjoin /eventleave - городские мероприятия\n",sizeof systemsText);
+        strcat(systemsText,"Админам: /eventcreate название /eventstart /eventend /eventreward ID сумма\n",sizeof systemsText);
         strcat(systemsText,"/bed - занять койку; /exit - выйти из БЦРБ\n",sizeof systemsText);
         strcat(systemsText,"/tablet - планшет полиции/FBI; /wanted ID 0-6\n",sizeof systemsText);
         strcat(systemsText,"/wantedlist - база преступников\n",sizeof systemsText);
@@ -9837,6 +9907,10 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
                 case 8:{gVXPhoneOn[playerid]=!gVXPhoneOn[playerid];if(!gVXPhoneOn[playerid])VX_Hangup(playerid);VX_Save(playerid);VX_ShowPhone(playerid);}
                 case 9:{if(gVXCallActive[playerid])VX_Hangup(playerid);else VX_Answer(playerid);}
                 case 10:OnPlayerCommandText(playerid,"/taxi");
+                case 11: VX4_MechCall(playerid);
+                case 12: VX4_BusStart(playerid);
+                case 13: VX_BizList(playerid);
+                case 14: VX4_EventInfo(playerid);
             }
         }
         case VX_SMS_NUMBER:
@@ -10004,6 +10078,7 @@ public VX_Tick()
     }
     if(now-lastSave>=30)lastSave=now;
     for(new d=0;d<VX_MAX_DROPS;d++)if(gVXDropQty[d] && now>=gVXDropExpiry[d])VX_ClearDrop(d);
+    VX4_Tick();
     return 1;
 }
 public OnPlayerText(playerid,text[])
@@ -11802,4 +11877,688 @@ stock VX_WardInfo(playerid)
     else format(status,sizeof status,"Обязательное лечение не требуется. Выход открыт.");
     format(body,sizeof body,"%s\n\nОсталось: %d мин. %d сек.\nСвободных коек: %d из %d.\n\n/exit или /hospitexit - выход после выписки.\n/hospitalinfo - это окно.",status,left/60,left%60,freeBeds,VX_BEDS);
     return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"БЦРБ | СТАЦИОНАР",body,"OK","");
+}
+
+
+
+// ================ VEXORIUM RP 4.0: городские сервисы ================
+
+stock VX4_PlayerConnect(playerid)
+{
+    gVX4TaxiRequestAt[playerid] = 0;
+    gVX4MechDuty[playerid] = false;
+    gVX4MechRequested[playerid] = false;
+    gVX4MechRequestedAt[playerid] = 0;
+    gVX4MechAssignedTo[playerid] = INVALID_PLAYER_ID;
+    gVX4MechTargetOf[playerid] = INVALID_PLAYER_ID;
+    gVX4MechVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX4BusVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX4BusStage[playerid] = -1;
+    gVX4BizShiftActive[playerid] = 0;
+    gVX4BizShiftBusiness[playerid] = 0;
+    gVX4BizShiftStarted[playerid] = 0;
+    gVX4EventJoined[playerid] = false;
+    return 1;
+}
+
+stock VX4_BusStop(playerid, bool:notify)
+{
+    new vehicle = gVX4BusVehicle[playerid];
+    if (vehicle > 0 && vehicle < MAX_VEHICLES && GetVehicleModel(vehicle) != 0)
+    {
+        if (GetPlayerVehicleID(playerid) == vehicle) RemovePlayerFromVehicle(playerid);
+        DestroyVehicle(vehicle);
+    }
+    gVX4BusVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX4BusStage[playerid] = -1;
+    DisablePlayerCheckpoint(playerid);
+    RemovePlayerMapIcon(playerid, 61);
+    if (notify) SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Маршрут остановлен.");
+    return 1;
+}
+
+stock VX4_BusStart(playerid)
+{
+    if (gJob[playerid] != 3)
+        return SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Сначала выберите работу водителя автобуса через /job."), 1;
+    if (gVX4BusStage[playerid] >= 0 || gWorkStage[playerid] > 0
+        || gDrivingTestStage[playerid] > 0 || gPursuitTarget[playerid] != INVALID_PLAYER_ID)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Сначала завершите текущий маршрут."), 1;
+    if (IsPlayerInAnyVehicle(playerid) || GetPlayerInterior(playerid) != 0
+        || GetPlayerVirtualWorld(playerid) != 0
+        || !IsPlayerInRangeOfPoint(playerid, 25.0, 1810.0, -1900.0, 13.4))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Начните маршрут на автобусной станции у диспетчера."), 1;
+    new vehicle = CreateVehicle(431, 1817.0, -1897.0, 13.5, 90.0, 6, 6, -1);
+    if (vehicle <= 0 || vehicle >= MAX_VEHICLES || GetVehicleModel(vehicle) == 0)
+        return SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Не удалось выдать автобус. Попробуйте ещё раз."), 1;
+    gVX4BusVehicle[playerid] = vehicle;
+    gVX4BusStage[playerid] = 0;
+    gVehicleFuel[vehicle] = 100;
+    PutPlayerInVehicle(playerid, vehicle, 0);
+    SetPlayerCheckpoint(playerid, gVX4BusStops[0][0],
+        gVX4BusStops[0][1], gVX4BusStops[0][2], 7.0);
+    SetPlayerMapIcon(playerid, 61, gVX4BusStops[0][0],
+        gVX4BusStops[0][1], gVX4BusStops[0][2], 0, COLOR_YELLOW, MAPICON_LOCAL);
+    SendClientMessage(playerid, COLOR_GREEN, "[АВТОБУС] Городской маршрут начат. Посетите 6 остановок и вернитесь на станцию.");
+    return 1;
+}
+
+stock VX4_BusCheckpoint(playerid)
+{
+    new vehicle = gVX4BusVehicle[playerid];
+    if (vehicle <= 0 || vehicle >= MAX_VEHICLES || GetVehicleModel(vehicle) == 0
+        || GetPlayerState(playerid) != PLAYER_STATE_DRIVER
+        || GetPlayerVehicleID(playerid) != vehicle)
+    {
+        VX4_BusStop(playerid, false);
+        SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Маршрут отменён: вы покинули выданный автобус.");
+        return 1;
+    }
+    if (gVX4BusStage[playerid] < 6)
+    {
+        gVX4BusStage[playerid]++;
+        if (gVX4BusStage[playerid] < 6)
+        {
+            SetPlayerCheckpoint(playerid, gVX4BusStops[gVX4BusStage[playerid]][0],
+                gVX4BusStops[gVX4BusStage[playerid]][1],
+                gVX4BusStops[gVX4BusStage[playerid]][2], 7.0);
+            SetPlayerMapIcon(playerid, 61, gVX4BusStops[gVX4BusStage[playerid]][0],
+                gVX4BusStops[gVX4BusStage[playerid]][1],
+                gVX4BusStops[gVX4BusStage[playerid]][2], 0, COLOR_YELLOW, MAPICON_LOCAL);
+            new msg[96];
+            format(msg, sizeof msg, "[АВТОБУС] Остановка %d из 6 пройдена.", gVX4BusStage[playerid]);
+            SendClientMessage(playerid, COLOR_GREEN, msg);
+        }
+        else
+        {
+            SetPlayerCheckpoint(playerid, 1810.0, -1900.0, 13.4, 8.0);
+            SetPlayerMapIcon(playerid, 61, 1810.0, -1900.0, 13.4, 0, COLOR_YELLOW, MAPICON_LOCAL);
+            SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Все остановки пройдены. Вернитесь на автобусную станцию.");
+        }
+        return 1;
+    }
+    new reward = 5200 + gLevel[playerid] * 50;
+    if (GiveCash(playerid, reward))
+    {
+        new msg[112];
+        format(msg, sizeof msg, "[АВТОБУС] Маршрут завершён. Ваша зарплата: %d руб.", reward);
+        SendClientMessage(playerid, COLOR_GREEN, msg);
+        SavePlayer(playerid);
+    }
+    else SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Достигнут лимит наличных. Обратитесь к администрации.");
+    VX4_BusStop(playerid, false);
+    return 1;
+}
+
+stock VX4_Checkpoint(playerid)
+{
+    if (gVX4BusStage[playerid] >= 0) return VX4_BusCheckpoint(playerid);
+    if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
+    {
+        new customer = gVX4MechTargetOf[playerid];
+        if (customer >= 0 && customer < MAX_PLAYERS
+            && gVX4MechRequested[customer])
+        {
+            DisablePlayerCheckpoint(playerid);
+            SendClientMessage(playerid, COLOR_GREEN, "[МЕХАНИК] Вы прибыли к клиенту. Используйте /mechfix.");
+            SendClientMessage(customer, COLOR_GREEN, "[МЕХАНИК] Механик прибыл к вашей машине.");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+stock VX4_MechCancel(customer, const reason[])
+{
+    if (customer < 0 || customer >= MAX_PLAYERS) return 0;
+    new mechanic = gVX4MechAssignedTo[customer];
+    gVX4MechRequested[customer] = false;
+    gVX4MechRequestedAt[customer] = 0;
+    gVX4MechAssignedTo[customer] = INVALID_PLAYER_ID;
+    gVX4MechVehicle[customer] = INVALID_VEHICLE_ID;
+    if (mechanic >= 0 && mechanic < MAX_PLAYERS)
+    {
+        gVX4MechTargetOf[mechanic] = INVALID_PLAYER_ID;
+        DisablePlayerCheckpoint(mechanic);
+        RemovePlayerMapIcon(mechanic, 60);
+        if (VX_Valid(mechanic)) SendClientMessage(mechanic, COLOR_YELLOW, reason);
+    }
+    if (VX_Valid(customer)) SendClientMessage(customer, COLOR_YELLOW, reason);
+    return 1;
+}
+
+stock VX4_MechDuty(playerid, bool:enabled)
+{
+    if (enabled)
+    {
+        if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0
+            || !IsPlayerInRangeOfPoint(playerid, 15.0, 1940.0, -1772.0, 13.4))
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Подойдите к маркеру автосервиса."), 1;
+        if (IsPlayerInAnyVehicle(playerid) || gFaction[playerid] != FACTION_NONE)
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Выйдите из машины и освободите государственную должность."), 1;
+        gVX4MechDuty[playerid] = true;
+        SendClientMessage(playerid, COLOR_GREEN, "[МЕХАНИК] Вы вышли на смену. Принимайте вызовы: /mechaccept ID.");
+    }
+    else
+    {
+        if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
+            VX4_MechCancel(gVX4MechTargetOf[playerid], "[МЕХАНИК] Механик завершил смену.");
+        gVX4MechDuty[playerid] = false;
+        SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Вы завершили смену.");
+    }
+    return 1;
+}
+
+stock VX4_MechCall(playerid)
+{
+    if (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Сядьте за руль машины, которой нужен ремонт."), 1;
+    if (gVX4MechRequested[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] У вас уже есть активный вызов."), 1;
+    new vehicle = GetPlayerVehicleID(playerid);
+    new Float:health, Float:x, Float:y, Float:z;
+    GetVehicleHealth(vehicle, health);
+    if (health >= 990.0)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Ваш автомобиль не нуждается в ремонте."), 1;
+    GetVehiclePos(vehicle, x, y, z);
+    gVX4MechRequested[playerid] = true;
+    gVX4MechRequestedAt[playerid] = gettime();
+    gVX4MechVehicle[playerid] = vehicle;
+    gVX4MechPos[playerid][0] = x;
+    gVX4MechPos[playerid][1] = y;
+    gVX4MechPos[playerid][2] = z;
+    new msg[128], count = 0;
+    format(msg, sizeof msg, "[МЕХАНИК] Вызов от %s (ID %d). Принять: /mechaccept %d", gName[playerid], playerid, playerid);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (VX_Valid(i) && gVX4MechDuty[i] && gVX4MechTargetOf[i] == INVALID_PLAYER_ID)
+        {
+            SendClientMessage(i, COLOR_YELLOW, msg);
+            count++;
+        }
+    }
+    if (!count)
+        SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Сейчас нет механиков на смене. Вызов будет активен 3 минуты.");
+    else SendClientMessage(playerid, COLOR_GREEN, "[МЕХАНИК] Вызов отправлен механикам.");
+    return 1;
+}
+
+stock VX4_MechAccept(mechanic, customer)
+{
+    if (!gVX4MechDuty[mechanic])
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Сначала выйдите на смену у автосервиса."), 1;
+    if (gVX4MechTargetOf[mechanic] != INVALID_PLAYER_ID)
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] Сначала завершите текущий вызов."), 1;
+    if (customer < 0 || customer >= MAX_PLAYERS || !VX_Valid(customer)
+        || !gVX4MechRequested[customer] || gVX4MechAssignedTo[customer] != INVALID_PLAYER_ID)
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Этот вызов уже недоступен."), 1;
+    if (gettime() - gVX4MechRequestedAt[customer] > 180)
+    {
+        VX4_MechCancel(customer, "[МЕХАНИК] Время ожидания механика истекло.");
+        return 1;
+    }
+    gVX4MechAssignedTo[customer] = mechanic;
+    gVX4MechTargetOf[mechanic] = customer;
+    SetPlayerCheckpoint(mechanic, gVX4MechPos[customer][0],
+        gVX4MechPos[customer][1], gVX4MechPos[customer][2], 6.0);
+    SetPlayerMapIcon(mechanic, 60, gVX4MechPos[customer][0],
+        gVX4MechPos[customer][1], gVX4MechPos[customer][2], 0,
+        COLOR_YELLOW, MAPICON_LOCAL);
+    SendClientMessage(mechanic, COLOR_GREEN, "[МЕХАНИК] Место клиента отмечено на карте. Прибыв, используйте /mechfix.");
+    SendClientMessage(customer, COLOR_GREEN, "[МЕХАНИК] Механик принял вызов и уже едет к вам.");
+    return 1;
+}
+
+stock VX4_MechFix(mechanic)
+{
+    new customer = gVX4MechTargetOf[mechanic];
+    if (!gVX4MechDuty[mechanic] || customer < 0 || customer >= MAX_PLAYERS
+        || !VX_Valid(customer) || !gVX4MechRequested[customer])
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] У вас нет активного вызова."), 1;
+    if (IsPlayerInAnyVehicle(mechanic))
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] Выйдите из машины для ремонта."), 1;
+    new vehicle = gVX4MechVehicle[customer];
+    if (vehicle <= 0 || vehicle >= MAX_VEHICLES || GetVehicleModel(vehicle) == 0
+        || GetPlayerVehicleID(customer) != vehicle || GetPlayerState(customer) != PLAYER_STATE_DRIVER)
+        return VX4_MechCancel(customer, "[МЕХАНИК] Машина клиента больше недоступна.");
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(vehicle, x, y, z);
+    if (!IsPlayerInRangeOfPoint(mechanic, 8.0, x, y, z))
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] Подойдите ближе к машине клиента."), 1;
+    if (gMoney[customer] < 1500)
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] У клиента недостаточно наличных: ремонт стоит 1500 руб."), 1;
+    if (gMoney[mechanic] > MAX_MONEY - 1000)
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Слишком много наличных для получения оплаты."), 1;
+    if (!TakeCash(customer, 1500))
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Не удалось получить оплату."), 1;
+    if (!GiveCash(mechanic, 1000))
+    {
+        GiveCash(customer, 1500);
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Оплата отменена и возвращена клиенту."), 1;
+    }
+    RepairVehicle(vehicle);
+    SetVehicleHealth(vehicle, 1000.0);
+    VX_SQL("UPDATE vx_businesses SET till=till+500 WHERE id=3");
+    SavePlayer(customer);
+    SavePlayer(mechanic);
+    SendClientMessage(customer, COLOR_GREEN, "[МЕХАНИК] Автомобиль отремонтирован. Оплата: 1500 руб.");
+    SendClientMessage(mechanic, COLOR_GREEN, "[МЕХАНИК] Ремонт выполнен. Ваша оплата: 1000 руб.");
+    VX4_MechCancel(customer, "[МЕХАНИК] Вызов завершён.");
+    return 1;
+}
+
+stock VX4_BizOwned(playerid)
+{
+    new q[192], business = 0;
+    format(q, sizeof q, "SELECT id FROM vx_businesses WHERE owner='%q' LIMIT 1", gName[playerid]);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r && db_num_rows(r)) business = db_get_field_int(r, 0);
+    if (r) db_free_result(r);
+    return business;
+}
+
+stock VX4_BizEmployee(playerid, &salary)
+{
+    new q[192], business = 0;
+    salary = 0;
+    format(q, sizeof q, "SELECT business_id,salary FROM vx4_biz_staff WHERE employee='%q'", gName[playerid]);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r && db_num_rows(r))
+    {
+        business = db_get_field_int(r, 0);
+        salary = db_get_field_int(r, 1);
+    }
+    if (r) db_free_result(r);
+    return business;
+}
+
+stock VX4_BizNear(playerid, business, Float:radius)
+{
+    if (business < 1 || business > 5 || GetPlayerInterior(playerid) != 0
+        || GetPlayerVirtualWorld(playerid) != 0) return 0;
+    return IsPlayerInRangeOfPoint(playerid, radius,
+        gVXBizPos[business - 1][0], gVXBizPos[business - 1][1],
+        gVXBizPos[business - 1][2]);
+}
+
+stock VX4_BizHire(playerid, target, salary)
+{
+    new business = VX4_BizOwned(playerid);
+    if (!business || !VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Владелец должен находиться у своего бизнеса."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target) || target == playerid)
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /bizhire ID зарплата"), 1;
+    if (salary < 100 || salary > 5000)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Зарплата за смену: от 100 до 5000 руб."), 1;
+    if (!VX4_BizNear(target, business, 20.0))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Сотрудник должен находиться рядом с бизнесом."), 1;
+    new q[224];
+    format(q, sizeof q, "SELECT business_id FROM vx4_biz_staff WHERE employee='%q'", gName[target]);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r && db_num_rows(r))
+    {
+        db_free_result(r);
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Этот игрок уже работает в другом бизнесе."), 1;
+    }
+    if (r) db_free_result(r);
+    format(q, sizeof q, "SELECT COUNT(*) FROM vx4_biz_staff WHERE business_id=%d", business);
+    r = db_query(gDatabase, q);
+    new count = 0;
+    if (r && db_num_rows(r)) count = db_get_field_int(r, 0);
+    if (r) db_free_result(r);
+    if (count >= 5)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Максимум 5 сотрудников."), 1;
+    format(q, sizeof q, "INSERT INTO vx4_biz_staff(employee,business_id,salary) VALUES('%q',%d,%d)", gName[target], business, salary);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Сотрудник нанят.");
+    SendClientMessage(target, COLOR_GREEN, "[БИЗНЕС] Вас наняли. Посмотрите состав: /bizstaff, начало смены: /bizclockin.");
+    return 1;
+}
+
+stock VX4_BizFire(playerid, target)
+{
+    new business = VX4_BizOwned(playerid);
+    if (!business || !VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Вы должны быть у своего бизнеса."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target))
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /bizfire ID"), 1;
+    new q[224];
+    format(q, sizeof q, "DELETE FROM vx4_biz_staff WHERE business_id=%d AND employee='%q'", business, gName[target]);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    gVX4BizShiftActive[target] = 0;
+    gVX4BizShiftBusiness[target] = 0;
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Сотрудник уволен.");
+    SendClientMessage(target, COLOR_YELLOW, "[БИЗНЕС] Ваш трудовой договор прекращён.");
+    return 1;
+}
+
+stock VX4_BizStaff(playerid)
+{
+    new business = VX4_BizOwned(playerid), salary = 0;
+    if (!business) business = VX4_BizEmployee(playerid, salary);
+    if (!business)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] У вас нет своего бизнеса или места работы."), 1;
+    new q[192], body[1200], row[96], employee[25];
+    body[0] = '\0';
+    strcat(body, "Сотрудник\tЗарплата за смену\n", sizeof body);
+    format(q, sizeof q, "SELECT employee,salary FROM vx4_biz_staff WHERE business_id=%d ORDER BY employee LIMIT 5", business);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r)
+    {
+        for (new i = 0; i < db_num_rows(r); i++)
+        {
+            db_get_field(r, 0, employee, sizeof employee);
+            format(row, sizeof row, "%s\t%d руб.\n", employee, db_get_field_int(r, 1));
+            strcat(body, row, sizeof body);
+            db_next_row(r);
+        }
+        db_free_result(r);
+    }
+    return VX_Show(playerid, VX_LOG, DIALOG_STYLE_TABLIST_HEADERS,
+        "VEXORIUM | Сотрудники", body);
+}
+
+stock VX4_BizSalary(playerid, target, salary)
+{
+    new business = VX4_BizOwned(playerid);
+    if (!business || !VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Вы должны быть у своего бизнеса."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target)
+        || salary < 100 || salary > 5000)
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /bizsalary ID сумма (100-5000)"), 1;
+    new q[224];
+    format(q, sizeof q, "UPDATE vx4_biz_staff SET salary=%d WHERE business_id=%d AND employee='%q'", salary, business, gName[target]);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Зарплата обновлена.");
+    SendClientMessage(target, COLOR_GREEN, "[БИЗНЕС] Ваша зарплата за смену изменена.");
+    return 1;
+}
+
+stock VX4_BizClockIn(playerid)
+{
+    new salary = 0, business = VX4_BizEmployee(playerid, salary);
+    if (!business)
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Сначала устройтесь к владельцу бизнеса."), 1;
+    if (!VX4_BizNear(playerid, business, 12.0))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Придите на рабочее место."), 1;
+    if (gVX4BizShiftActive[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Ваша смена уже начата."), 1;
+    gVX4BizShiftActive[playerid] = 1;
+    gVX4BizShiftBusiness[playerid] = business;
+    gVX4BizShiftStarted[playerid] = gettime();
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Смена начата. Минимум 60 секунд, затем /bizclockout.");
+    return 1;
+}
+
+stock VX4_BizClockOut(playerid)
+{
+    new salary = 0, business = VX4_BizEmployee(playerid, salary);
+    if (!gVX4BizShiftActive[playerid] || !business
+        || business != gVX4BizShiftBusiness[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] У вас нет активной смены."), 1;
+    if (!VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Вернитесь на рабочее место."), 1;
+    if (gettime() - gVX4BizShiftStarted[playerid] < 60)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Смена должна длиться не менее 60 секунд."), 1;
+    if (gMoney[playerid] > MAX_MONEY - salary)
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Достигнут лимит наличных."), 1;
+    new q[192], till = 0;
+    format(q, sizeof q, "SELECT till FROM vx_businesses WHERE id=%d", business);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r && db_num_rows(r)) till = db_get_field_int(r, 0);
+    if (r) db_free_result(r);
+    if (till < salary)
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] В кассе недостаточно денег для вашей зарплаты."), 1;
+    if (!VX_Begin()) return VX_Error(playerid);
+    format(q, sizeof q, "UPDATE vx_businesses SET till=till-%d WHERE id=%d AND till>=%d", salary, business, salary);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    if (!VX_Commit()) return VX_Error(playerid);
+    GiveCash(playerid, salary);
+    SavePlayer(playerid);
+    gVX4BizShiftActive[playerid] = 0;
+    gVX4BizShiftBusiness[playerid] = 0;
+    gVX4BizShiftStarted[playerid] = 0;
+    new msg[96];
+    format(msg, sizeof msg, "[БИЗНЕС] Смена завершена. Получено: %d руб.", salary);
+    SendClientMessage(playerid, COLOR_GREEN, msg);
+    return 1;
+}
+
+stock VX4_EventInfo(playerid)
+{
+    new body[512], title[96];
+    if (!gVX4EventActive)
+        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "VEXORIUM | Мероприятия",
+            "Сейчас городских мероприятий нет. Загляните позже.", "Понятно", "Закрыть");
+    format(title, sizeof title, "VEXORIUM | %s", gVX4EventTitle);
+    body[0] = '\0';
+    if (gVX4EventStarted) strcat(body, "Статус: мероприятие уже началось.\n", sizeof body);
+    else strcat(body, "Статус: идёт регистрация участников.\n", sizeof body);
+    strcat(body, "Войти: /eventjoin\nВернуться: /eventleave\n", sizeof body);
+    strcat(body, "Событие проходит в месте, выбранном организатором.", sizeof body);
+    return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, title, body, "Понятно", "Закрыть");
+}
+
+stock VX4_EventCreate(playerid, const rawTitle[])
+{
+    if (gAdmin[playerid] < 3)
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Создавать события могут администраторы 3 уровня и выше."), 1;
+    if (gVX4EventActive)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Сначала завершите текущее событие: /eventend."), 1;
+    new title[48];
+    VX_CleanText(rawTitle, title, sizeof title);
+    if (strlen(title) < 3)
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /eventcreate название"), 1;
+    if (IsPlayerInAnyVehicle(playerid))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Выйдите из машины, чтобы создать точку события."), 1;
+    format(gVX4EventTitle, sizeof gVX4EventTitle, "%s", title);
+    GetPlayerPos(playerid, gVX4EventPos[0], gVX4EventPos[1], gVX4EventPos[2]);
+    gVX4EventInterior = GetPlayerInterior(playerid);
+    gVX4EventWorld = GetPlayerVirtualWorld(playerid);
+    gVX4EventHost = playerid;
+    gVX4EventActive = true;
+    gVX4EventStarted = false;
+    gVX4EventPickup = CreatePickup(1239, 1, gVX4EventPos[0],
+        gVX4EventPos[1], gVX4EventPos[2], gVX4EventWorld);
+    gVX4EventLabel = Create3DTextLabel("{FFD700}VEXORIUM | МЕРОПРИЯТИЕ\n{FFFFFF}/eventjoin — участвовать",
+        COLOR_WHITE, gVX4EventPos[0], gVX4EventPos[1],
+        gVX4EventPos[2] + 1.0, 20.0, gVX4EventWorld, 1);
+    new msg[128];
+    format(msg, sizeof msg, "[МЕРОПРИЯТИЕ] %s. Информация и регистрация: /event", gVX4EventTitle);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (VX_Valid(i))
+        {
+            SendClientMessage(i, COLOR_ORANGE, msg);
+            SetPlayerMapIcon(i, 62, gVX4EventPos[0], gVX4EventPos[1],
+                gVX4EventPos[2], 0, COLOR_ORANGE, MAPICON_GLOBAL);
+        }
+    }
+    return 1;
+}
+
+stock VX4_EventJoin(playerid)
+{
+    if (!gVX4EventActive || gVX4EventStarted)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Регистрация закрыта."), 1;
+    if (gVX4EventJoined[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Вы уже участвуете."), 1;
+    if (IsPlayerInAnyVehicle(playerid) || gVXHospital[playerid] || gIsJailed[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Выйдите из транспорта и покиньте служебные зоны."), 1;
+    GetPlayerPos(playerid, gVX4EventReturnPos[playerid][0],
+        gVX4EventReturnPos[playerid][1], gVX4EventReturnPos[playerid][2]);
+    GetPlayerFacingAngle(playerid, gVX4EventReturnPos[playerid][3]);
+    gVX4EventReturnInterior[playerid] = GetPlayerInterior(playerid);
+    gVX4EventReturnWorld[playerid] = GetPlayerVirtualWorld(playerid);
+    gVX4EventJoined[playerid] = true;
+    SetPlayerInterior(playerid, gVX4EventInterior);
+    SetPlayerVirtualWorld(playerid, gVX4EventWorld);
+    SetPlayerPos(playerid, gVX4EventPos[0] + float(random(7) - 3),
+        gVX4EventPos[1] + float(random(7) - 3), gVX4EventPos[2]);
+    SetPlayerFacingAngle(playerid, 0.0);
+    SetCameraBehindPlayer(playerid);
+    SendClientMessage(playerid, COLOR_GREEN, "[МЕРОПРИЯТИЕ] Вы присоединились. Для возврата используйте /eventleave.");
+    return 1;
+}
+
+stock VX4_EventRestore(playerid)
+{
+    if (!gVX4EventJoined[playerid]) return 0;
+    gVX4EventJoined[playerid] = false;
+    SetPlayerInterior(playerid, gVX4EventReturnInterior[playerid]);
+    SetPlayerVirtualWorld(playerid, gVX4EventReturnWorld[playerid]);
+    SetPlayerPos(playerid, gVX4EventReturnPos[playerid][0],
+        gVX4EventReturnPos[playerid][1], gVX4EventReturnPos[playerid][2]);
+    SetPlayerFacingAngle(playerid, gVX4EventReturnPos[playerid][3]);
+    SetCameraBehindPlayer(playerid);
+    return 1;
+}
+
+stock VX4_EventEnd(playerid)
+{
+    if (!gVX4EventActive)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Активного события нет."), 1;
+    if (playerid != gVX4EventHost && gAdmin[playerid] < 3)
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Завершить событие может организатор или администратор."), 1;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (VX_Valid(i) && gVX4EventJoined[i]) VX4_EventRestore(i);
+        RemovePlayerMapIcon(i, 62);
+    }
+    if (gVX4EventPickup != INVALID_PICKUP) DestroyPickup(gVX4EventPickup);
+    gVX4EventPickup = INVALID_PICKUP;
+    if (gVX4EventLabel != Text3D:0xFFFF) Delete3DTextLabel(gVX4EventLabel);
+    gVX4EventLabel = Text3D:0xFFFF;
+    gVX4EventActive = false;
+    gVX4EventStarted = false;
+    gVX4EventHost = INVALID_PLAYER_ID;
+    gVX4EventTitle[0] = '\0';
+    SendClientMessageToAll(COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Городское событие завершено.");
+    return 1;
+}
+
+stock VX4_EventReward(playerid, target, amount)
+{
+    if (!gVX4EventActive || (playerid != gVX4EventHost && gAdmin[playerid] < 3))
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Награждать может организатор или администратор."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target)
+        || !gVX4EventJoined[target] || amount < 1 || amount > 5000)
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /eventreward ID сумма (1-5000)"), 1;
+    if (!GiveCash(target, amount))
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Не удалось начислить приз: денежный лимит."), 1;
+    SavePlayer(target);
+    new msg[96];
+    format(msg, sizeof msg, "[МЕРОПРИЯТИЕ] Вы получили приз: %d руб.", amount);
+    SendClientMessage(target, COLOR_GREEN, msg);
+    SendClientMessage(playerid, COLOR_GREEN, "[МЕРОПРИЯТИЕ] Приз начислен.");
+    return 1;
+}
+
+stock VX4_Command(playerid, const cmdtext[])
+{
+    new cmd[32], params[128], a[32], b[32];
+    GetToken(cmdtext, 0, cmd, sizeof cmd);
+    GetParams(cmdtext, params, sizeof params);
+    GetToken(params, 0, a, sizeof a);
+    GetToken(params, 1, b, sizeof b);
+
+    if (!strcmp(cmd, "/vex4", true))
+        return SendClientMessage(playerid, COLOR_YELLOW,
+            "VEXORIUM 4.0: /mechonduty /mechoff /mechcall /mechaccept /mechfix /busroute /busstop /bizhire /bizfire /bizstaff /bizsalary /bizclockin /bizclockout /event"),
+            1;
+    if (!strcmp(cmd, "/mechonduty", true)) return VX4_MechDuty(playerid, true);
+    if (!strcmp(cmd, "/mechoff", true)) return VX4_MechDuty(playerid, false);
+    if (!strcmp(cmd, "/mechcall", true)) return VX4_MechCall(playerid);
+    if (!strcmp(cmd, "/mechaccept", true)) return VX4_MechAccept(playerid, strval(a));
+    if (!strcmp(cmd, "/mechfix", true)) return VX4_MechFix(playerid);
+    if (!strcmp(cmd, "/mechcancel", true))
+    {
+        if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
+            return VX4_MechCancel(gVX4MechTargetOf[playerid], "[МЕХАНИК] Механик отменил вызов.");
+        if (gVX4MechRequested[playerid])
+            return VX4_MechCancel(playerid, "[МЕХАНИК] Вызов отменён.");
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Активного вызова нет."), 1;
+    }
+    if (!strcmp(cmd, "/busroute", true)) return VX4_BusStart(playerid);
+    if (!strcmp(cmd, "/busstop", true)) return VX4_BusStop(playerid, true);
+    if (!strcmp(cmd, "/bizhire", true)) return VX4_BizHire(playerid, strval(a), strval(b));
+    if (!strcmp(cmd, "/bizfire", true)) return VX4_BizFire(playerid, strval(a));
+    if (!strcmp(cmd, "/bizstaff", true)) return VX4_BizStaff(playerid);
+    if (!strcmp(cmd, "/bizsalary", true)) return VX4_BizSalary(playerid, strval(a), strval(b));
+    if (!strcmp(cmd, "/bizclockin", true)) return VX4_BizClockIn(playerid);
+    if (!strcmp(cmd, "/bizclockout", true)) return VX4_BizClockOut(playerid);
+    if (!strcmp(cmd, "/bizquit", true))
+    {
+        new salary = 0, business = VX4_BizEmployee(playerid, salary);
+        if (!business) return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Вы нигде не работаете."), 1;
+        new q[128];
+        format(q, sizeof q, "DELETE FROM vx4_biz_staff WHERE employee='%q'", gName[playerid]);
+        if (!VX_SQL(q)) return VX_Error(playerid);
+        gVX4BizShiftActive[playerid] = 0;
+        gVX4BizShiftBusiness[playerid] = 0;
+        SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Вы уволились по собственному желанию.");
+        return 1;
+    }
+    if (!strcmp(cmd, "/event", true) || !strcmp(cmd, "/eventinfo", true)) return VX4_EventInfo(playerid);
+    if (!strcmp(cmd, "/eventcreate", true)) return VX4_EventCreate(playerid, params);
+    if (!strcmp(cmd, "/eventjoin", true)) return VX4_EventJoin(playerid);
+    if (!strcmp(cmd, "/eventleave", true))
+    {
+        if (!VX4_EventRestore(playerid))
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Вы не участвуете."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "[МЕРОПРИЯТИЕ] Вы вернулись на прежнее место."), 1;
+    }
+    if (!strcmp(cmd, "/eventstart", true))
+    {
+        if (!gVX4EventActive || (playerid != gVX4EventHost && gAdmin[playerid] < 3))
+            return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Недостаточно прав."), 1;
+        if (gVX4EventStarted)
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Событие уже началось."), 1;
+        gVX4EventStarted = true;
+        for (new i = 0; i < MAX_PLAYERS; i++)
+            if (VX_Valid(i) && gVX4EventJoined[i])
+                SendClientMessage(i, COLOR_ORANGE, "[МЕРОПРИЯТИЕ] Событие началось!");
+        return 1;
+    }
+    if (!strcmp(cmd, "/eventend", true)) return VX4_EventEnd(playerid);
+    if (!strcmp(cmd, "/eventreward", true)) return VX4_EventReward(playerid, strval(a), strval(b));
+    return 0;
+}
+
+stock VX4_Tick()
+{
+    new now = gettime();
+    for (new p = 0; p < MAX_PLAYERS; p++)
+    {
+        if (!IsPlayerConnected(p)) continue;
+        if (gTaxiRequestActive[p] && gVX4TaxiRequestAt[p] > 0
+            && now - gVX4TaxiRequestAt[p] > 180)
+        {
+            VX_TaxiCancelForPlayer(p, "[ТАКСИ] Время ожидания истекло. Вызов отменён.", true);
+            gVX4TaxiRequestAt[p] = 0;
+        }
+        if (gVX4MechRequested[p] && now - gVX4MechRequestedAt[p] > 180)
+            VX4_MechCancel(p, "[МЕХАНИК] Время ожидания истекло. Вызов отменён.");
+    }
+    return 1;
+}
+
+stock VX4_PlayerDisconnect(playerid)
+{
+    if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
+        VX4_MechCancel(gVX4MechTargetOf[playerid], "[МЕХАНИК] Механик отключился. Вызов отменён.");
+    if (gVX4MechRequested[playerid])
+        VX4_MechCancel(playerid, "[МЕХАНИК] Клиент отключился. Вызов отменён.");
+    if (gVX4BusStage[playerid] >= 0) VX4_BusStop(playerid, false);
+    gVX4MechDuty[playerid] = false;
+    gVX4BizShiftActive[playerid] = 0;
+    gVX4TaxiRequestAt[playerid] = 0;
+    if (gVX4EventActive && gVX4EventHost == playerid) VX4_EventEnd(playerid);
+    gVX4EventJoined[playerid] = false;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (gVX4MechAssignedTo[i] == playerid)
+            VX4_MechCancel(i, "[МЕХАНИК] Механик отключился. Вызов отменён.");
+    }
+    return 1;
 }
