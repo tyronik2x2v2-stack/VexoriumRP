@@ -2578,7 +2578,7 @@ stock SpawnGangBases()
     new Float:dx[4] = {5.0, 0.0, -5.0, 0.0};
     new Float:dy[4] = {0.0, 5.0, 0.0, -5.0};
     new Float:angles[4] = {90.0, 180.0, 270.0, 0.0};
-    new names[4][24] = {"���� �����", "������", "��� ������ �����", "������� �������"};
+    new names[4][128] = {"���� �����", "������", "��� ������ �����", "������� �������"};
     for (new i = 0; i < 4; i++)
     {
         CreatePickup(1275, 23, x[i], y[i], z[i], 0);
@@ -2722,7 +2722,7 @@ new Text3D:gVQFarmLabel = Text3D:0xFFFF;
 
 new const gVQTutMoney[VQ_TUT_STEPS] = {300, 300, 1000, 300, 500, 800, 300, 500, 2000, 2500};
 new const gVQTutXP[VQ_TUT_STEPS] = {0, 0, 1, 0, 0, 1, 0, 0, 1, 2};
-new const gVQTutTitle[VQ_TUT_STEPS][64] =
+new const gVQTutTitle[VQ_TUT_STEPS][128] =
 {
     "�������� ����� ������",
     "�������� GPS",
@@ -2735,7 +2735,7 @@ new const gVQTutTitle[VQ_TUT_STEPS][64] =
     "�������� ������������ �����",
     "������ 3 ������ ������"
 };
-new const gVQTutShort[VQ_TUT_STEPS][32] =
+new const gVQTutShort[VQ_TUT_STEPS][64] =
 {
     "�������� /hub",
     "�������� /gps",
@@ -2748,7 +2748,7 @@ new const gVQTutShort[VQ_TUT_STEPS][32] =
     "�����: ���������",
     "������ 3 ������"
 };
-new const gVQTutHint[VQ_TUT_STEPS][128] =
+new const gVQTutHint[VQ_TUT_STEPS][512] =
 {
     "������� /hub � ��� �������, GPS, ������, ��������� � �������.",
     "������� /gps � ������ ����� ��������� ������� �� ������ ����� ������.",
@@ -2765,7 +2765,7 @@ new const gVQTutHint[VQ_TUT_STEPS][128] =
 new const gVQDailyTarget[VQ_DAILY_TYPES] = {2, 800, 4000, 5, 3, 12};
 new const gVQDailyMoney[VQ_DAILY_TYPES] = {1500, 600, 800, 500, 600, 2200};
 new const gVQDailyXP[VQ_DAILY_TYPES] = {1, 0, 1, 0, 0, 1};
-new const gVQDailyName[VQ_DAILY_TYPES][48] =
+new const gVQDailyName[VQ_DAILY_TYPES][192] =
 {
     "�����: ������ 2 ������ ������",
     "��������: �������� 800 � ������",
@@ -2774,7 +2774,7 @@ new const gVQDailyName[VQ_DAILY_TYPES][48] =
     "������� ����: ����������� /me ��� /do 3 ����",
     "�����: �������� 12 ������ ������"
 };
-new const gVQDailyShort[VQ_DAILY_TYPES][32] =
+new const gVQDailyShort[VQ_DAILY_TYPES][96] =
 {
     "����� ������",
     "������ ������, �",
@@ -4073,10 +4073,29 @@ public OnPlayerConnect(playerid)
     new query[512];
     format(query, sizeof query, "SELECT name FROM accounts WHERE name='%q'", gName[playerid]);
     new DBResult:connectResult = db_query(gDatabase, query);
+    new loginText[1024];
+    loginText[0] = '\0';
+    strcat(loginText, "================================\n", sizeof loginText);
+    strcat(loginText, "             V E X O R I U M\n", sizeof loginText);
+    strcat(loginText, "          ����� �Ĩ� ����\n\n", sizeof loginText);
+    strcat(loginText, "������� ������. ����� ���� ������.\n", sizeof loginText);
+    strcat(loginText, "������ ����� �� ����� �����.\n\n", sizeof loginText);
+    strcat(loginText, "����� ����� ��� ����� �� ������.", sizeof loginText);
+
+    new registerText[1024];
+    registerText[0] = '\0';
+    strcat(registerText, "================================\n", sizeof registerText);
+    strcat(registerText, "             V E X O R I U M\n", sizeof registerText);
+    strcat(registerText, "       ���� ������� ����������\n\n", sizeof registerText);
+    strcat(registerText, "����� ������� �� ������.\n", sizeof registerText);
+    strcat(registerText, "�������� ������ �� 4 �� 64 ��������.\n", sizeof registerText);
+    strcat(registerText, "������� ���: �� ����������� ��� ��������� �����.\n\n", sizeof registerText);
+    strcat(registerText, "����� ������� ��� �����������.", sizeof registerText);
+
     if (connectResult && db_num_rows(connectResult))
-        ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "VEXORIUM | ����� ����������", "================================\n             V E X O R I U M\n          ����� �Ĩ� ����\n\n������� ������. ����� ���� ������.\n������ ����� �� ����� �����.\n\n����� ����� ��� ����� �� ������.", "�����", "�����");
+        ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "VEXORIUM | ����� ����������", loginText, "�����", "�����");
     else
-        ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | �������� ��������", "================================\n             V E X O R I U M\n       ���� ������� ����������\n\n����� ������� �� ������.\n�������� ������ �� 4 �� 64 ��������.\n������� ���: �� ����������� ��� ��������� �����.\n\n����� ������� ��� �����������.", "�������", "�����");
+        ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | �������� ��������", registerText, "�������", "�����");
     if (connectResult) db_free_result(connectResult);
     return 1;
 }
