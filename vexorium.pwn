@@ -57,6 +57,13 @@
 #define OWNER_NAME "Stanislav_Belkin"
 #define MAX_MONEY 2000000000
 
+forward VX3_Init();
+forward VX3_PlayerConnect(playerid);
+forward VX3_PlayerDisconnect(playerid);
+forward VX3_KeyState(playerid, newkeys, oldkeys);
+forward VX3_Command(playerid, const cmdtext[]);
+forward VX3_Tick();
+
 new DB:gDatabase;
 new DBResult:gResult;
 new bool:gLogged[MAX_PLAYERS];
@@ -3997,6 +4004,7 @@ public OnPlayerConnect(playerid)
     // Map blips are updated in RefreshNearbyMapVisibility instead of shown worldwide.
     gLastTaserTick[playerid] = 0;
     GetPlayerName(playerid, gName[playerid], MAX_PLAYER_NAME + 1);
+    VX3_PlayerConnect(playerid);
     gOwnedCarModel[playerid] = 0;
     gAccessoryModel[playerid] = 0;
     gOwnedCarVehicle[playerid] = INVALID_VEHICLE_ID;
@@ -4055,6 +4063,7 @@ public OnPlayerDisconnect(playerid, reason)
 {
     RP_Disconnect(playerid);
     VX_Disconnect(playerid);
+    VX3_PlayerDisconnect(playerid);
     VQ_Disconnect(playerid);
     if (gFBIEnterTimer[playerid]) { KillTimer(gFBIEnterTimer[playerid]); gFBIEnterTimer[playerid] = 0; }
     gFBIPendingEnter[playerid] = false;
@@ -5230,6 +5239,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
     if(gIsJailed[playerid] || gHandcuffed[playerid] || gTaserStunned[playerid]
         || gRPStretcherBy[playerid]!=INVALID_PLAYER_ID) return 1;
     if(!gLogged[playerid] || gVXHospital[playerid] || gVXSpec[playerid]!=INVALID_PLAYER_ID) return 1;
+    if (VX3_KeyState(playerid, newkeys, oldkeys)) return 1;
     if (gFBIEditActive[playerid] && gFBIEditObject[playerid] != INVALID_OBJECT_ID)
     {
         if ((newkeys & KEY_SPRINT) && !(oldkeys & KEY_SPRINT)) { gFBIEditRZ[playerid] += 5.0; if (gFBIEditRZ[playerid] >= 360.0) gFBIEditRZ[playerid] -= 360.0; UpdateFBIEditorObject(playerid); }
@@ -7834,6 +7844,7 @@ stock VX_Init()
         new t[96];format(t,sizeof t,"{FFD700}%s\n{FFFFFF}/biz %d",gVXBizName[b],b+1);
         Create3DTextLabel(t,COLOR_WHITE,gVXBizPos[b][0],gVXBizPos[b][1],gVXBizPos[b][2]+1.0,9.0,0,1);
     }
+    VX3_Init();
     gVXLastTick = gettime();
     gVXTimer = SetTimer("VX_Tick",1000,true);
     print("[VEXORIUM UPDATE] Bank, inventory, phone, families, businesses, reports and BCRB initialized.");
@@ -8007,6 +8018,8 @@ stock VX_ShowInventory(playerid)
     format(title,sizeof title,"��������� | %.1f / 30 kg",float(VX_Weight(playerid))/1000.0);
     strcat(body,"Slot\tItem\tQuantity\tWeight\n");
     for(new i=0;i<6;i++){format(row,sizeof row,"%d\t%s\t%d\t%.2f kg\n",i+1,gVXItemName[i],VX_ItemCount(playerid,i),float(VX_ItemCount(playerid,i)*gVXItemWeight[i])/1000.0);strcat(body,row);}
+    format(row,sizeof row,"7\t10L canisters\t%d\t-\n8\t20L canisters\t%d\t-\n9\tFishing bait\t%d\t-\n10\tFish\t%d\t-\n",gVX3Can10[playerid],gVX3Can20[playerid],gVX3Bait[playerid],gVX3Fish[playerid]);
+    strcat(body,row);
     strcat(body,"7\t������ / ����� ���������\t1\t-\n8\tPhone\t1\t-\n9\t������� ������� �����\t-\t-\n");
     return VX_Show(playerid,VX_INV,DIALOG_STYLE_TABLIST_HEADERS,title,body);
 }
@@ -8813,6 +8826,7 @@ stock VX_Command(playerid,const cmdtext[])
         if(strcmp(cmd,"/bed",true) && strcmp(cmd,"/report",true) && strcmp(cmd,"/phone",true) && strcmp(cmd,"/sms",true) && strcmp(cmd,"/call",true) && strcmp(cmd,"/answer",true) && strcmp(cmd,"/hangup",true) && strcmp(cmd,"/hospitexit",true) && strcmp(cmd,"/systems",true) && strcmp(cmd,"/help",true) && strcmp(cmd,"/hud",true) && strcmp(cmd,"/hudfont",true))
             return SendClientMessage(playerid,COLOR_RED,"[����] ������� ��������� �������. ��������: /bed /phone /report."),1;
     }
+    if (VX3_Command(playerid, cmdtext)) return 1;
     if(!strcmp(cmd,"/medcert",true))return VX_MedCertificate(playerid);
     if(!strcmp(cmd,"/ward",true))return VX_EnterWard(playerid);
     if(!strcmp(cmd,"/lobby",true))return VX_ReturnLobby(playerid);
@@ -10928,4 +10942,551 @@ stock VX_WardInfo(playerid)
     else format(status,sizeof status,"������������ ������� �� ���������. ����� ������.");
     format(body,sizeof body,"%s\n\n��������: %d ���. %d ���.\n��������� ����: %d �� %d.\n\n/exit ��� /hospitexit - ����� ����� �������.\n/hospitalinfo - ��� ����.",status,left/60,left%60,freeBeds,VX_BEDS);
     return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"���� | ���������",body,"OK","");
+}
+
+
+// ============================================================================
+// VEXORIUM RP 3.0 - non-violent gameplay additions
+// Uses existing SQLite, inventory, vehicle, faction, and fuel systems.
+// ============================================================================
+
+new gVX3Can10[MAX_PLAYERS], gVX3Can20[MAX_PLAYERS];
+new gVX3FishingRod[MAX_PLAYERS], gVX3Bait[MAX_PLAYERS], gVX3Fish[MAX_PLAYERS];
+new bool:gVX3ItemsLoaded[MAX_PLAYERS];
+new gVX3FishState[MAX_PLAYERS], gVX3FishSeconds[MAX_PLAYERS];
+new gVX3JobType[MAX_PLAYERS], gVX3JobVehicle[MAX_PLAYERS], gVX3JobStage[MAX_PLAYERS];
+new gVX3JobDestination[MAX_PLAYERS];
+new gVX3CarOfferFrom[MAX_PLAYERS], gVX3CarOfferPrice[MAX_PLAYERS], gVX3CarOfferUntil[MAX_PLAYERS];
+
+new const Float:gVX3PizzaRoute[4][3] =
+{
+    {2244.4, -1665.1, 15.4},
+    {1833.0, -1842.0, 13.3},
+    {1351.2, -1759.2, 13.5},
+    {2424.0, -1742.0, 13.5}
+};
+new const Float:gVX3CashRoute[3][3] =
+{
+    {1004.0, -939.3, 42.2},
+    {1940.0, -1772.0, 13.4},
+    {2424.0, -1229.0, 25.3}
+};
+
+stock VX3_Init()
+{
+    VX_SQL("CREATE TABLE IF NOT EXISTS vx3_items (name TEXT PRIMARY KEY, can10 INTEGER NOT NULL DEFAULT 0, can20 INTEGER NOT NULL DEFAULT 0, rod INTEGER NOT NULL DEFAULT 0, bait INTEGER NOT NULL DEFAULT 0, fish INTEGER NOT NULL DEFAULT 0)");
+    VX_SQL("CREATE TABLE IF NOT EXISTS vx3_storage (owner TEXT NOT NULL, kind INTEGER NOT NULL, item INTEGER NOT NULL, amount INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(owner,kind,item))");
+    Create3DTextLabel("{66CCFF}SANTA MARIA PIER\n{FFFFFF}/fish | /fishbuy | /fishsell", COLOR_WHITE, 390.0, -2088.0, 8.5, 20.0, 0, 1);
+    SetTimer("VX3_Tick", 1000, true);
+    print("[VEXORIUM 3.0] Vehicle storage, canisters, fishing, delivery jobs and faction supplies initialized.");
+    return 1;
+}
+
+stock VX3_LoadItems(playerid)
+{
+    if (gDatabase == DB:0 || !strlen(gName[playerid])) return 0;
+    new q[256];
+    format(q, sizeof q, "INSERT OR IGNORE INTO vx3_items(name) VALUES('%q')", gName[playerid]);
+    VX_SQL(q);
+    format(q, sizeof q, "SELECT can10,can20,rod,bait,fish FROM vx3_items WHERE name='%q'", gName[playerid]);
+    new DBResult:r = db_query(gDatabase, q);
+    if (!r) return 0;
+    if (db_num_rows(r))
+    {
+        gVX3Can10[playerid] = db_get_field_int(r, 0);
+        gVX3Can20[playerid] = db_get_field_int(r, 1);
+        gVX3FishingRod[playerid] = db_get_field_int(r, 2);
+        gVX3Bait[playerid] = db_get_field_int(r, 3);
+        gVX3Fish[playerid] = db_get_field_int(r, 4);
+    }
+    db_free_result(r);
+    gVX3ItemsLoaded[playerid] = true;
+    return 1;
+}
+
+stock VX3_SaveItems(playerid)
+{
+    if (!gVX3ItemsLoaded[playerid] || !strlen(gName[playerid])) return 0;
+    new q[400];
+    format(q, sizeof q, "INSERT OR REPLACE INTO vx3_items(name,can10,can20,rod,bait,fish) VALUES('%q',%d,%d,%d,%d,%d)",
+        gName[playerid], gVX3Can10[playerid], gVX3Can20[playerid], gVX3FishingRod[playerid],
+        gVX3Bait[playerid], gVX3Fish[playerid]);
+    return VX_SQL(q);
+}
+
+stock VX3_PlayerConnect(playerid)
+{
+    gVX3Can10[playerid] = 0;
+    gVX3Can20[playerid] = 0;
+    gVX3FishingRod[playerid] = 0;
+    gVX3Bait[playerid] = 0;
+    gVX3Fish[playerid] = 0;
+    gVX3ItemsLoaded[playerid] = false;
+    gVX3FishState[playerid] = 0;
+    gVX3FishSeconds[playerid] = 0;
+    gVX3JobType[playerid] = 0;
+    gVX3JobVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX3JobStage[playerid] = 0;
+    gVX3JobDestination[playerid] = 0;
+    gVX3CarOfferFrom[playerid] = INVALID_PLAYER_ID;
+    gVX3CarOfferPrice[playerid] = 0;
+    gVX3CarOfferUntil[playerid] = 0;
+    return VX3_LoadItems(playerid);
+}
+
+stock VX3_PlayerDisconnect(playerid)
+{
+    VX3_SaveItems(playerid);
+    gVX3FishState[playerid] = 0;
+    if (gVX3JobVehicle[playerid] != INVALID_VEHICLE_ID && GetVehicleModel(gVX3JobVehicle[playerid]))
+        DestroyVehicle(gVX3JobVehicle[playerid]);
+    gVX3JobVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX3JobType[playerid] = 0;
+    gVX3CarOfferFrom[playerid] = INVALID_PLAYER_ID;
+    for (new p = 0; p < MAX_PLAYERS; p++)
+        if (gVX3CarOfferFrom[p] == playerid) gVX3CarOfferFrom[p] = INVALID_PLAYER_ID;
+    return 1;
+}
+
+stock VX3_NearMarket(playerid)
+{
+    if (GetPlayerVirtualWorld(playerid) == VX_MARKET_WORLD && GetPlayerInterior(playerid) == VX_MARKET_INTERIOR) return 1;
+    for (new i = 0; i < VX_MARKET_COUNT; i++)
+        if (IsPlayerInRangeOfPoint(playerid, 5.0, gVXMarketPos[i][0], gVXMarketPos[i][1], gVXMarketPos[i][2])) return 1;
+    return 0;
+}
+
+stock VX3_NearGas(playerid)
+{
+    if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0) return 0;
+    for (new i = 0; i < VX_GAS_COUNT; i++)
+        if (IsPlayerInRangeOfPoint(playerid, 5.0, gVXGasPos[i][0], gVXGasPos[i][1], gVXGasPos[i][2])) return 1;
+    return 0;
+}
+
+stock VX3_FindCar(playerid)
+{
+    new v = GetPlayerVehicleID(playerid);
+    if (v > 0 && v < MAX_VEHICLES && RP_VehicleOwner(v) != INVALID_PLAYER_ID && RP_HasKeys(playerid, v)) return v;
+    new Float:x, Float:y, Float:z, Float:distance, Float:best = 5.0;
+    for (new candidate = 1; candidate < MAX_VEHICLES; candidate++)
+    {
+        if (!GetVehicleModel(candidate) || GetVehicleVirtualWorld(candidate) != GetPlayerVirtualWorld(playerid)) continue;
+        if (RP_VehicleOwner(candidate) == INVALID_PLAYER_ID || !RP_HasKeys(playerid, candidate)) continue;
+        GetVehiclePos(candidate, x, y, z);
+        distance = GetPlayerDistanceFromPoint(playerid, x, y, z);
+        if (distance <= best) { v = candidate; best = distance; }
+    }
+    if (v > 0 && v < MAX_VEHICLES && RP_VehicleOwner(v) != INVALID_PLAYER_ID) return v;
+    return INVALID_VEHICLE_ID;
+}
+
+stock VX3_StorageShow(playerid, kind)
+{
+    new v = VX3_FindCar(playerid);
+    if (v == INVALID_VEHICLE_ID) return SendClientMessage(playerid, COLOR_RED, "[CAR] Need keys and proximity to a personal car."), 1;
+    new owner = RP_VehicleOwner(v), q[256], body[900], row[96];
+    if (owner == INVALID_PLAYER_ID) return 1;
+    if (kind == 0) strcat(body, "TRUNK STORAGE\nSlot\tItem\tQuantity\n");
+    else strcat(body, "GLOVEBOX STORAGE\nSlot\tItem\tQuantity\n");
+    for (new item = 0; item < 6; item++)
+    {
+        new amount = 0;
+        format(q, sizeof q, "SELECT amount FROM vx3_storage WHERE owner='%q' AND kind=%d AND item=%d", gName[owner], kind, item);
+        new DBResult:r = db_query(gDatabase, q);
+        if (r) { if (db_num_rows(r)) amount = db_get_field_int(r, 0); db_free_result(r); }
+        format(row, sizeof row, "%d\t%s\t%d\n", item + 1, gVXItemName[item], amount);
+        strcat(body, row);
+    }
+    strcat(body, "\n/trunk put|take [slot 1-6] [amount]\n/glovebox put|take [slot 1-6] [amount]");
+    return VX_Show(playerid, VX_LOG, DIALOG_STYLE_TABLIST_HEADERS, "VEXORIUM | Vehicle storage", body, "OK", "Close");
+}
+
+stock VX3_StorageTransfer(playerid, kind, action, item, amount)
+{
+    if (item < 0 || item >= 6 || amount < 1 || amount > 100)
+        return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /trunk put|take [slot 1-6] [amount]"), 1;
+    new v = VX3_FindCar(playerid);
+    if (v == INVALID_VEHICLE_ID) return SendClientMessage(playerid, COLOR_RED, "[CAR] Need keys and proximity to a personal car."), 1;
+    new owner = RP_VehicleOwner(v), stored = 0, q[320];
+    if (owner == INVALID_PLAYER_ID) return 1;
+    format(q, sizeof q, "SELECT amount FROM vx3_storage WHERE owner='%q' AND kind=%d AND item=%d", gName[owner], kind, item);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r) { if (db_num_rows(r)) stored = db_get_field_int(r, 0); db_free_result(r); }
+    new inventory = VX_ItemCount(playerid, item), nextStored = stored, nextInventory = inventory;
+    if (action == 0)
+    {
+        if (inventory < amount) return SendClientMessage(playerid, COLOR_RED, "[CAR] Not enough items in inventory."), 1;
+        nextStored += amount; nextInventory -= amount;
+        if (nextStored > 100) return SendClientMessage(playerid, COLOR_RED, "[CAR] Storage slot limit is 100."), 1;
+    }
+    else
+    {
+        if (stored < amount) return SendClientMessage(playerid, COLOR_RED, "[CAR] Not enough items in storage."), 1;
+        if (!VX_CanCarry(playerid, item, amount)) return SendClientMessage(playerid, COLOR_RED, "[INV] Inventory full."), 1;
+        nextStored -= amount; nextInventory += amount;
+    }
+    if (!VX_Begin()) return VX_Error(playerid);
+    VX_SetItem(playerid, item, nextInventory);
+    VX_ItemsSQL(playerid);
+    format(q, sizeof q, "INSERT OR REPLACE INTO vx3_storage(owner,kind,item,amount) VALUES('%q',%d,%d,%d)", gName[owner], kind, item, nextStored);
+    VX_SQL(q);
+    if (!VX_Commit()) { VX_SetItem(playerid, item, inventory); return VX_Error(playerid); }
+    new message[128];
+    format(message, sizeof message, "[CAR] %s x%d %s.", action == 0 ? "Stored" : "Removed", amount, gVXItemName[item]);
+    SendClientMessage(playerid, COLOR_GREEN, message);
+    return VX3_StorageShow(playerid, kind);
+}
+
+stock VX3_Canister(playerid, const action[], const sizeText[])
+{
+    new size = strval(sizeText);
+    if (!strcmp(action, "buy", true))
+    {
+        if (!VX3_NearGas(playerid)) return SendClientMessage(playerid, COLOR_RED, "[GAS] Buy canisters at a gas station."), 1;
+        if (size == 10)
+        {
+            if (gVX3Can10[playerid] >= 10 || !TakeCash(playerid, 1000)) return SendClientMessage(playerid, COLOR_RED, "[GAS] 10L canister costs $1000; limit 10."), 1;
+            gVX3Can10[playerid]++;
+        }
+        else if (size == 20)
+        {
+            if (gVX3Can20[playerid] >= 5 || !TakeCash(playerid, 1800)) return SendClientMessage(playerid, COLOR_RED, "[GAS] 20L canister costs $1800; limit 5."), 1;
+            gVX3Can20[playerid]++;
+        }
+        else return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /can buy 10 or /can buy 20"), 1;
+        VX3_SaveItems(playerid);
+        return SendClientMessage(playerid, COLOR_GREEN, "[GAS] Canister added. Use /can use 10|20 in the driver's seat."), 1;
+    }
+    if (!strcmp(action, "use", true))
+    {
+        if (GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return SendClientMessage(playerid, COLOR_RED, "[GAS] Sit in the driver's seat first."), 1;
+        new v = GetPlayerVehicleID(playerid);
+        if (v <= 0 || v >= MAX_VEHICLES || !GetVehicleModel(v)) return 1;
+        new add = 0;
+        if (size == 10 && gVX3Can10[playerid] > 0) add = 10;
+        else if (size == 20 && gVX3Can20[playerid] > 0) add = 20;
+        else return SendClientMessage(playerid, COLOR_RED, "[GAS] You do not have that canister."), 1;
+        if (gVehicleFuel[v] >= 100) return SendClientMessage(playerid, COLOR_YELLOW, "[GAS] Tank is already full."), 1;
+        if (gVehicleFuel[v] + add > 100) return SendClientMessage(playerid, COLOR_YELLOW, "[GAS] There is not enough free tank capacity for that canister."), 1;
+        if (size == 10) gVX3Can10[playerid]--; else gVX3Can20[playerid]--;
+        gVehicleFuel[v] += add;
+        if (RP_VehicleOwner(v) == playerid) { gRPCarFuel[playerid] = gVehicleFuel[v]; RP_SaveCar(playerid); }
+        VX3_SaveItems(playerid); UpdateVexHud(playerid);
+        return SendClientMessage(playerid, COLOR_GREEN, "[GAS] Fuel added from the canister."), 1;
+    }
+    return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /can buy|use 10|20"), 1;
+}
+
+stock VX3_FishBuy(playerid, const item[], amount)
+{
+    if (!VX3_NearMarket(playerid)) return SendClientMessage(playerid, COLOR_RED, "[FISH] Buy fishing supplies at a 24/7 store."), 1;
+    if (!strcmp(item, "rod", true))
+    {
+        if (gVX3FishingRod[playerid]) return SendClientMessage(playerid, COLOR_YELLOW, "[FISH] You already own a fishing rod."), 1;
+        if (!TakeCash(playerid, 1800)) return SendClientMessage(playerid, COLOR_RED, "[FISH] A rod costs $1800."), 1;
+        gVX3FishingRod[playerid] = 1;
+    }
+    else if (!strcmp(item, "bait", true))
+    {
+        if (amount < 1 || amount > 50 || !TakeCash(playerid, amount * 50))
+            return SendClientMessage(playerid, COLOR_RED, "[FISH] Usage: /fishbuy bait [1-50], $50 each."), 1;
+        gVX3Bait[playerid] += amount;
+        if (gVX3Bait[playerid] > 200) gVX3Bait[playerid] = 200;
+    }
+    else return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /fishbuy rod or /fishbuy bait [amount]"), 1;
+    VX3_SaveItems(playerid);
+    return SendClientMessage(playerid, COLOR_GREEN, "[FISH] Supplies added to your inventory."), 1;
+}
+
+stock VX3_FishStart(playerid)
+{
+    if (!IsPlayerInRangeOfPoint(playerid, 8.0, 390.0, -2088.0, 7.8))
+        return SendClientMessage(playerid, COLOR_RED, "[FISH] Go to the Santa Maria Beach pier."), 1;
+    if (!gVX3FishingRod[playerid] || gVX3Bait[playerid] < 1)
+        return SendClientMessage(playerid, COLOR_RED, "[FISH] You need a rod and bait. Buy them at 24/7 with /fishbuy."), 1;
+    if (gVX3FishState[playerid]) return SendClientMessage(playerid, COLOR_YELLOW, "[FISH] Already fishing. Press Y on a bite or N to stop."), 1;
+    gVX3FishState[playerid] = 1; gVX3FishSeconds[playerid] = 5 + random(6);
+    SendClientMessage(playerid, COLOR_GREEN, "[FISH] Line cast. Wait for a bite..."); return 1;
+}
+
+stock VX3_FishKey(playerid, bool:accept)
+{
+    if (!gVX3FishState[playerid]) return 0;
+    if (!accept)
+    {
+        gVX3FishState[playerid] = 0; gVX3FishSeconds[playerid] = 0;
+        SendClientMessage(playerid, COLOR_YELLOW, "[FISH] You stopped fishing."); return 1;
+    }
+    if (gVX3FishState[playerid] != 2) return SendClientMessage(playerid, COLOR_YELLOW, "[FISH] No bite yet. Wait for the signal."), 1;
+    if (!IsPlayerInRangeOfPoint(playerid, 10.0, 390.0, -2088.0, 7.8) || gVX3Bait[playerid] < 1)
+    {
+        gVX3FishState[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "[FISH] Fishing stopped."), 1;
+    }
+    gVX3Bait[playerid]--;
+    new catch = 1 + random(3);
+    gVX3Fish[playerid] += catch; gVX3FishState[playerid] = 0; gVX3FishSeconds[playerid] = 0;
+    VX3_SaveItems(playerid);
+    new msg[112]; format(msg, sizeof msg, "[FISH] Good catch! +%d fish. Total: %d. Use /fish to continue.", catch, gVX3Fish[playerid]);
+    SendClientMessage(playerid, COLOR_GREEN, msg); return 1;
+}
+
+stock VX3_FishSell(playerid)
+{
+    if (!IsPlayerInRangeOfPoint(playerid, 10.0, 390.0, -2088.0, 7.8))
+        return SendClientMessage(playerid, COLOR_RED, "[FISH] Find the fish buyer at the Santa Maria pier."), 1;
+    if (gVX3Fish[playerid] < 1) return SendClientMessage(playerid, COLOR_YELLOW, "[FISH] You have no fish to sell."), 1;
+    new count = gVX3Fish[playerid], total = count * 180;
+    gVX3Fish[playerid] = 0; VX3_SaveItems(playerid); GiveCash(playerid, total);
+    new msg[112]; format(msg, sizeof msg, "[FISH] Sold %d fish for $%d.", count, total);
+    return SendClientMessage(playerid, COLOR_GREEN, msg), 1;
+}
+
+stock VX3_CreateJobVehicle(playerid, model, Float:x, Float:y, Float:z, Float:a)
+{
+    if (gVX3JobVehicle[playerid] != INVALID_VEHICLE_ID && GetVehicleModel(gVX3JobVehicle[playerid])) DestroyVehicle(gVX3JobVehicle[playerid]);
+    new v = CreateVehicle(model, x, y, z, a, 1, 1, 600);
+    if (v == INVALID_VEHICLE_ID || v == 0) return SendClientMessage(playerid, COLOR_RED, "[JOB] Could not create work vehicle."), INVALID_VEHICLE_ID;
+    gVX3JobVehicle[playerid] = v; gVehicleFuel[v] = 100; PutPlayerInVehicle(playerid, v, 0); return v;
+}
+
+stock VX3_JobStop(playerid, const reason[])
+{
+    if (gVX3JobVehicle[playerid] != INVALID_VEHICLE_ID && GetVehicleModel(gVX3JobVehicle[playerid])) DestroyVehicle(gVX3JobVehicle[playerid]);
+    gVX3JobVehicle[playerid] = INVALID_VEHICLE_ID; gVX3JobType[playerid] = 0;
+    gVX3JobStage[playerid] = 0; gVX3JobDestination[playerid] = 0;
+    SendClientMessage(playerid, COLOR_YELLOW, reason); return 1;
+}
+
+stock VX3_PizzaStart(playerid)
+{
+    if (gVX3JobType[playerid]) return SendClientMessage(playerid, COLOR_RED, "[PIZZA] Finish your current delivery first."), 1;
+    if (IsPlayerInAnyVehicle(playerid) || !IsPlayerInRangeOfPoint(playerid, 18.0, 2105.0, -1806.0, 13.4))
+        return SendClientMessage(playerid, COLOR_RED, "[PIZZA] Start at the Los Santos pizzeria on foot."), 1;
+    if (VX3_CreateJobVehicle(playerid, 448, 2105.0, -1811.0, 13.4, 0.0) == INVALID_VEHICLE_ID) return 1;
+    gVX3JobType[playerid] = 1; gVX3JobStage[playerid] = 0;
+    return SendClientMessage(playerid, COLOR_GREEN, "[PIZZA] Shift started on a Pizzaboy. Use /pizzadeliver at each stop; /jobstop to quit."), 1;
+}
+
+stock VX3_PizzaDeliver(playerid)
+{
+    if (gVX3JobType[playerid] != 1 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || GetPlayerVehicleID(playerid) != gVX3JobVehicle[playerid])
+        return SendClientMessage(playerid, COLOR_RED, "[PIZZA] Start a shift with /pizzajob."), 1;
+    new stage = gVX3JobStage[playerid];
+    if (stage < 0 || stage >= 4) return 1;
+    if (!IsPlayerInRangeOfPoint(playerid, 12.0, gVX3PizzaRoute[stage][0], gVX3PizzaRoute[stage][1], gVX3PizzaRoute[stage][2]))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[PIZZA] You are not at the current delivery address."), 1;
+    GiveCash(playerid, 450); gVX3JobStage[playerid]++;
+    if (gVX3JobStage[playerid] >= 4) { GiveCash(playerid, 1200); return VX3_JobStop(playerid, "[PIZZA] All deliveries completed! Shift bonus: $1200."); }
+    new msg[112]; format(msg, sizeof msg, "[PIZZA] Delivery accepted. Stop %d/4.", gVX3JobStage[playerid] + 1);
+    return SendClientMessage(playerid, COLOR_GREEN, msg), 1;
+}
+
+stock VX3_CashStart(playerid)
+{
+    if (gVX3JobType[playerid]) return SendClientMessage(playerid, COLOR_RED, "[CASH] Finish your current delivery first."), 1;
+    if (IsPlayerInAnyVehicle(playerid) || !IsPlayerInRangeOfPoint(playerid, 22.0, 1478.0, -1020.0, 23.5))
+        return SendClientMessage(playerid, COLOR_RED, "[CASH] Start at the Los Santos bank on foot."), 1;
+    if (VX3_CreateJobVehicle(playerid, 428, 1473.0, -1020.0, 23.5, 180.0) == INVALID_VEHICLE_ID) return 1;
+    gVX3JobType[playerid] = 2; gVX3JobStage[playerid] = 0;
+    return SendClientMessage(playerid, COLOR_GREEN, "[CASH] Cash transfer route started. Visit 3 points and return to the bank; /cashdeliver."), 1;
+}
+
+stock VX3_CashDeliver(playerid)
+{
+    if (gVX3JobType[playerid] != 2 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || GetPlayerVehicleID(playerid) != gVX3JobVehicle[playerid])
+        return SendClientMessage(playerid, COLOR_RED, "[CASH] Start the transfer route with /cashjob."), 1;
+    new stage = gVX3JobStage[playerid];
+    if (stage < 3)
+    {
+        if (!IsPlayerInRangeOfPoint(playerid, 14.0, gVX3CashRoute[stage][0], gVX3CashRoute[stage][1], gVX3CashRoute[stage][2]))
+            return SendClientMessage(playerid, COLOR_YELLOW, "[CASH] Drive to the next bank/ATM point."), 1;
+        gVX3JobStage[playerid]++; GiveCash(playerid, 650);
+        return SendClientMessage(playerid, COLOR_GREEN, "[CASH] Collection secured. Continue to the next stop."), 1;
+    }
+    if (!IsPlayerInRangeOfPoint(playerid, 18.0, 1478.0, -1020.0, 23.5))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[CASH] Return the vehicle to the bank."), 1;
+    GiveCash(playerid, 1800); return VX3_JobStop(playerid, "[CASH] Route completed. Return bonus: $1800.");
+}
+
+stock VX3_SupplyStart(playerid, destination)
+{
+    if (gFaction[playerid] != FACTION_ARMY) return SendClientMessage(playerid, COLOR_RED, "[SUPPLY] Army personnel only."), 1;
+    if (gVX3JobType[playerid]) return SendClientMessage(playerid, COLOR_RED, "[SUPPLY] Finish your current job first."), 1;
+    if (IsPlayerInAnyVehicle(playerid) || !IsPlayerInRangeOfPoint(playerid, 25.0, 404.5, 2488.8, 17.5))
+        return SendClientMessage(playerid, COLOR_RED, "[SUPPLY] Start at the Army base on foot."), 1;
+    if (destination != FACTION_POLICE && destination != FACTION_FBI)
+        return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /supplystart 2 (LSPD) or /supplystart 7 (FBI)."), 1;
+    if (VX3_CreateJobVehicle(playerid, 433, 410.0, 2484.0, 17.5, 90.0) == INVALID_VEHICLE_ID) return 1;
+    gVX3JobType[playerid] = 3; gVX3JobStage[playerid] = 0; gVX3JobDestination[playerid] = destination;
+    return SendClientMessage(playerid, COLOR_GREEN, "[SUPPLY] Barracks loaded. Deliver organization materials to LSPD/FBI and use /supplydeliver."), 1;
+}
+
+stock VX3_SupplyDeliver(playerid)
+{
+    if (gVX3JobType[playerid] != 3 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || GetPlayerVehicleID(playerid) != gVX3JobVehicle[playerid])
+        return SendClientMessage(playerid, COLOR_RED, "[SUPPLY] Start with /supplystart 2|7."), 1;
+    new faction = gVX3JobDestination[playerid];
+    if (faction == FACTION_POLICE)
+    {
+        if (!IsPlayerInRangeOfPoint(playerid, 18.0, 1553.4399, -1675.5238, 16.1953))
+            return SendClientMessage(playerid, COLOR_YELLOW, "[SUPPLY] Drive to the LSPD loading point."), 1;
+    }
+    else if (!IsPlayerInRangeOfPoint(playerid, 18.0, -2281.9553, 2288.3784, 4.9739))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[SUPPLY] Drive to the FBI loading point."), 1;
+    new q[200]; format(q, sizeof q, "UPDATE org_stashes SET materials=materials+250 WHERE faction_id=%d", faction);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    GiveCash(playerid, 1500);
+    return VX3_JobStop(playerid, "[SUPPLY] Materials delivery accepted. +250 materials, +$1500.");
+}
+
+stock VX3_SellCarOffer(playerid, targetid, price)
+{
+    if (!VX_Valid(targetid) || targetid == playerid || !VX_Near(playerid, targetid, 4.0))
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Target must be online and within 4 meters."), 1;
+    if (!gOwnedCarModel[playerid] || gOwnedCarModel[targetid])
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Seller needs a car; buyer must not own one."), 1;
+    if (price < 1000 || price > 50000000 || gMoney[targetid] < price)
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Price must be $1,000-$50,000,000; buyer needs enough cash."), 1;
+    if (IsPlayerInAnyVehicle(playerid) || IsPlayerInAnyVehicle(targetid))
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Both players must be on foot."), 1;
+    new oldVehicle = gOwnedCarVehicle[playerid];
+    if (oldVehicle > 0 && oldVehicle < MAX_VEHICLES && IsFleetVehicleOccupied(oldVehicle))
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Your vehicle must be empty before sale."), 1;
+    gVX3CarOfferFrom[targetid] = playerid; gVX3CarOfferPrice[targetid] = price; gVX3CarOfferUntil[targetid] = gettime() + 60;
+    new msg[160]; format(msg, sizeof msg, "[CAR] %s offers model %d for $%d. Type /acceptcar or /declinecar within 60 seconds.", gName[playerid], gOwnedCarModel[playerid], price);
+    SendClientMessage(targetid, COLOR_YELLOW, msg);
+    return SendClientMessage(playerid, COLOR_GREEN, "[CAR] Offer sent. Buyer has 60 seconds to accept."), 1;
+}
+
+stock VX3_SellCarAccept(playerid)
+{
+    new seller = gVX3CarOfferFrom[playerid], price = gVX3CarOfferPrice[playerid];
+    if (!VX_Valid(seller) || gVX3CarOfferUntil[playerid] < gettime()) return SendClientMessage(playerid, COLOR_RED, "[CAR] No active offer."), 1;
+    if (gOwnedCarModel[playerid] || !gOwnedCarModel[seller] || gMoney[playerid] < price)
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Offer invalid or insufficient funds."), 1;
+    if (!VX_Near(playerid, seller, 4.0) || IsPlayerInAnyVehicle(playerid) || IsPlayerInAnyVehicle(seller))
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Both players must be on foot and nearby."), 1;
+    new oldVehicle = gOwnedCarVehicle[seller];
+    if (oldVehicle > 0 && oldVehicle < MAX_VEHICLES && IsFleetVehicleOccupied(oldVehicle))
+        return SendClientMessage(playerid, COLOR_RED, "[CAR] Seller's vehicle must be empty."), 1;
+    RP_SaveCar(seller);
+    new model = gOwnedCarModel[seller], q[400];
+    if (!VX_Begin()) return VX_Error(playerid);
+    VX_MoneySQL(playerid, gMoney[playerid] - price, gBankMoney[playerid]);
+    VX_MoneySQL(seller, gMoney[seller] + price, gBankMoney[seller]);
+    format(q, sizeof q, "UPDATE accounts SET ownedcar=%d WHERE name='%q'", model, gName[playerid]); VX_SQL(q);
+    format(q, sizeof q, "UPDATE accounts SET ownedcar=0 WHERE name='%q'", gName[seller]); VX_SQL(q);
+    format(q, sizeof q, "UPDATE rp_vehicles SET owner='%q' WHERE owner='%q'", gName[playerid], gName[seller]); VX_SQL(q);
+    format(q, sizeof q, "DELETE FROM rp_keys WHERE owner='%q'", gName[seller]); VX_SQL(q);
+    if (!VX_Commit()) return VX_Error(playerid);
+    if (oldVehicle > 0 && oldVehicle < MAX_VEHICLES && RP_VehicleOwner(oldVehicle) == seller)
+    {
+        gPersonalVehicleOwner[oldVehicle] = INVALID_PLAYER_ID; DestroyVehicle(oldVehicle);
+    }
+    gOwnedCarVehicle[seller] = INVALID_VEHICLE_ID; gOwnedCarModel[seller] = 0; gOwnedCarModel[playerid] = model;
+    gRPCarKm[seller] = 0.0; gRPCarHealth[seller] = 1000.0; gRPCarFuel[seller] = 100;
+    gRPCarBroken[seller] = false; gRPCarRegistered[seller] = false;
+    RP_LoadCar(playerid);
+    VX_MoneySync(playerid, gMoney[playerid] - price, gBankMoney[playerid]);
+    VX_MoneySync(seller, gMoney[seller] + price, gBankMoney[seller]);
+    gVX3CarOfferFrom[playerid] = INVALID_PLAYER_ID; gVX3CarOfferPrice[playerid] = 0; gVX3CarOfferUntil[playerid] = 0;
+    SendClientMessage(seller, COLOR_GREEN, "[CAR] Your vehicle was sold successfully.");
+    return SendClientMessage(playerid, COLOR_GREEN, "[CAR] Purchase completed. Use /mycar at the dealership to spawn it."), 1;
+}
+
+stock VX3_Megaphone(playerid, const text[])
+{
+    if ((gFaction[playerid] != FACTION_POLICE && gFaction[playerid] != FACTION_FBI) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+        return SendClientMessage(playerid, COLOR_RED, "[MEGAPHONE] LSPD/FBI drivers only."), 1;
+    new v = GetPlayerVehicleID(playerid), model = GetVehicleModel(v);
+    if (!((model >= 596 && model <= 599) || model == 490 || model == 528))
+        return SendClientMessage(playerid, COLOR_RED, "[MEGAPHONE] Drive an official police/FBI vehicle."), 1;
+    new clean[128], msg[180], Float:x, Float:y, Float:z;
+    VX_CleanText(text, clean, sizeof clean);
+    if (!strlen(clean)) return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /m [announcement]"), 1;
+    GetPlayerPos(playerid, x, y, z); format(msg, sizeof msg, "[MEGAPHONE] %s: %s", gName[playerid], clean);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (VX_Valid(i) && GetPlayerVirtualWorld(i) == GetPlayerVirtualWorld(playerid)
+            && GetPlayerInterior(i) == GetPlayerInterior(playerid) && IsPlayerInRangeOfPoint(i, 60.0, x, y, z))
+            SendClientMessage(i, COLOR_YELLOW, msg);
+    return 1;
+}
+
+stock VX3_Command(playerid, const cmdtext[])
+{
+    new cmd[32], params[160], a[32], b[32], c[32];
+    GetToken(cmdtext, 0, cmd, sizeof cmd); GetParams(cmdtext, params, sizeof params);
+    GetToken(params, 0, a, sizeof a); GetToken(params, 1, b, sizeof b); GetToken(params, 2, c, sizeof c);
+    if (!strcmp(cmd, "/vex3", true))
+        return SendClientMessage(playerid, COLOR_YELLOW, "VEXORIUM 3.0: /trunk /glovebox /can /sellcar /acceptcar /fishbuy /fish /fishsell /pizzajob /pizzadeliver /cashjob /cashdeliver /supplystart /supplydeliver /m /jobstop"), 1;
+    if (!strcmp(cmd, "/trunk", true) || !strcmp(cmd, "/glovebox", true))
+    {
+        new kind = !strcmp(cmd, "/trunk", true) ? 0 : 1;
+        if (!strlen(a)) return VX3_StorageShow(playerid, kind);
+        if (!strcmp(a, "put", true) || !strcmp(a, "take", true))
+        {
+            new slot = strval(b), amount = strval(c);
+            if (slot < 1 || slot > 6 || amount < 1) return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /trunk put|take [slot 1-6] [amount]"), 1;
+            return VX3_StorageTransfer(playerid, kind, !strcmp(a, "put", true) ? 0 : 1, slot - 1, amount);
+        }
+        return SendClientMessage(playerid, COLOR_YELLOW, "Usage: /trunk put|take [slot 1-6] [amount]"), 1;
+    }
+    if (!strcmp(cmd, "/can", true)) return VX3_Canister(playerid, a, b);
+    if (!strcmp(cmd, "/sellcar", true)) return VX3_SellCarOffer(playerid, strval(a), strval(b));
+    if (!strcmp(cmd, "/acceptcar", true)) return VX3_SellCarAccept(playerid);
+    if (!strcmp(cmd, "/declinecar", true))
+    {
+        if (gVX3CarOfferFrom[playerid] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_YELLOW, "[CAR] No offer to decline."), 1;
+        gVX3CarOfferFrom[playerid] = INVALID_PLAYER_ID; gVX3CarOfferPrice[playerid] = 0; gVX3CarOfferUntil[playerid] = 0;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[CAR] Offer declined."), 1;
+    }
+    if (!strcmp(cmd, "/fishbuy", true)) return VX3_FishBuy(playerid, a, strval(b));
+    if (!strcmp(cmd, "/fish", true))
+    {
+        if (gVX3FishState[playerid] == 2) return VX3_FishKey(playerid, true);
+        return VX3_FishStart(playerid);
+    }
+    if (!strcmp(cmd, "/fishsell", true)) return VX3_FishSell(playerid);
+    if (!strcmp(cmd, "/pizzajob", true)) return VX3_PizzaStart(playerid);
+    if (!strcmp(cmd, "/pizzadeliver", true)) return VX3_PizzaDeliver(playerid);
+    if (!strcmp(cmd, "/cashjob", true)) return VX3_CashStart(playerid);
+    if (!strcmp(cmd, "/cashdeliver", true)) return VX3_CashDeliver(playerid);
+    if (!strcmp(cmd, "/supplystart", true)) return VX3_SupplyStart(playerid, strval(a));
+    if (!strcmp(cmd, "/supplydeliver", true)) return VX3_SupplyDeliver(playerid);
+    if (!strcmp(cmd, "/jobstop", true)) return VX3_JobStop(playerid, "[JOB] You left your current Vexorium 3.0 job.");
+    if (!strcmp(cmd, "/m", true)) return VX3_Megaphone(playerid, params);
+    return 0;
+}
+
+stock VX3_KeyState(playerid, newkeys, oldkeys)
+{
+    if (gVX3FishState[playerid])
+    {
+        if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) return VX3_FishKey(playerid, true);
+        if ((newkeys & KEY_NO) && !(oldkeys & KEY_NO)) return VX3_FishKey(playerid, false);
+    }
+    return 0;
+}
+
+public VX3_Tick()
+{
+    for (new p = 0; p < MAX_PLAYERS; p++)
+    {
+        if (!IsPlayerConnected(p) || !gLogged[p]) continue;
+        if (gVX3CarOfferFrom[p] != INVALID_PLAYER_ID && gVX3CarOfferUntil[p] < gettime())
+        {
+            gVX3CarOfferFrom[p] = INVALID_PLAYER_ID; gVX3CarOfferPrice[p] = 0; gVX3CarOfferUntil[p] = 0;
+        }
+        if (gVX3FishState[p] == 1 && gVX3FishSeconds[p] > 0)
+        {
+            gVX3FishSeconds[p]--;
+            if (gVX3FishSeconds[p] <= 0)
+            {
+                gVX3FishState[p] = 2;
+                SendClientMessage(p, COLOR_YELLOW, "[FISH] BITE! Press Y to pull the line or N to stop.");
+            }
+        }
+    }
+    return 1;
 }
