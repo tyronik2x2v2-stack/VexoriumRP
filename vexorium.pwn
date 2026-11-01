@@ -128,16 +128,16 @@ new const gVXClothesModel[VX_CLOTHES_COUNT] = {7,14,20,23,46,48,56,60,93,188,193
 new const gVXClothesPrice[VX_CLOTHES_COUNT] = {35000,50000,65000,85000,110000,140000,180000,220000,270000,330000,400000,500000};
 new const gVXClothesLabel[VX_CLOTHES_COUNT][32] =
 {
-    "Р“РѕСЂРѕРґСЃРєРѕР№", "РџРѕРІСЃРµРґРЅРµРІРЅС‹Р№", "РЎРїРѕСЂС‚РёРІРЅС‹Р№", "РљР»Р°СЃСЃРёС‡РµСЃРєРёР№",
-    "РЎРІРѕР±РѕРґРЅС‹Р№", "РЈР»РёС‡РЅС‹Р№", "РЎС‚РёР»СЊРЅС‹Р№", "РњРѕР»РѕРґС‘Р¶РЅС‹Р№",
-    "Р”РµР»РѕРІРѕР№", "РњРѕРґРЅС‹Р№", "Р’РµС‡РµСЂРЅРёР№", "РџСЂРµРјРёСѓРј"
+    "Городской", "Повседневный", "Спортивный", "Классический",
+    "Свободный", "Уличный", "Стильный", "Молодёжный",
+    "Деловой", "Модный", "Вечерний", "Премиум"
 };
 new gFaction[MAX_PLAYERS];
 new gFactionRank[MAX_PLAYERS];
 new gOrgInviteFrom[MAX_PLAYERS];
 new bool:gPoliceCivilianSkin[MAX_PLAYERS];
 new gGang[MAX_PLAYERS];
-new gSpawnPreference[MAX_PLAYERS]; // 0 = РЅРµ РІС‹Р±СЂР°РЅРѕ, 1 = РѕСЂРіР°РЅРёР·Р°С†РёСЏ, 2 = РІРѕРєР·Р°Р»
+new gSpawnPreference[MAX_PLAYERS]; // 0 = не выбрано, 1 = организация, 2 = вокзал
 new gRentalVehicle[MAX_PLAYERS];
 new gBaseScooter = INVALID_VEHICLE_ID;
 new bool:gPendingScooterChoice[MAX_PLAYERS];
@@ -551,7 +551,7 @@ new gVXDropItem[VX_MAX_DROPS], gVXDropQty[VX_MAX_DROPS], gVXDropExpiry[VX_MAX_DR
 new gVXDropWorld[VX_MAX_DROPS], gVXDropInterior[VX_MAX_DROPS], gVXDropPickup[VX_MAX_DROPS];
 new Float:gVXDropPos[VX_MAX_DROPS][3];
 new Text3D:gVXDropLabel[VX_MAX_DROPS];
-new const gVXItemName[6][24] = {"РђРїС‚РµС‡РєР°", "Р•РґР°", "Р’РѕРґР°", "Р РµРјРєРѕРјРїР»РµРєС‚", "SIM-РєР°СЂС‚Р°", "РћС‚РјС‹С‡РєР°"};
+new const gVXItemName[6][24] = {"Аптечка", "Еда", "Вода", "Ремкомплект", "SIM-карта", "Отмычка"};
 new const gVXItemWeight[6] = {1000,500,500,2000,10,100};
 new const Float:gVXBedPos[VX_BEDS][3] = {
  {1987.0,1988.0,1001.0},{1992.0,1988.0,1001.0},{1997.0,1988.0,1001.0},
@@ -668,86 +668,86 @@ stock GetFactionName(faction, output[], size)
 {
     switch (faction)
     {
-        case FACTION_CITYHALL: format(output, size, "РњСЌСЂРёСЏ");
-        case FACTION_POLICE: format(output, size, "РџРѕР»РёС†РёСЏ");
-        case FACTION_HOSPITAL: format(output, size, "Р‘Р¦Р Р‘");
-        case FACTION_ARMY: format(output, size, "РђСЂРјРёСЏ");
-        case FACTION_NAVY: format(output, size, "Р’РњР¤");
-        case FACTION_AIRFORCE: format(output, size, "Р’Р’РЎ");
+        case FACTION_CITYHALL: format(output, size, "Мэрия");
+        case FACTION_POLICE: format(output, size, "Полиция");
+        case FACTION_HOSPITAL: format(output, size, "БЦРБ");
+        case FACTION_ARMY: format(output, size, "Армия");
+        case FACTION_NAVY: format(output, size, "ВМФ");
+        case FACTION_AIRFORCE: format(output, size, "ВВС");
         case FACTION_FBI: format(output, size, "FBI");
-        default: format(output, size, "РќРµС‚ С„СЂР°РєС†РёРё");
+        default: format(output, size, "Нет фракции");
     }
     return 1;
 }
 
 stock GetFactionRankName(faction, rank, output[], size)
 {
-    if (rank < 1 || rank > 10) { format(output, size, "РќРµС‚ СЂР°РЅРіР°"); return 1; }
+    if (rank < 1 || rank > 10) { format(output, size, "Нет ранга"); return 1; }
     if (faction == FACTION_CITYHALL)
     {
         switch (rank)
         {
-            case 1: format(output, size, "РЎС‚Р°Р¶С‘СЂ");
-            case 2: format(output, size, "РЎРµРєСЂРµС‚Р°СЂСЊ");
-            case 3: format(output, size, "РџРѕРјРѕС‰РЅРёРє");
-            case 4: format(output, size, "РЎРїРµС†РёР°Р»РёСЃС‚");
-            case 5: format(output, size, "РќР°С‡Р°Р»СЊРЅРёРє РѕС‚РґРµР»Р°");
-            case 6: format(output, size, "Р—Р°РјРµСЃС‚РёС‚РµР»СЊ РіР»Р°РІС‹");
-            case 7: format(output, size, "РЎРѕРІРµС‚РЅРёРє");
-            case 8: format(output, size, "Р—Р°РјРµСЃС‚РёС‚РµР»СЊ РјСЌСЂР°");
-            case 9: format(output, size, "Р’РёС†Рµ-РјСЌСЂ");
-            case 10: format(output, size, "РњСЌСЂ");
+            case 1: format(output, size, "Стажёр");
+            case 2: format(output, size, "Секретарь");
+            case 3: format(output, size, "Помощник");
+            case 4: format(output, size, "Специалист");
+            case 5: format(output, size, "Начальник отдела");
+            case 6: format(output, size, "Заместитель главы");
+            case 7: format(output, size, "Советник");
+            case 8: format(output, size, "Заместитель мэра");
+            case 9: format(output, size, "Вице-мэр");
+            case 10: format(output, size, "Мэр");
         }
     }
     else if (faction == FACTION_POLICE)
     {
         switch (rank)
         {
-            case 1: format(output, size, "РљР°РґРµС‚");
-            case 2: format(output, size, "Р СЏРґРѕРІРѕР№");
-            case 3: format(output, size, "РЎРµСЂР¶Р°РЅС‚");
-            case 4: format(output, size, "РЎС‚Р°СЂС€РёРЅР°");
-            case 5: format(output, size, "РџСЂР°РїРѕСЂС‰РёРє");
-            case 6: format(output, size, "Р›РµР№С‚РµРЅР°РЅС‚");
-            case 7: format(output, size, "РљР°РїРёС‚Р°РЅ");
-            case 8: format(output, size, "РњР°Р№РѕСЂ");
-            case 9: format(output, size, "РџРѕР»РєРѕРІРЅРёРє");
-            case 10: format(output, size, "РќР°С‡Р°Р»СЊРЅРёРє РїРѕР»РёС†РёРё");
+            case 1: format(output, size, "Кадет");
+            case 2: format(output, size, "Рядовой");
+            case 3: format(output, size, "Сержант");
+            case 4: format(output, size, "Старшина");
+            case 5: format(output, size, "Прапорщик");
+            case 6: format(output, size, "Лейтенант");
+            case 7: format(output, size, "Капитан");
+            case 8: format(output, size, "Майор");
+            case 9: format(output, size, "Полковник");
+            case 10: format(output, size, "Начальник полиции");
         }
     }
     else if (faction == FACTION_HOSPITAL)
     {
         switch (rank)
         {
-            case 1: format(output, size, "РРЅС‚РµСЂРЅ");
-            case 2: format(output, size, "РњРµРґР±СЂР°С‚/РјРµРґСЃРµСЃС‚СЂР°");
-            case 3: format(output, size, "Р¤РµР»СЊРґС€РµСЂ");
-            case 4: format(output, size, "РњРµРґРёС†РёРЅСЃРєРёР№ С‚РµС…РЅРёРє");
-            case 5: format(output, size, "Р’СЂР°С‡");
-            case 6: format(output, size, "РҐРёСЂСѓСЂРі");
-            case 7: format(output, size, "Р—Р°РІРµРґСѓСЋС‰РёР№ РѕС‚РґРµР»РµРЅРёРµРј");
-            case 8: format(output, size, "Р—Р°РјРµСЃС‚РёС‚РµР»СЊ РіР»Р°РІРІСЂР°С‡Р°");
-            case 9: format(output, size, "Р“Р»Р°РІРІСЂР°С‡");
-            case 10: format(output, size, "РњРёРЅРёСЃС‚СЂ Р·РґСЂР°РІРѕРѕС…СЂР°РЅРµРЅРёСЏ");
+            case 1: format(output, size, "Интерн");
+            case 2: format(output, size, "Медбрат/медсестра");
+            case 3: format(output, size, "Фельдшер");
+            case 4: format(output, size, "Медицинский техник");
+            case 5: format(output, size, "Врач");
+            case 6: format(output, size, "Хирург");
+            case 7: format(output, size, "Заведующий отделением");
+            case 8: format(output, size, "Заместитель главврача");
+            case 9: format(output, size, "Главврач");
+            case 10: format(output, size, "Министр здравоохранения");
         }
     }
     else if (faction == FACTION_ARMY || faction == FACTION_NAVY || faction == FACTION_AIRFORCE || faction == FACTION_FBI)
     {
         switch (rank)
         {
-            case 1: format(output, size, "Р РµРєСЂСѓС‚");
-            case 2: format(output, size, "Р СЏРґРѕРІРѕР№");
-            case 3: format(output, size, "Р•С„СЂРµР№С‚РѕСЂ");
-            case 4: format(output, size, "РњР»Р°РґС€РёР№ СЃРµСЂР¶Р°РЅС‚");
-            case 5: format(output, size, "РЎРµСЂР¶Р°РЅС‚");
-            case 6: format(output, size, "РЎС‚Р°СЂС€РёРЅР°");
-            case 7: format(output, size, "РџСЂР°РїРѕСЂС‰РёРє");
-            case 8: format(output, size, "Р›РµР№С‚РµРЅР°РЅС‚");
-            case 9: format(output, size, "РџРѕР»РєРѕРІРЅРёРє");
-            case 10: format(output, size, "РљРѕРјР°РЅРґСѓСЋС‰РёР№");
+            case 1: format(output, size, "Рекрут");
+            case 2: format(output, size, "Рядовой");
+            case 3: format(output, size, "Ефрейтор");
+            case 4: format(output, size, "Младший сержант");
+            case 5: format(output, size, "Сержант");
+            case 6: format(output, size, "Старшина");
+            case 7: format(output, size, "Прапорщик");
+            case 8: format(output, size, "Лейтенант");
+            case 9: format(output, size, "Полковник");
+            case 10: format(output, size, "Командующий");
         }
     }
-    else format(output, size, "РќРµС‚ СЂР°РЅРіР°");
+    else format(output, size, "Нет ранга");
     return 1;
 }
 
@@ -760,8 +760,8 @@ stock CommandMatch(const cmdtext[], const command[])
 
 stock HideVexDefaultHud(playerid)
 {
-    // Р’ СЃС‚Р°РЅРґР°СЂС‚РЅРѕРј SA-MP 0.3.7 РЅРµС‚ native РґР»СЏ СЃРєСЂС‹С‚РёСЏ РѕС‚РґРµР»СЊРЅС‹С… СЌР»РµРјРµРЅС‚РѕРІ HUD.
-    // РћСЃС‚Р°РІР»СЏРµРј СЃРѕРІРјРµСЃС‚РёРјСѓСЋ Р·Р°РіР»СѓС€РєСѓ, С‡С‚РѕР±С‹ РёСЃС…РѕРґРЅРёРє РєРѕРјРїРёР»РёСЂРѕРІР°Р»СЃСЏ.
+    // В стандартном SA-MP 0.3.7 нет native для скрытия отдельных элементов HUD.
+    // Оставляем совместимую заглушку, чтобы исходник компилировался.
     #pragma unused playerid
     return 1;
 }
@@ -817,23 +817,23 @@ stock GetHudFactionName(playerid, output[], size)
     {
         switch (gGang[playerid])
         {
-            case 1: format(output, size, "Р“Р РЈР’");
-            case 2: format(output, size, "Р‘РђР›Р›РђРЎ");
-            case 3: format(output, size, "Р’РђР“РћРЎ");
-            case 4: format(output, size, "РђР¦РўР•РљР");
+            case 1: format(output, size, "ГРУВ");
+            case 2: format(output, size, "БАЛЛАС");
+            case 3: format(output, size, "ВАГОС");
+            case 4: format(output, size, "АЦТЕКИ");
         }
         return 1;
     }
     switch (gFaction[playerid])
     {
-        case FACTION_CITYHALL: format(output, size, "РњР­Р РРЇ");
-        case FACTION_POLICE: format(output, size, "РџРћР›РР¦РРЇ");
-        case FACTION_HOSPITAL: format(output, size, "Р‘Р¦Р Р‘");
-        case FACTION_ARMY: format(output, size, "РђР РњРРЇ");
-        case FACTION_NAVY: format(output, size, "Р’РњР¤");
-        case FACTION_AIRFORCE: format(output, size, "Р’Р’РЎ");
-        case FACTION_FBI: format(output, size, "Р¤Р‘Р ");
-        default: format(output, size, "Р“Р РђР–Р”РђРќРРќ");
+        case FACTION_CITYHALL: format(output, size, "МЭРИЯ");
+        case FACTION_POLICE: format(output, size, "ПОЛИЦИЯ");
+        case FACTION_HOSPITAL: format(output, size, "БЦРБ");
+        case FACTION_ARMY: format(output, size, "АРМИЯ");
+        case FACTION_NAVY: format(output, size, "ВМФ");
+        case FACTION_AIRFORCE: format(output, size, "ВВС");
+        case FACTION_FBI: format(output, size, "ФБР");
+        default: format(output, size, "ГРАЖДАНИН");
     }
     return 1;
 }
@@ -1119,8 +1119,8 @@ stock CreateVexHud(playerid)
     VexHudStoreValue(playerid, VHV_ID, VexHudText(playerid, 616.0, 16.0, "_", 0.150, 0.90, VEX_HUD_MUTED, 3, 3));
     VexHudStoreValue(playerid, VHV_NAME, VexHudText(playerid, 486.0, 30.0, "_", 0.170, 0.90, VEX_HUD_WHITE, 1, 1));
     VexHudRect(playerid, 486.0, 43.0, 130.0, 0.7, 0xFFFFFF18);
-    VexHudText(playerid, 486.0, 47.0, "Р—Р”РћР РћР’Р¬Р•", 0.140, 0.85, VEX_HUD_MUTED, 1, 1);
-    VexHudText(playerid, 560.0, 47.0, "Р‘Р РћРќРЇ", 0.140, 0.85, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 486.0, 47.0, "ЗДОРОВЬЕ", 0.140, 0.85, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 560.0, 47.0, "БРОНЯ", 0.140, 0.85, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_HEALTH, VexHudText(playerid, 548.0, 45.0, "_", 0.185, 1.00, VEX_HUD_WHITE, 3, 3));
     VexHudStoreValue(playerid, VHV_ARMOUR, VexHudText(playerid, 616.0, 45.0, "_", 0.185, 1.00, VEX_HUD_WHITE, 3, 3));
     VexHudRect(playerid, 486.0, 59.0, 62.0, 4.0, VEX_HUD_TRACK);
@@ -1129,24 +1129,24 @@ stock CreateVexHud(playerid)
     VexHudStoreBar(playerid, VHB_ARMOUR, VexHudRect(playerid, 560.0, 59.0, 56.0, 4.0, VEX_HUD_ARMOUR));
     VexHudRect(playerid, 482.0, 65.0, 138.0, 16.0, 0x111D2AFF);
     VexHudRect(playerid, 482.0, 81.0, 138.0, 16.0, 0x0D1925FF);
-    VexHudText(playerid, 486.0, 69.0, "РќРђР›РР§РќР«Р•", 0.155, 0.90, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 486.0, 69.0, "НАЛИЧНЫЕ", 0.155, 0.90, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_CASH, VexHudText(playerid, 616.0, 67.0, "_", 0.195, 1.10, VEX_HUD_ACCENT, 3, 3));
-    VexHudText(playerid, 486.0, 85.0, "Р‘РђРќРљ", 0.155, 0.90, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 486.0, 85.0, "БАНК", 0.155, 0.90, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_BANK, VexHudText(playerid, 616.0, 83.0, "_", 0.185, 1.00, VEX_HUD_WHITE, 3, 3));
     VexHudRect(playerid, 486.0, 97.0, 130.0, 0.7, 0xFFFFFF18);
-    VexHudText(playerid, 486.0, 103.0, "РЈР РћР’Р•РќР¬", 0.145, 0.85, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 486.0, 103.0, "УРОВЕНЬ", 0.145, 0.85, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_LEVEL, VexHudText(playerid, 548.0, 101.0, "_", 0.195, 1.05, VEX_HUD_WHITE, 3, 3));
     VexHudStoreValue(playerid, VHV_XP, VexHudText(playerid, 616.0, 103.0, "_", 0.125, 0.85, VEX_HUD_MUTED, 3, 3));
     VexHudRect(playerid, 486.0, 117.0, 130.0, 2.0, VEX_HUD_TRACK);
     VexHudStoreBar(playerid, VHB_XP, VexHudRect(playerid, 486.0, 117.0, 130.0, 2.0, VEX_HUD_ACCENT));
-    VexHudText(playerid, 486.0, 125.0, "РћР Р“РђРќРР—РђР¦РРЇ", 0.130, 0.85, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 486.0, 125.0, "ОРГАНИЗАЦИЯ", 0.130, 0.85, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_FACTION, VexHudText(playerid, 616.0, 123.0, "_", 0.170, 0.95, VEX_HUD_WHITE, 3, 1));
-    VexHudText(playerid, 486.0, 141.0, "Р РћР—Р«РЎРљ", 0.135, 0.80, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 486.0, 141.0, "РОЗЫСК", 0.135, 0.80, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_WANTED, VexHudText(playerid, 544.0, 139.0, "_", 0.160, 0.90, VEX_HUD_WARNING, 3, 3));
-    VexHudText(playerid, 558.0, 141.0, "РџРђРўР РћРќР«", 0.130, 0.80, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 558.0, 141.0, "ПАТРОНЫ", 0.130, 0.80, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_AMMO, VexHudText(playerid, 616.0, 139.0, "_", 0.150, 0.90, VEX_HUD_WHITE, 3, 3));
 
-    VexHudText(playerid, 486.0, 155.0, "РћР РЈР–РР•", 0.135, 0.80, VEX_HUD_MUTED);
+    VexHudText(playerid, 486.0, 155.0, "ОРУЖИЕ", 0.135, 0.80, VEX_HUD_MUTED);
     VexHudStoreValue(playerid, VHV_WEAPON,
         VexHudText(playerid, 616.0, 153.0, "_", 0.135, 0.85, VEX_HUD_WHITE, 3, 1));
 
@@ -1177,8 +1177,8 @@ stock CreateVexHud(playerid)
     VexHudRect(playerid, 472.0, 358.0, 2.0, 80.0, VEX_HUD_ACCENT);
     VexHudText(playerid, 483.0, 363.0, "VEX DRIVE", 0.175, 0.95, VEX_HUD_ACCENT, 1, 1);
     VexHudStoreValue(playerid, VHV_SPEED, VexHudText(playerid, 483.0, 381.0, "_", 0.430, 2.00, VEX_HUD_WHITE, 1, 1));
-    VexHudText(playerid, 540.0, 394.0, "РљРњ/Р§", 0.125, 0.75, VEX_HUD_MUTED, 1, 1);
-    VexHudText(playerid, 574.0, 380.0, "РўРћРџР›РР’Рћ", 0.125, 0.75, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 540.0, 394.0, "КМ/Ч", 0.125, 0.75, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 574.0, 380.0, "ТОПЛИВО", 0.125, 0.75, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_FUEL, VexHudText(playerid, 624.0, 389.0, "_", 0.190, 1.05, VEX_HUD_WHITE, 3, 3));
     VexHudRect(playerid, 574.0, 405.0, 50.0, 3.0, VEX_HUD_TRACK);
     VexHudStoreBar(playerid, VHB_FUEL, VexHudRect(playerid, 574.0, 405.0, 50.0, 3.0, VEX_HUD_ACCENT));
@@ -1186,7 +1186,7 @@ stock CreateVexHud(playerid)
     VexHudStoreBar(playerid, VHB_SPEED, VexHudRect(playerid, 483.0, 405.0, 76.0, 3.0, VEX_HUD_ACCENT));
     VexHudStoreValue(playerid, VHV_ENGINE, VexHudText(playerid, 483.0, 414.0, "_", 0.135, 0.80, VEX_HUD_WHITE, 1, 1));
     VexHudStoreValue(playerid, VHV_LOCK, VexHudText(playerid, 624.0, 414.0, "_", 0.125, 0.75, VEX_HUD_MUTED, 3, 1));
-    VexHudText(playerid, 483.0, 429.0, "РљРЈР—РћР’", 0.130, 0.75, VEX_HUD_MUTED, 1, 1);
+    VexHudText(playerid, 483.0, 429.0, "КУЗОВ", 0.130, 0.75, VEX_HUD_MUTED, 1, 1);
     VexHudStoreValue(playerid, VHV_BODY, VexHudText(playerid, 536.0, 427.0, "_", 0.155, 0.85, VEX_HUD_WHITE, 3, 3));
     if (!VX_CreateHudToast(playerid)) gVexHudBuildFailed[playerid] = true;
 
@@ -1194,7 +1194,7 @@ stock CreateVexHud(playerid)
     {
         DestroyVexHud(playerid);
         printf("[VEXORIUM HUD] Creation failed for player %d; check textdraw limits.", playerid);
-        SendClientMessage(playerid, COLOR_RED, "[HUD] РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РёРЅС‚РµСЂС„РµР№СЃ. РџСЂРѕРІРµСЂСЊС‚Рµ server_log.txt.");
+        SendClientMessage(playerid, COLOR_RED, "[HUD] Не удалось создать интерфейс. Проверьте server_log.txt.");
         return 0;
     }
     gHudCreated[playerid] = true;
@@ -1226,7 +1226,7 @@ stock UpdateVexNav(playerid)
     cells[4] = 4;
     if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0)
     {
-        VexHudSetValue(playerid, VHV_NAV_MARKET, "Р’ РџРћРњР•Р©Р•РќРР");
+        VexHudSetValue(playerid, VHV_NAV_MARKET, "В ПОМЕЩЕНИИ");
         VexHudSetValue(playerid, VHV_NAV_FUEL, "");
     }
     else
@@ -1258,19 +1258,19 @@ stock UpdateVexNav(playerid)
             }
         }
         new label[64];
-        if (bestM > 450.0) format(label, sizeof label, "РњРђР“РђР—РРќ: РќР•Рў");
-        else format(label, sizeof label, "РњРђР“РђР—РРќ: %d Рњ", floatround(bestM));
+        if (bestM > 450.0) format(label, sizeof label, "МАГАЗИН: НЕТ");
+        else format(label, sizeof label, "МАГАЗИН: %d М", floatround(bestM));
         VexHudSetValue(playerid, VHV_NAV_MARKET, label);
-        if (bestA > 450.0) format(label, sizeof label, "РђР—РЎ: РќР•Рў");
-        else format(label, sizeof label, "РђР—РЎ: %d Рњ", floatround(bestA));
+        if (bestA > 450.0) format(label, sizeof label, "АЗС: НЕТ");
+        else format(label, sizeof label, "АЗС: %d М", floatround(bestA));
         VexHudSetValue(playerid, VHV_NAV_FUEL, label);
     }
     new Float:angle;
     GetPlayerFacingAngle(playerid, angle);
-    if (angle >= 315.0 || angle < 45.0) VexHudSetValue(playerid, VHV_NAV_DIRECTION, "РЎ");
-    else if (angle < 135.0) VexHudSetValue(playerid, VHV_NAV_DIRECTION, "Р’");
-    else if (angle < 225.0) VexHudSetValue(playerid, VHV_NAV_DIRECTION, "Р®");
-    else VexHudSetValue(playerid, VHV_NAV_DIRECTION, "Р—");
+    if (angle >= 315.0 || angle < 45.0) VexHudSetValue(playerid, VHV_NAV_DIRECTION, "С");
+    else if (angle < 135.0) VexHudSetValue(playerid, VHV_NAV_DIRECTION, "В");
+    else if (angle < 225.0) VexHudSetValue(playerid, VHV_NAV_DIRECTION, "Ю");
+    else VexHudSetValue(playerid, VHV_NAV_DIRECTION, "З");
     for (new c = 0; c < 9; c++) VexNavSetCell(playerid, c, cells[c]);
     return 1;
 }
@@ -1334,16 +1334,16 @@ stock UpdateVexHud(playerid)
     VexHudSetValue(playerid, VHV_AMMO, text);
     switch (weapon)
     {
-        case 0: format(text, sizeof text, "РљРЈР›РђРљР");
-        case 3: format(text, sizeof text, "Р”РЈР‘РРќРљРђ");
-        case 22: format(text, sizeof text, "РџРРЎРўРћР›Р•Рў");
-        case 23: format(text, sizeof text, "РўРђР™Р—Р•Р ");
+        case 0: format(text, sizeof text, "КУЛАКИ");
+        case 3: format(text, sizeof text, "ДУБИНКА");
+        case 22: format(text, sizeof text, "ПИСТОЛЕТ");
+        case 23: format(text, sizeof text, "ТАЙЗЕР");
         case 24: format(text, sizeof text, "DESERT EAGLE");
-        case 25, 26, 27: format(text, sizeof text, "Р”Р РћР‘РћР’РРљ");
-        case 28, 29, 32: format(text, sizeof text, "РџРРЎРўРћР›Р•Рў-РџРЈР›Р•РњРЃРў");
-        case 30: format(text, sizeof text, "РђРљ-47");
+        case 25, 26, 27: format(text, sizeof text, "ДРОБОВИК");
+        case 28, 29, 32: format(text, sizeof text, "ПИСТОЛЕТ-ПУЛЕМЁТ");
+        case 30: format(text, sizeof text, "АК-47");
         case 31: format(text, sizeof text, "M4");
-        case 33, 34: format(text, sizeof text, "Р’РРќРўРћР’РљРђ");
+        case 33, 34: format(text, sizeof text, "ВИНТОВКА");
         default: format(text, sizeof text, "ID %d", weapon);
     }
     VexHudSetValue(playerid, VHV_WEAPON, text);
@@ -1383,12 +1383,12 @@ stock UpdateVexHud(playerid)
     VexHudSetBar(playerid, VHB_FUEL, fuel, fuel <= 15 ? 0xFF465FFF : VEX_HUD_ACCENT);
     new engine, lights, alarm, doors, bonnet, boot, objective;
     GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
-    if (engine == VEHICLE_PARAMS_ON) VexHudSetValue(playerid, VHV_ENGINE, "~g~Р”Р’РР“: Р’РљР›");
-    else if (engine == VEHICLE_PARAMS_OFF) VexHudSetValue(playerid, VHV_ENGINE, "~r~Р”Р’РР“: Р’Р«РљР›");
-    else VexHudSetValue(playerid, VHV_ENGINE, "Р”Р’РР“: --");
-    if (doors == VEHICLE_PARAMS_ON) VexHudSetValue(playerid, VHV_LOCK, "Р—РђРљР Р«РўРћ");
-    else if (doors == VEHICLE_PARAMS_OFF) VexHudSetValue(playerid, VHV_LOCK, "РћРўРљР Р«РўРћ");
-    else VexHudSetValue(playerid, VHV_LOCK, "Р—РђРњРћРљ: --");
+    if (engine == VEHICLE_PARAMS_ON) VexHudSetValue(playerid, VHV_ENGINE, "~g~ДВИГ: ВКЛ");
+    else if (engine == VEHICLE_PARAMS_OFF) VexHudSetValue(playerid, VHV_ENGINE, "~r~ДВИГ: ВЫКЛ");
+    else VexHudSetValue(playerid, VHV_ENGINE, "ДВИГ: --");
+    if (doors == VEHICLE_PARAMS_ON) VexHudSetValue(playerid, VHV_LOCK, "ЗАКРЫТО");
+    else if (doors == VEHICLE_PARAMS_OFF) VexHudSetValue(playerid, VHV_LOCK, "ОТКРЫТО");
+    else VexHudSetValue(playerid, VHV_LOCK, "ЗАМОК: --");
     GetVehicleHealth(vehicleid, condition);
     format(text, sizeof text, "%d%%", VexHudClamp(floatround(condition / 10.0), 0, 100));
     VexHudSetValue(playerid, VHV_BODY, text);
@@ -1444,7 +1444,7 @@ stock SaveVexHudSettings(playerid)
     new DBResult:result = db_query(gDatabase, query);
     if (!result)
     {
-        SendClientMessage(playerid, COLOR_YELLOW, "[HUD] РќР°СЃС‚СЂРѕР№РєР° РґРµР№СЃС‚РІСѓРµС‚ РґРѕ РІС‹С…РѕРґР°: РЅРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РµС‘ РІ Р±Р°Р·Рµ.");
+        SendClientMessage(playerid, COLOR_YELLOW, "[HUD] Настройка действует до выхода: не удалось сохранить её в базе.");
         return 0;
     }
     db_free_result(result);
@@ -1453,9 +1453,9 @@ stock SaveVexHudSettings(playerid)
 
 stock ShowVexHudFonts(playerid)
 {
-    SendClientMessage(playerid, COLOR_YELLOW, "[HUD] РџСЂРѕС„РёР»СЊ РґРѕР»Р¶РµРЅ СЃРѕРІРїР°РґР°С‚СЊ СЃ СЂСѓСЃРёС„РёРєР°С‚РѕСЂРѕРј GTA. Р‘РµР· СЂСѓСЃСЃРєРёС… С€СЂРёС„С‚РѕРІ РєР»РёРµРЅС‚Р° РєРёСЂРёР»Р»РёС†Р° РЅРµ РїРѕСЏРІРёС‚СЃСЏ.");
+    SendClientMessage(playerid, COLOR_YELLOW, "[HUD] Профиль должен совпадать с русификатором GTA. Без русских шрифтов клиента кириллица не появится.");
     return ShowPlayerDialog(playerid, DIALOG_VEX_HUD_FONT, DIALOG_STYLE_LIST,
-        "VEXORIUM | Р СѓСЃСЃРєРёР№ С€СЂРёС„С‚ HUD", "1. SanLtd\n2. 1РЎ\n3. RUS / Rush\n4. Community\n5. MG\n6. РџСЂСЏРјР°СЏ CP1251 / rustext\n7. ASCII / Unknown3 - Р±Р°Р·РѕРІС‹Р№\n8. Unknown2\n9. Unknown1", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        "VEXORIUM | Русский шрифт HUD", "1. SanLtd\n2. 1С\n3. RUS / Rush\n4. Community\n5. MG\n6. Прямая CP1251 / rustext\n7. ASCII / Unknown3 - базовый\n8. Unknown2\n9. Unknown1", "Выбрать", "Закрыть");
 }
 
 stock SetVexHudFont(playerid, profile)
@@ -1466,7 +1466,7 @@ stock SetVexHudFont(playerid, profile)
     gVexHudBuildFailed[playerid] = false;
     ShowVexHud(playerid);
     SaveVexHudSettings(playerid);
-    SendClientMessage(playerid, COLOR_GREEN, "[HUD] РЁСЂРёС„С‚ РїСЂРёРјРµРЅС‘РЅ. РќРµРІРµСЂРЅС‹Рµ Р±СѓРєРІС‹? Р’С‹Р±РµСЂРёС‚Рµ РґСЂСѓРіРѕР№ РІ /hudfont.");
+    SendClientMessage(playerid, COLOR_GREEN, "[HUD] Шрифт применён. Неверные буквы? Выберите другой в /hudfont.");
     return 1;
 }
 
@@ -1486,8 +1486,8 @@ stock GiveCash(playerid, amount)
     GivePlayerMoney(playerid, gMoney[playerid]);
     UpdateVexHud(playerid);
     new toastText[48];
-    format(toastText, sizeof toastText, "+%d СЂСѓР±. РЅР°Р»РёС‡РЅС‹РјРё", amount);
-    VX_Notify(playerid, "Р—РђР§РРЎР›Р•РќРћ", toastText, VEX_HUD_ACCENT);
+    format(toastText, sizeof toastText, "+%d руб. наличными", amount);
+    VX_Notify(playerid, "ЗАЧИСЛЕНО", toastText, VEX_HUD_ACCENT);
     return 1;
 }
 
@@ -1499,8 +1499,8 @@ stock TakeCash(playerid, amount)
     GivePlayerMoney(playerid, gMoney[playerid]);
     UpdateVexHud(playerid);
     new toastText[48];
-    format(toastText, sizeof toastText, "-%d СЂСѓР±. РЅР°Р»РёС‡РЅС‹РјРё", amount);
-    VX_Notify(playerid, "РћРџР›РђРўРђ", toastText, VEX_HUD_WARNING);
+    format(toastText, sizeof toastText, "-%d руб. наличными", amount);
+    VX_Notify(playerid, "ОПЛАТА", toastText, VEX_HUD_WARNING);
     return 1;
 }
 
@@ -1630,7 +1630,7 @@ stock VX_WorkSkin(job)
     return 0;
 }
 
-// ====================== VEXORIUM | РњР°РіР°Р·РёРЅ РѕРґРµР¶РґС‹ ======================
+// ====================== VEXORIUM | Магазин одежды ======================
 stock VX_ClothesNear(playerid)
 {
     if (GetPlayerVirtualWorld(playerid) != 0 || GetPlayerInterior(playerid) != 0) return 0;
@@ -1666,18 +1666,18 @@ stock VX_ClothesOpen(playerid)
 {
     if (!gLogged[playerid] || !gRPLoaded[playerid]) return 1;
     if (gVXClothesPreview[playerid]>=0) VX_ClothesCancel(playerid);
-    if (!VX_ClothesNear(playerid)) return SendClientMessage(playerid,COLOR_YELLOW,"[РћР”Р•Р–Р”Рђ] РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°РіР°Р·РёРЅСѓ РѕРґРµР¶РґС‹. РђРґСЂРµСЃР°: /clothesgps."),1;
+    if (!VX_ClothesNear(playerid)) return SendClientMessage(playerid,COLOR_YELLOW,"[ОДЕЖДА] Подойдите к магазину одежды. Адреса: /clothesgps."),1;
     if (gFaction[playerid]>=FACTION_CITYHALL && gFaction[playerid]<=FACTION_FBI && gFactionRank[playerid]>0 && VX_ClothesUniform(playerid))
-        return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] Р’ СЃР»СѓР¶РµР±РЅРѕР№ С„РѕСЂРјРµ РїРѕРєСѓРїР°С‚СЊ РѕРґРµР¶РґСѓ РЅРµР»СЊР·СЏ. РЎРЅРёРјРёС‚Рµ С„РѕСЂРјСѓ РІ СЂР°Р·РґРµРІР°Р»РєРµ."),1;
-    if (!VX_ClothesCanUse(playerid)) return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] РЎРµР№С‡Р°СЃ РјР°РіР°Р·РёРЅ РЅРµРґРѕСЃС‚СѓРїРµРЅ."),1;
+        return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] В служебной форме покупать одежду нельзя. Снимите форму в раздевалке."),1;
+    if (!VX_ClothesCanUse(playerid)) return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] Сейчас магазин недоступен."),1;
     new body[850],line[72];
-    format(body,sizeof body,"РЎС‚РёР»СЊ\tРЎРєРёРЅ\tР¦РµРЅР°\n");
+    format(body,sizeof body,"Стиль\tСкин\tЦена\n");
     for(new i=0;i<VX_CLOTHES_COUNT;i++)
     {
-        format(line,sizeof line,"%s\t%d\t%d СЂСѓР±.\n",gVXClothesLabel[i],gVXClothesModel[i],gVXClothesPrice[i]);
+        format(line,sizeof line,"%s\t%d\t%d руб.\n",gVXClothesLabel[i],gVXClothesModel[i],gVXClothesPrice[i]);
         strcat(body,line);
     }
-    ShowPlayerDialog(playerid,DIALOG_CLOTHES,DIALOG_STYLE_TABLIST_HEADERS,"VEXORIUM | РњРђР“РђР—РРќ РћР”Р•Р–Р”Р«",body,"РџСЂРёРјРµСЂРёС‚СЊ","Р—Р°РєСЂС‹С‚СЊ");
+    ShowPlayerDialog(playerid,DIALOG_CLOTHES,DIALOG_STYLE_TABLIST_HEADERS,"VEXORIUM | МАГАЗИН ОДЕЖДЫ",body,"Примерить","Закрыть");
     return 1;
 }
 stock VX_ClothesLoad(playerid, legacySkin)
@@ -1707,32 +1707,32 @@ stock VX_ClothesBuy(playerid,index)
 {
     if(index<0 || index>=VX_CLOTHES_COUNT || !VX_ClothesCanUse(playerid)) return 0;
     new price=gVXClothesPrice[index], skin=gVXClothesModel[index];
-    if(gMoney[playerid]<price) return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С…."),0;
+    if(gMoney[playerid]<price) return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] Недостаточно наличных."),0;
     // Atomic purchase: write account balance and civilian skin together.
     new query[192];
-    if(!VX_Begin()) return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] Р‘Р°Р·Р° РґР°РЅРЅС‹С… РЅРµРґРѕСЃС‚СѓРїРЅР°."),0;
+    if(!VX_Begin()) return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] База данных недоступна."),0;
     format(query,sizeof query,"UPDATE accounts SET money=%d WHERE name='%q'",gMoney[playerid]-price,gName[playerid]);
     if(!VX_SQL(query))
     {
         VX_SQL("ROLLBACK");
-        return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] РћРїР»Р°С‚Р° РѕС‚РјРµРЅРµРЅР°."),0;
+        return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] Оплата отменена."),0;
     }
     format(query,sizeof query,"INSERT OR REPLACE INTO vx_clothing(name,skin) VALUES('%q',%d)",gName[playerid],skin);
     if(!VX_SQL(query))
     {
         VX_SQL("ROLLBACK");
-        return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] РџРѕРєСѓРїРєР° РѕС‚РјРµРЅРµРЅР°."),0;
+        return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] Покупка отменена."),0;
     }
-    if(!VX_Commit())return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РїРѕРєСѓРїРєСѓ."),0;
+    if(!VX_Commit())return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] Не удалось сохранить покупку."),0;
     gMoney[playerid]-=price;
     ResetPlayerMoney(playerid);GivePlayerMoney(playerid,gMoney[playerid]);
     gVXAccountSkin[playerid]=skin;
     gVXClothesPreview[playerid]=-1;
     SetPlayerSkin(playerid,skin);
     UpdateVexHud(playerid);
-    new msg[128];format(msg,sizeof msg,"[РћР”Р•Р–Р”Рђ] РљСѓРїР»РµРЅ СЃС‚РёР»СЊ В«%sВ» Р·Р° %d СЂСѓР±. РЎРєРёРЅ %d СЃРѕС…СЂР°РЅС‘РЅ.",gVXClothesLabel[index],price,skin);
+    new msg[128];format(msg,sizeof msg,"[ОДЕЖДА] Куплен стиль «%s» за %d руб. Скин %d сохранён.",gVXClothesLabel[index],price,skin);
     SendClientMessage(playerid,COLOR_GREEN,msg);
-    VX_Notify(playerid, "РџРћРљРЈРџРљРђ", "РќРѕРІС‹Р№ РѕР±СЂР°Р· СЃРѕС…СЂР°РЅС‘РЅ", VEX_HUD_ACCENT);
+    VX_Notify(playerid, "ПОКУПКА", "Новый образ сохранён", VEX_HUD_ACCENT);
     return 1;
 }
 
@@ -1789,7 +1789,7 @@ stock ApplySavedSpawn(playerid)
             case 4: SetPlayerFacingAngle(playerid, 0.0);   // Varrios Aztecas
         }
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕСЏРІРёР»РёСЃСЊ РЅР° Р±Р°Р·Рµ СЃРІРѕРµР№ Р±Р°РЅРґС‹.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы появились на базе своей банды.");
         return 1;
     }
 
@@ -1836,13 +1836,13 @@ stock ApplySavedSpawn(playerid)
             }
         }
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕСЏРІРёР»РёСЃСЊ РІ СЂР°Р·РґРµРІР°Р»РєРµ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы появились в раздевалке своей организации.");
     }
     else
     {
         SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0);
         SetPlayerPos(playerid, 1753.5, -1894.2, 13.6); SetPlayerFacingAngle(playerid, 90.0);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕСЏРІРёР»РёСЃСЊ Сѓ РІРѕРєР·Р°Р»Р° Р›РѕСЃ-РЎР°РЅС‚РѕСЃ.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы появились у вокзала Лос-Сантос.");
     }
     SetCameraBehindPlayer(playerid);
     return 1;
@@ -1852,9 +1852,9 @@ stock ShowSpawnMenu(playerid)
 {
     if (!gLogged[playerid]) return 0;
     if (gFaction[playerid] >= FACTION_CITYHALL && gFaction[playerid] <= FACTION_FBI)
-        ShowPlayerDialog(playerid, DIALOG_SPAWN, DIALOG_STYLE_LIST, "VEXORIUM RP | РњРµСЃС‚Рѕ РїРѕСЏРІР»РµРЅРёСЏ", "РџРѕСЏРІРёС‚СЊСЃСЏ РІ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё\nРЎС‚Р°СЂС‚РѕРІР°СЏ Р·РѕРЅР° / РІРѕРєР·Р°Р»", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        ShowPlayerDialog(playerid, DIALOG_SPAWN, DIALOG_STYLE_LIST, "VEXORIUM RP | Место появления", "Появиться в своей организации\nСтартовая зона / вокзал", "Выбрать", "Закрыть");
     else
-        ShowPlayerDialog(playerid, DIALOG_SPAWN, DIALOG_STYLE_LIST, "VEXORIUM RP | РЎС‚Р°СЂС‚ РЅРѕРІРёС‡РєР°", "РЎС‚Р°СЂС‚РѕРІР°СЏ Р·РѕРЅР° / РІРѕРєР·Р°Р»\nРРЅС„РѕСЂРјР°С†РёСЏ Рѕ СЃРєСѓС‚РµСЂРµ: /rent", "РџРѕСЏРІРёС‚СЊСЃСЏ", "Р—Р°РєСЂС‹С‚СЊ");
+        ShowPlayerDialog(playerid, DIALOG_SPAWN, DIALOG_STYLE_LIST, "VEXORIUM RP | Старт новичка", "Стартовая зона / вокзал\nИнформация о скутере: /rent", "Появиться", "Закрыть");
     gSpawnMenuShown[playerid] = true;
     return 1;
 }
@@ -1874,30 +1874,30 @@ stock SendLocalMessage(playerid, color, const message[], Float:range)
 stock ShowFactionCommands(playerid)
 {
     if (!gLogged[playerid]) return 0;
-    SendClientMessage(playerid, COLOR_BLUE, "========== РљРћРњРђРќР”Р« РћР Р“РђРќРР—РђР¦РР ==========");
+    SendClientMessage(playerid, COLOR_BLUE, "========== КОМАНДЫ ОРГАНИЗАЦИИ ==========");
     if (gFaction[playerid] == FACTION_POLICE)
     {
-        SendClientMessage(playerid, COLOR_BLUE, "/showpass [ID] вЂ” РїСЂРѕРІРµСЂРёС‚СЊ РїР°СЃРїРѕСЂС‚");
-        SendClientMessage(playerid, COLOR_BLUE, "/search [ID] вЂ” РїСЂРѕРІРµСЃС‚Рё РѕР±С‹СЃРє СЂСЏРґРѕРј СЃ РёРіСЂРѕРєРѕРј");
-        SendClientMessage(playerid, COLOR_BLUE, "/ticket [ID] [СЃСѓРјРјР°] [РїСЂРёС‡РёРЅР°] вЂ” РІС‹РїРёСЃР°С‚СЊ С€С‚СЂР°С„ (СЃРѕ 2 СЂР°РЅРіР°)");
-        SendClientMessage(playerid, COLOR_BLUE, "/arrest [ID] [СЃРµРєСѓРЅРґС‹] [РїСЂРёС‡РёРЅР°] вЂ” Р·Р°РґРµСЂР¶Р°С‚СЊ РёРіСЂРѕРєР° (СЃРѕ 2 СЂР°РЅРіР°)");
-        SendClientMessage(playerid, COLOR_BLUE, "/release [ID] вЂ” РѕСЃРІРѕР±РѕРґРёС‚СЊ РёР· РљРџР— (СЃ 5 СЂР°РЅРіР°)");
-        SendClientMessage(playerid, COLOR_BLUE, "/wanted [ID] [0-6] [РїСЂРёС‡РёРЅР°] (СЃ 3 СЂР°РЅРіР°), /cuff [ID] Рё /uncuff [ID] (СЃРѕ 2 СЂР°РЅРіР°), /pursuit [ID]");
-        SendClientMessage(playerid, COLOR_BLUE, "/sobescr вЂ” СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ (СЃ 9 СЂР°РЅРіР°)");
-        SendClientMessage(playerid, COLOR_BLUE, "/org вЂ” РјРµРЅСЋ СѓС‡Р°СЃС‚РєР°; /duty вЂ” РёРЅС„РѕСЂРјР°С†РёСЏ Рѕ С„РѕСЂРјРµ");
+        SendClientMessage(playerid, COLOR_BLUE, "/showpass [ID] — проверить паспорт");
+        SendClientMessage(playerid, COLOR_BLUE, "/search [ID] — провести обыск рядом с игроком");
+        SendClientMessage(playerid, COLOR_BLUE, "/ticket [ID] [сумма] [причина] — выписать штраф (со 2 ранга)");
+        SendClientMessage(playerid, COLOR_BLUE, "/arrest [ID] [секунды] [причина] — задержать игрока (со 2 ранга)");
+        SendClientMessage(playerid, COLOR_BLUE, "/release [ID] — освободить из КПЗ (с 5 ранга)");
+        SendClientMessage(playerid, COLOR_BLUE, "/wanted [ID] [0-6] [причина] (с 3 ранга), /cuff [ID] и /uncuff [ID] (со 2 ранга), /pursuit [ID]");
+        SendClientMessage(playerid, COLOR_BLUE, "/sobescr — собеседование (с 9 ранга)");
+        SendClientMessage(playerid, COLOR_BLUE, "/org — меню участка; /duty — информация о форме");
     }
     else if (gFaction[playerid] == FACTION_CITYHALL)
     {
-        SendClientMessage(playerid, COLOR_BLUE, "/org вЂ” РјРµРЅСЋ РјСЌСЂРёРё Рё РІРѕР·РјРѕР¶РЅРѕСЃС‚Рё РѕСЂРіР°РЅРёР·Р°С†РёРё");
-        SendClientMessage(playerid, COLOR_BLUE, "/licgive [ID] [auto/weapon/boat/air] вЂ” РІС‹РґР°С‚СЊ Р»РёС†РµРЅР·РёСЋ");
-        SendClientMessage(playerid, COLOR_BLUE, "/sobescr вЂ” РѕР±СЉСЏРІРёС‚СЊ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ (СЃ 9 СЂР°РЅРіР°)");
-        SendClientMessage(playerid, COLOR_BLUE, "Р”Р»СЏ РѕСЃС‚Р°Р»СЊРЅС‹С… С„СѓРЅРєС†РёР№ РёСЃРїРѕР»СЊР·СѓР№С‚Рµ РјР°СЂРєРµСЂС‹ Рё РјРµРЅСЋ РјСЌСЂРёРё.");
+        SendClientMessage(playerid, COLOR_BLUE, "/org — меню мэрии и возможности организации");
+        SendClientMessage(playerid, COLOR_BLUE, "/licgive [ID] [auto/weapon/boat/air] — выдать лицензию");
+        SendClientMessage(playerid, COLOR_BLUE, "/sobescr — объявить собеседование (с 9 ранга)");
+        SendClientMessage(playerid, COLOR_BLUE, "Для остальных функций используйте маркеры и меню мэрии.");
     }
     else
     {
-        SendClientMessage(playerid, COLOR_BLUE, "/org вЂ” РѕС‚РєСЂС‹С‚СЊ РјРµРЅСЋ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё");
-        SendClientMessage(playerid, COLOR_BLUE, "/sobescr вЂ” РѕР±СЉСЏРІРёС‚СЊ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ (СЃ 9 СЂР°РЅРіР°)");
-        SendClientMessage(playerid, COLOR_BLUE, "/duty вЂ” РёРЅС„РѕСЂРјР°С†РёСЏ Рѕ С„РѕСЂРјРµ; РјР°СЂРєРµСЂС‹ РѕСЂРіР°РЅРёР·Р°С†РёРё вЂ” СЃРєР»Р°Рґ Рё РіР°СЂР°Р¶");
+        SendClientMessage(playerid, COLOR_BLUE, "/org — открыть меню своей организации");
+        SendClientMessage(playerid, COLOR_BLUE, "/sobescr — объявить собеседование (с 9 ранга)");
+        SendClientMessage(playerid, COLOR_BLUE, "/duty — информация о форме; маркеры организации — склад и гараж");
     }
     SendClientMessage(playerid, COLOR_BLUE, "========================================");
     return 1;
@@ -1906,11 +1906,11 @@ stock ShowFactionCommands(playerid)
 stock ShowPoliceMenu(playerid)
 {
     if (GetPlayerInterior(playerid) != 6 || GetPlayerVirtualWorld(playerid) != 0)
-        return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р·РґР°РЅРёРµ РїРѕР»РёС†РёРё: РїРѕРґРѕР№РґРёС‚Рµ Рє РІС…РѕРґСѓ Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /enterpd."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Сначала войдите в здание полиции: подойдите к входу и используйте /enterpd."), 1;
     ShowPlayerDialog(playerid, DIALOG_POLICE_MENU, DIALOG_STYLE_LIST,
-        "VEXORIUM RP | РЈС‡Р°СЃС‚РѕРє LSPD",
-        "РҐРѕР»Р» СѓС‡Р°СЃС‚РєР°\nРљР°Р±РёРЅРµС‚ РЅР°С‡Р°Р»СЊРЅРёРєР°\nРљРѕРјРЅР°С‚Р° РґРѕРїСЂРѕСЃР°\nРљРџР—\nР Р°Р·РґРµРІР°Р»РєР° (РјР°СЂРєРµСЂ РѕРґРµР¶РґС‹)\nР’С‹Р№С‚Рё Рє РіР°СЂР°Р¶Сѓ\nР’С‹Р№С‚Рё РёР· СѓС‡Р°СЃС‚РєР°",
-        "РћС‚РєСЂС‹С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        "VEXORIUM RP | Участок LSPD",
+        "Холл участка\nКабинет начальника\nКомната допроса\nКПЗ\nРаздевалка (маркер одежды)\nВыйти к гаражу\nВыйти из участка",
+        "Открыть", "Закрыть");
     return 1;
 }
 
@@ -1940,10 +1940,10 @@ stock VX_CarjackReward(model)
 
 stock StartCarjack(playerid)
 {
-    if (gLevel[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ СЂР°Р±РѕС‚С‹ Р°РІС‚РѕСѓРіРѕРЅС‰РёРєРѕРј РЅСѓР¶РµРЅ 3 СѓСЂРѕРІРµРЅСЊ."), 0;
-    if (gFaction[playerid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "РЎРѕС‚СЂСѓРґРЅРёРєРё РіРѕСЃСѓРґР°СЂСЃС‚РІРµРЅРЅС‹С… РѕСЂРіР°РЅРёР·Р°С†РёР№ РЅРµ РјРѕРіСѓС‚ СЂР°Р±РѕС‚Р°С‚СЊ Р°РІС‚РѕСѓРіРѕРЅС‰РёРєР°РјРё."), 0;
-    if (gWorkStage[playerid] > 0 || gCarjackActive[playerid]) return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ РёР»Рё РѕС‚РјРµРЅРёС‚Рµ С‚РµРєСѓС‰СѓСЋ СЂР°Р±РѕС‚Сѓ."), 0;
-    if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р° РїРµСЂРµРґ РЅР°С‡Р°Р»РѕРј Р°РІС‚РѕСѓРіРѕРЅР°."), 0;
+    if (gLevel[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "Для работы автоугонщиком нужен 3 уровень."), 0;
+    if (gFaction[playerid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Сотрудники государственных организаций не могут работать автоугонщиками."), 0;
+    if (gWorkStage[playerid] > 0 || gCarjackActive[playerid]) return SendClientMessage(playerid, COLOR_YELLOW, "Сначала завершите или отмените текущую работу."), 0;
+    if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Выйдите из транспорта перед началом автоугона."), 0;
     if (gLockpicks[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[MARKET] Dlya raboty avtougonschikom nuzhna otmychka. Kupite ee v zdanii marketa ili cherez /shop."), 0;
 
     // Open-air street/parking locations. Hospital and dealership-front positions are excluded.
@@ -2003,7 +2003,7 @@ stock StartCarjack(playerid)
         vehicleid = INVALID_VEHICLE_ID;
     }
     if (vehicleid == INVALID_VEHICLE_ID || GetVehicleModel(vehicleid) == 0 || idx < 0)
-        return SendClientMessage(playerid, COLOR_RED, "РќРµ РЅР°С€Р»РѕСЃСЊ СЃРІРѕР±РѕРґРЅРѕРіРѕ РјРµСЃС‚Р° РґР»СЏ РјР°С€РёРЅС‹. РџРѕРїСЂРѕР±СѓР№С‚Рµ С‡СѓС‚СЊ РїРѕР·Р¶Рµ."), 0;
+        return SendClientMessage(playerid, COLOR_RED, "Не нашлось свободного места для машины. Попробуйте чуть позже."), 0;
 
     // Explicitly keep the spawned target in the exterior world/interior.
     SetVehicleVirtualWorld(vehicleid, 0);
@@ -2025,14 +2025,14 @@ stock StartCarjack(playerid)
     SetPlayerCheckpoint(playerid, spawnX, spawnY, spawnZ, 5.0);
     SetPlayerMapIcon(playerid, 48, spawnX, spawnY, spawnZ, 55, 0, MAPICON_LOCAL);
     gGpsActive[playerid] = false;
-    SendClientMessage(playerid, COLOR_GREEN, "РђРІС‚РѕСѓРіРѕРЅ РЅР°С‡Р°С‚! РќР° СЂР°РґР°СЂРµ РѕС‚РјРµС‡РµРЅР° СЃР»СѓС‡Р°Р№РЅР°СЏ РјР°С€РёРЅР°. РџРѕРґСЉРµРґСЊС‚Рµ Рє РЅРµР№ Рё РІРІРµРґРёС‚Рµ /hack.");
+    SendClientMessage(playerid, COLOR_GREEN, "Автоугон начат! На радаре отмечена случайная машина. Подъедьте к ней и введите /hack.");
     return 1;
 }
 
 stock AnnounceCarjack(playerid)
 {
     new msg[160];
-    format(msg, sizeof msg, "[Р”РРЎРџР•РўР§Р•Р ] РќРµРёР·РІРµСЃС‚РЅС‹Р№ СѓРіРЅР°Р» Р°РІС‚РѕРјРѕР±РёР»СЊ! РџСЂРµСЃР»РµРґРѕРІР°С‚СЊ: /accept | РћС‚РєР°Р·Р°С‚СЊСЃСЏ: /cancel.");
+    format(msg, sizeof msg, "[ДИСПЕТЧЕР] Неизвестный угнал автомобиль! Преследовать: /accept | Отказаться: /cancel.");
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (!IsPlayerConnected(i) || !gLogged[i]) continue;
@@ -2237,8 +2237,8 @@ stock VX_TaxiCancelForPlayer(playerid, const reason[], bool:resumeShift)
     new driverid = gTaxiOrderDriver[playerid];
     if (driverid >= 0 && driverid < MAX_PLAYERS && IsPlayerConnected(driverid) && gTaxiOrderTarget[driverid] == playerid)
     {
-        SendClientMessage(driverid, COLOR_YELLOW, "[РўРђРљРЎР] РџР°СЃСЃР°Р¶РёСЂ РѕС‚РјРµРЅРёР» Р·Р°РєР°Р·.");
-        VX_TaxiClearDriver(driverid, "[РўРђРљРЎР] РџРѕРµР·РґРєР° РѕС‚РјРµРЅРµРЅР°.", resumeShift);
+        SendClientMessage(driverid, COLOR_YELLOW, "[ТАКСИ] Пассажир отменил заказ.");
+        VX_TaxiClearDriver(driverid, "[ТАКСИ] Поездка отменена.", resumeShift);
     }
     gTaxiOrderDriver[playerid] = INVALID_PLAYER_ID;
     gTaxiRequestActive[playerid] = false;
@@ -2253,7 +2253,7 @@ stock VX_TaxiDisconnect(playerid)
         {
             gTaxiOrderDriver[passenger] = INVALID_PLAYER_ID;
             gTaxiRequestActive[passenger] = false;
-            SendClientMessage(passenger, COLOR_YELLOW, "[РўРђРљРЎР] Р’РѕРґРёС‚РµР»СЊ РѕС‚РєР»СЋС‡РёР»СЃСЏ. Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ.");
+            SendClientMessage(passenger, COLOR_YELLOW, "[ТАКСИ] Водитель отключился. Заказ отменён.");
         }
     }
     gTaxiOrderTarget[playerid] = INVALID_PLAYER_ID;
@@ -2261,7 +2261,7 @@ stock VX_TaxiDisconnect(playerid)
     new driver = gTaxiOrderDriver[playerid];
     if (driver >= 0 && driver < MAX_PLAYERS && IsPlayerConnected(driver) && gTaxiOrderTarget[driver] == playerid)
     {
-        SendClientMessage(driver, COLOR_YELLOW, "[РўРђРљРЎР] РџР°СЃСЃР°Р¶РёСЂ РѕС‚РєР»СЋС‡РёР»СЃСЏ. Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ.");
+        SendClientMessage(driver, COLOR_YELLOW, "[ТАКСИ] Пассажир отключился. Заказ отменён.");
         VX_TaxiClearDriver(driver, "", true);
     }
     gTaxiOrderDriver[playerid] = INVALID_PLAYER_ID;
@@ -2272,17 +2272,17 @@ stock VX_TaxiDisconnect(playerid)
 stock ShowGPS(playerid)
 {
     ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "VEXORIUM RP | GPS",
-        "[1] РћР±С‰РµСЃС‚РІРµРЅРЅС‹Рµ РјРµСЃС‚Р°\n[2] РћСЂРіР°РЅРёР·Р°С†РёРё Рё СЃР»СѓР¶Р±С‹\n[3] Р Р°Р±РѕС‚С‹ РґР»СЏ РЅРѕРІРёС‡РєРѕРІ\n[4] РџРѕ СЂР°Р±РѕС‚Рµ\n[5] РќРµР»РµРіР°Р»СЊРЅС‹Рµ РѕСЂРіР°РЅРёР·Р°С†РёРё\n[6] РўСЂР°РЅСЃРїРѕСЂС‚ Рё РђР—РЎ\n[7] РњР°РіР°Р·РёРЅС‹ Рё РѕРґРµР¶РґР°\n[8] РќРµРґРІРёР¶РёРјРѕСЃС‚СЊ\n[9] РњРµРґРёС†РёРЅР° Рё Р±РѕР»СЊРЅРёС†Р°", "РћС‚РєСЂС‹С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        "[1] Общественные места\n[2] Организации и службы\n[3] Работы для новичков\n[4] По работе\n[5] Нелегальные организации\n[6] Транспорт и АЗС\n[7] Магазины и одежда\n[8] Недвижимость\n[9] Медицина и больница", "Открыть", "Закрыть");
     return 1;
 }
 stock StartWorkRoute(playerid)
 {
     if (!((gJob[playerid] >= 1 && gJob[playerid] <= 4) || gJob[playerid] == 7))
-        return SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Р­С‚Р° СЂР°Р±РѕС‚Р° РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚ РјР°СЂС€СЂСѓС‚ /work. Р’С‹Р±РµСЂРёС‚Рµ С‚Р°РєСЃРё, РґР°Р»СЊРЅРѕР±РѕР№С‰РёРєР°, Р°РІС‚РѕР±СѓСЃ, С€Р°С…С‚Сѓ РёР»Рё РїРѕР¶Р°СЂРЅСѓСЋ СЃР»СѓР¶Р±Сѓ."), 0;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Эта работа не использует маршрут /work. Выберите такси, дальнобойщика, автобус, шахту или пожарную службу."), 0;
     if (gWorkStage[playerid] > 0)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Р’С‹ СѓР¶Рµ РЅР° СЃРјРµРЅРµ. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /stopwork РґР»СЏ РѕС‚РјРµРЅС‹."), 0;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Вы уже на смене. Используйте /stopwork для отмены."), 0;
     if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0)
-        return SendClientMessage(playerid, COLOR_YELLOW, "РќР°С‡РЅРёС‚Рµ СЃРјРµРЅСѓ СЂСЏРґРѕРј СЃ СЂР°Р±РѕС‚РѕРґР°С‚РµР»РµРј РЅР° СѓР»РёС†Рµ."), 0;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Начните смену рядом с работодателем на улице."), 0;
     new Float:employerX, Float:employerY, Float:employerZ;
     switch (gJob[playerid])
     {
@@ -2293,9 +2293,9 @@ stock StartWorkRoute(playerid)
         default: { employerX = 820.0; employerY = 856.0; employerZ = 12.0; }
     }
     if (GetPlayerDistanceFromPoint(playerid, employerX, employerY, employerZ) > 25.0)
-        return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґРѕР№РґРёС‚Рµ Рє NPC-РґРёСЃРїРµС‚С‡РµСЂСѓ СЃРІРѕРµР№ СЂР°Р±РѕС‚С‹ Рё РІРІРµРґРёС‚Рµ /work."), 0;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Подойдите к NPC-диспетчеру своей работы и введите /work."), 0;
     if (IsPlayerInAnyVehicle(playerid))
-        return SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р° РїРµСЂРµРґ РЅР°С‡Р°Р»РѕРј СЃРјРµРЅС‹."), 0;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Выйдите из транспорта перед началом смены."), 0;
     if (gWorkVehicle[playerid] != INVALID_VEHICLE_ID && GetVehicleModel(gWorkVehicle[playerid]) != 0)
         DestroyVehicle(gWorkVehicle[playerid]);
     gWorkVehicle[playerid] = INVALID_VEHICLE_ID;
@@ -2306,7 +2306,7 @@ stock StartWorkRoute(playerid)
         if (gJob[playerid] == 7) { vx = VX_FIRE_STATION_X + 7.0; vy = VX_FIRE_STATION_Y - 2.0; }
         gWorkVehicle[playerid] = CreateVehicle(model, vx, vy, employerZ + 0.3, 90.0, 6, 6, -1);
         if (gWorkVehicle[playerid] == INVALID_VEHICLE_ID)
-            return SendClientMessage(playerid, COLOR_RED, "РќРµ СѓРґР°Р»РѕСЃСЊ РІС‹РґР°С‚СЊ СЂР°Р±РѕС‡РёР№ С‚СЂР°РЅСЃРїРѕСЂС‚. РћСЃРІРѕР±РѕРґРёС‚Рµ РјРµСЃС‚Рѕ Рё РїРѕРІС‚РѕСЂРёС‚Рµ."), 0;
+            return SendClientMessage(playerid, COLOR_RED, "Не удалось выдать рабочий транспорт. Освободите место и повторите."), 0;
         gVehicleFuel[gWorkVehicle[playerid]] = 100;
         PutPlayerInVehicle(playerid, gWorkVehicle[playerid], 0);
     }
@@ -2320,11 +2320,11 @@ stock StartWorkRoute(playerid)
         gFireCallIndex[playerid] = random(VX_FIRE_CALL_COUNT);
         SetPlayerCheckpoint(playerid, gVXFireCallPos[gFireCallIndex[playerid]][0],
             gVXFireCallPos[gFireCallIndex[playerid]][1], gVXFireCallPos[gFireCallIndex[playerid]][2], 7.0);
-        SendClientMessage(playerid, COLOR_ORANGE, "[РџРћР–РђР РќРђРЇ РЎР›РЈР–Р‘Рђ] РџРѕР»СѓС‡РµРЅ РІС‹Р·РѕРІ. Р”РѕР±РµСЂРёС‚РµСЃСЊ РЅР° РїРѕР¶Р°СЂРЅРѕР№ РјР°С€РёРЅРµ РґРѕ РѕС‚РјРµС‡РµРЅРЅРѕРіРѕ Р°РґСЂРµСЃР°.");
+        SendClientMessage(playerid, COLOR_ORANGE, "[ПОЖАРНАЯ СЛУЖБА] Получен вызов. Доберитесь на пожарной машине до отмеченного адреса.");
     }
     else SetPlayerCheckpoint(playerid, 838.0, 870.0, 12.0, 7.0);
-    if (gJob[playerid] != 7) SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] РЎРјРµРЅР° РЅР°С‡Р°Р»Р°СЃСЊ! Р Р°Р±РѕС‡РёР№ С‚СЂР°РЅСЃРїРѕСЂС‚ РІС‹РґР°РЅ, СЃР»РµРґСѓР№С‚Рµ РїРѕ РєСЂР°СЃРЅС‹Рј РѕС‚РјРµС‚РєР°Рј.");
-    if (gJob[playerid] == 1) SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] РќР° СЃРјРµРЅРµ РїСЂРёРЅРёРјР°Р№С‚Рµ Р·Р°РєР°Р·С‹ РєРѕРјР°РЅРґРѕР№ /taxiaccept ID, Р·Р°РІРµСЂС€Р°Р№С‚Рµ РїРѕРµР·РґРєСѓ вЂ” /taxidone. РћС‚РјРµРЅР° вЂ” /taxicancel.");
+    if (gJob[playerid] != 7) SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Смена началась! Рабочий транспорт выдан, следуйте по красным отметкам.");
+    if (gJob[playerid] == 1) SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] На смене принимайте заказы командой /taxiaccept ID, завершайте поездку — /taxidone. Отмена — /taxicancel.");
     return 1;
 }
 
@@ -2347,8 +2347,8 @@ stock GetOrgExterior(faction, &Float:x, &Float:y, &Float:z)
 
 stock GetOrgGarage(faction, &Float:x, &Float:y, &Float:z)
 {
-    // РўРѕС‡РєРё Р°РІС‚РѕРїР°СЂРєРѕРІ РѕС‚РґРµР»РµРЅС‹ РѕС‚ СЃРїР°РІРЅРѕРІ Рё РІС…РѕРґРѕРІ РІ Р·РґР°РЅРёСЏ.
-    // Р’СЃРµ РІС‹РґР°РІР°РµРјС‹Рµ РјР°С€РёРЅС‹ СЃРѕР·РґР°СЋС‚СЃСЏ СЂСЏРґРѕРј СЃ СЌС‚РѕР№ С‚РѕС‡РєРѕР№, Р° РЅРµ РїРѕРІРµСЂС… РёРіСЂРѕРєР°.
+    // Точки автопарков отделены от спавнов и входов в здания.
+    // Все выдаваемые машины создаются рядом с этой точкой, а не поверх игрока.
     switch (faction)
     {
         case FACTION_CITYHALL: { x = 1462.4062; y = -1741.2448; z = 13.5468; }
@@ -2375,22 +2375,22 @@ stock IsInOwnOrgInterior(playerid)
 
 stock ShowOrgMenu(playerid)
 {
-    SendClientMessage(playerid, COLOR_YELLOW, "РЈРїСЂР°РІР»РµРЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРµР№: /orgmembers, /orginvite ID (СЂР°РЅРі 8+), /orgrank ID Р РђРќР“, /orgkick ID Рё /orgfund.");
+    SendClientMessage(playerid, COLOR_YELLOW, "Управление организацией: /orgmembers, /orginvite ID (ранг 8+), /orgrank ID РАНГ, /orgkick ID и /orgfund.");
     if (gFaction[playerid] == FACTION_HOSPITAL)
     {
         new hospitalBody[512];
         hospitalBody[0] = '\0';
-        strcat(hospitalBody, "/mduty - РЅР°С‡Р°С‚СЊ РёР»Рё Р·Р°РєРѕРЅС‡РёС‚СЊ СЃРјРµРЅСѓ\n", sizeof hospitalBody);
-        strcat(hospitalBody, "/mcalls - РІС‹Р·РѕРІС‹ СЃРєРѕСЂРѕР№\n/maccept ID - РїСЂРёРЅСЏС‚СЊ РІС‹Р·РѕРІ\n", sizeof hospitalBody);
-        strcat(hospitalBody, "/heal ID - РІС‹Р»РµС‡РёС‚СЊ РїР°С†РёРµРЅС‚Р°\n/hgarage - РіР°СЂР°Р¶ СЃРєРѕСЂРѕР№ РїРѕРјРѕС‰Рё\n", sizeof hospitalBody);
-        strcat(hospitalBody, "/ward - РІРѕР№С‚Рё РІ РїР°Р»Р°С‚С‹\n/lobby - РІРµСЂРЅСѓС‚СЊСЃСЏ РІ С…РѕР»Р»\n/exit - РІС‹Р№С‚Рё РёР· Р±РѕР»СЊРЅРёС†С‹", sizeof hospitalBody);
-        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "Р‘Р¦Р Р‘ | РЎРѕС‚СЂСѓРґРЅРёРє", hospitalBody, "РћРљ", "Р—Р°РєСЂС‹С‚СЊ");
+        strcat(hospitalBody, "/mduty - начать или закончить смену\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/mcalls - вызовы скорой\n/maccept ID - принять вызов\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/heal ID - вылечить пациента\n/hgarage - гараж скорой помощи\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/ward - войти в палаты\n/lobby - вернуться в холл\n/exit - выйти из больницы", sizeof hospitalBody);
+        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "БЦРБ | Сотрудник", hospitalBody, "ОК", "Закрыть");
     }
     new factionName[32], title[64];
     GetFactionName(gFaction[playerid], factionName, sizeof factionName);
-    format(title, sizeof title, "%s | РЁС‚Р°Р± РѕСЂРіР°РЅРёР·Р°С†РёРё", factionName);
+    format(title, sizeof title, "%s | Штаб организации", factionName);
     ShowPlayerDialog(playerid, DIALOG_ORG_MENU, DIALOG_STYLE_LIST, title,
-        "Р“Р»Р°РІРЅС‹Р№ С…РѕР»Р»\nРљР°Р±РёРЅРµС‚ СЂСѓРєРѕРІРѕРґСЃС‚РІР°\nРљРѕРјРЅР°С‚Р° СЃРѕР±СЂР°РЅРёР№ / РїРѕСЃС‚СЂРѕРµРЅРёРµ\nР’С‹Р№С‚Рё Рє РіР°СЂР°Р¶Сѓ\nРџРѕРєРёРЅСѓС‚СЊ Р·РґР°РЅРёРµ", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        "Главный холл\nКабинет руководства\nКомната собраний / построение\nВыйти к гаражу\nПокинуть здание", "Выбрать", "Закрыть");
     return 1;
 }
 
@@ -2412,7 +2412,7 @@ stock EnterOrgInteriorForFaction(playerid, faction)
         SetPlayerPos(playerid, 251.0, 67.0, 1003.6);
         SetPlayerFacingAngle(playerid, 180.0);
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІРѕС€Р»Рё РІ СѓС‡Р°СЃС‚РѕРє LSPD. Р’С‹Р№С‚Рё РјРѕР¶РЅРѕ С‡РµСЂРµР· РјР°СЂРєРµСЂ РІС‹С…РѕРґР°.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вошли в участок LSPD. Выйти можно через маркер выхода.");
         if (gFaction[playerid] == FACTION_POLICE && gFactionRank[playerid] >= 1) ShowFactionCommands(playerid);
         return 1;
     }
@@ -2424,7 +2424,7 @@ stock EnterOrgInteriorForFaction(playerid, faction)
         SetPlayerPos(playerid, 246.4510, 65.5860, 1003.6410);
         SetPlayerFacingAngle(playerid, 180.0);
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "FBI: Р’С‹ РІРѕС€Р»Рё РІ С€С‚Р°Р±. Р’С‹С…РѕРґ СЂСЏРґРѕРј СЃ РІС…РѕРґРѕРј.");
+        SendClientMessage(playerid, COLOR_GREEN, "FBI: Вы вошли в штаб. Выход рядом с входом.");
         if (gFaction[playerid] == FACTION_FBI && gFactionRank[playerid] >= 1) ShowOrgMenu(playerid);
         return 1;
     }
@@ -2442,8 +2442,8 @@ stock EnterOrgInteriorForFaction(playerid, faction)
         SetPlayerFacingAngle(playerid, 180.0);
     }
     SetCameraBehindPlayer(playerid);
-    SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІРѕС€Р»Рё РІ Р·РґР°РЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРё. РќР°Р№РґРёС‚Рµ РјР°СЂРєРµСЂ РІС‹С…РѕРґР°, С‡С‚РѕР±С‹ РІРµСЂРЅСѓС‚СЊСЃСЏ РЅР° СѓР»РёС†Сѓ.");
-    // Р›СЋР±РѕР№ РёРіСЂРѕРє РјРѕР¶РµС‚ РІРѕР№С‚Рё РІ Р·РґР°РЅРёРµ, РЅРѕ РјРµРЅСЋ СѓРїСЂР°РІР»РµРЅРёСЏ РґРѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј СЌС‚РѕР№ РѕСЂРіР°РЅРёР·Р°С†РёРё.
+    SendClientMessage(playerid, COLOR_GREEN, "Вы вошли в здание организации. Найдите маркер выхода, чтобы вернуться на улицу.");
+    // Любой игрок может войти в здание, но меню управления доступно только сотрудникам этой организации.
     if (gFaction[playerid] == faction && gFactionRank[playerid] >= 1)
     {
         ShowOrgMenu(playerid);
@@ -2454,7 +2454,7 @@ stock EnterOrgInteriorForFaction(playerid, faction)
 
 stock EnterOrgInterior(playerid)
 {
-    SendClientMessage(playerid, COLOR_YELLOW, "Р’С…РѕРґ РІ Р·РґР°РЅРёСЏ РґРѕСЃС‚СѓРїРµРЅ С‡РµСЂРµР· РјР°СЂРєРµСЂС‹ Сѓ РґРІРµСЂРµР№. РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°СЂРєРµСЂСѓ РЅСѓР¶РЅРѕР№ РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+    SendClientMessage(playerid, COLOR_YELLOW, "Вход в здания доступен через маркеры у дверей. Подойдите к маркеру нужной организации.");
     return 1;
 }
 
@@ -2681,7 +2681,7 @@ public VX_StartIssuedCar(playerid,vehicleid)
     gVXFleetAnchored[vehicleid]=false;
     SetVehicleParamsForPlayer(vehicleid,playerid,0,0);
     UpdateVexHud(playerid);
-    SendClientMessage(playerid,COLOR_GREEN,"[Р“РђР РђР–] Р”РІРёРіР°С‚РµР»СЊ РІРєР»СЋС‡С‘РЅ. РЎР»СѓР¶РµР±РЅР°СЏ РјР°С€РёРЅР° СЃРІРѕР±РѕРґРЅР° РґР»СЏ РґРІРёР¶РµРЅРёСЏ.");
+    SendClientMessage(playerid,COLOR_GREEN,"[ГАРАЖ] Двигатель включён. Служебная машина свободна для движения.");
     return 1;
 }
 
@@ -2782,9 +2782,9 @@ stock VX_GarageRoute(playerid)
     if(gFaction[playerid]==FACTION_POLICE) { x=1579.0;y=-1719.0;z=13.5; }
     SetPlayerMapIcon(playerid,VX_GARAGE_MAP_ICON,x,y,z,0,0x33CC66FF,MAPICON_GLOBAL);
     gVXGarageRoute[playerid]=true;
-    SendClientMessage(playerid,COLOR_GREEN,"[Р“РђР РђР–] Р“Р°СЂР°Р¶ РѕСЂРіР°РЅРёР·Р°С†РёРё РѕС‚РјРµС‡РµРЅ РЅР° РєР°СЂС‚Рµ. РџРѕРґРѕР№РґРёС‚Рµ Рє РјРµС‚РєРµ Рё РїРѕРІС‚РѕСЂРёС‚Рµ /garage.");
+    SendClientMessage(playerid,COLOR_GREEN,"[ГАРАЖ] Гараж организации отмечен на карте. Подойдите к метке и повторите /garage.");
     if(GetPlayerInterior(playerid)!=0 || GetPlayerVirtualWorld(playerid)!=0)
-        SendClientMessage(playerid,COLOR_YELLOW,"[Р“РђР РђР–] РЎРЅР°С‡Р°Р»Р° РІС‹Р№РґРёС‚Рµ РёР· Р·РґР°РЅРёСЏ РѕСЂРіР°РЅРёР·Р°С†РёРё С‡РµСЂРµР· /orggarage.");
+        SendClientMessage(playerid,COLOR_YELLOW,"[ГАРАЖ] Сначала выйдите из здания организации через /orggarage.");
     return 1;
 }
 
@@ -2813,7 +2813,7 @@ stock SpawnFactionFleet()
                 SetVehicleVirtualWorld(vid, 0);
                 // Every display vehicle gets its own /garage hint, including helicopters and other special vehicles.
                 new hintText[128];
-                format(hintText, sizeof(hintText), "{33CC66}РђРІС‚РѕРїР°СЂРє\n{FFFFFF}РџРѕРґРѕР№РґРёС‚Рµ Рё РїСЂРѕРїРёС€РёС‚Рµ /garage");
+                format(hintText, sizeof(hintText), "{33CC66}Автопарк\n{FFFFFF}Подойдите и пропишите /garage");
                 Create3DTextLabel(hintText, COLOR_WHITE, x, y, z + 1.15, 18.0, 0, 1);
                 // Locked parking-slot vehicle; employees must use /garage to get their own copy.
                 new eng, lit, alm, doors, bonnet, boot, obj;
@@ -2898,7 +2898,7 @@ stock SetGangStashMoney(gang, amount)
 
 stock GetGangSkin(gang, rank)
 {
-    // РЁС‚Р°С‚РЅС‹Рµ РјРѕРґРµР»Рё GTA:SA, РїРѕРґС…РѕРґСЏС‰РёРµ СѓР»РёС‡РЅС‹Рј Р±Р°РЅРґР°Рј.
+    // Штатные модели GTA:SA, подходящие уличным бандам.
     if (rank < 1) rank = 1;
     if (rank > 6) rank = 6;
     switch (gang)
@@ -2938,7 +2938,7 @@ stock SetGangWeaponAmmo(gang, weaponid, amount)
 
 stock ShowGangWeaponMenu(playerid)
 {
-    ShowPlayerDialog(playerid, DIALOG_GANG_WEAPONS, DIALOG_STYLE_LIST, "РћСЂСѓР¶РµР№РЅС‹Р№ СЃРєР»Р°Рґ Р±Р°РЅРґС‹", "РџРёСЃС‚РѕР»РµС‚ 9РјРј вЂ” РІР·СЏС‚СЊ/РїРѕР»РѕР¶РёС‚СЊ\nРџРёСЃС‚РѕР»РµС‚ Desert Eagle вЂ” РІР·СЏС‚СЊ/РїРѕР»РѕР¶РёС‚СЊ\nР”СЂРѕР±РѕРІРёРє вЂ” РІР·СЏС‚СЊ/РїРѕР»РѕР¶РёС‚СЊ\nMP5 вЂ” РІР·СЏС‚СЊ/РїРѕР»РѕР¶РёС‚СЊ\nAK-47 вЂ” РІР·СЏС‚СЊ/РїРѕР»РѕР¶РёС‚СЊ\nM4 вЂ” РІР·СЏС‚СЊ/РїРѕР»РѕР¶РёС‚СЊ", "Р’С‹Р±СЂР°С‚СЊ", "РќР°Р·Р°Рґ");
+    ShowPlayerDialog(playerid, DIALOG_GANG_WEAPONS, DIALOG_STYLE_LIST, "Оружейный склад банды", "Пистолет 9мм — взять/положить\nПистолет Desert Eagle — взять/положить\nДробовик — взять/положить\nMP5 — взять/положить\nAK-47 — взять/положить\nM4 — взять/положить", "Выбрать", "Назад");
     return 1;
 }
 
@@ -2954,15 +2954,15 @@ stock SpawnGangBases()
     new Float:dx[4] = {5.0, 0.0, -5.0, 0.0};
     new Float:dy[4] = {0.0, 5.0, 0.0, -5.0};
     new Float:angles[4] = {90.0, 180.0, 270.0, 0.0};
-    new names[4][24] = {"Р“СЂСѓРІ РЎС‚СЂРёС‚", "Р‘Р°Р»Р»Р°СЃ", "Р›РѕСЃ РЎР°РЅС‚РѕСЃ Р’Р°РіРѕСЃ", "Р’Р°СЂСЂРёРѕСЃ РђС†С‚РµРєР°СЃ"};
+    new names[4][24] = {"Грув Стрит", "Баллас", "Лос Сантос Вагос", "Варриос Ацтекас"};
     for (new i = 0; i < 4; i++)
     {
         CreatePickup(1275, 23, x[i], y[i], z[i], 0);
         new label[160];
-        format(label, sizeof label, "{FFD700}%s | Р‘РђР—Рђ\n{FFFFFF}Р’СЃС‚СѓРїРёС‚СЊ РІ Р±Р°РЅРґСѓ: /gang\nРЎРєР»Р°Рґ Рё РѕРґРµР¶РґР° РґРѕСЃС‚СѓРїРЅС‹ С‡РµСЂРµР· РјР°СЂРєРµСЂ", names[i]);
+        format(label, sizeof label, "{FFD700}%s | БАЗА\n{FFFFFF}Вступить в банду: /gang\nСклад и одежда доступны через маркер", names[i]);
         gGangStashPickup[i + 1] = CreatePickup(1275, 23, x[i] + 1.5, y[i] + 1.5, z[i], 0);
-        Create3DTextLabel("{00FF99}РћР РЈР–Р•Р™РќР«Р™ РЎРљР›РђР” Р‘РђРќР”Р«\n{FFFFFF}РЎРѕСЃС‚РѕСЏРЅРёРµ: РґРµРЅСЊРіРё, РѕСЂСѓР¶РёРµ, Р±СЂРѕРЅРµР¶РёР»РµС‚", COLOR_WHITE, x[i] + 1.5, y[i] + 1.5, z[i] + 1.0, 18.0, 0, 1);
-        Create3DTextLabel("{33CCFF}РЎРљР›РђР” Р‘РђРќР”Р«\n{FFFFFF}Р’Р·СЏС‚СЊ РѕСЂСѓР¶РёРµ, Р±СЂРѕРЅРµР¶РёР»РµС‚ Рё РґРµРЅСЊРіРё", COLOR_WHITE, x[i] + 1.5, y[i] + 1.5, z[i] + 1.6, 18.0, 0, 1);
+        Create3DTextLabel("{00FF99}ОРУЖЕЙНЫЙ СКЛАД БАНДЫ\n{FFFFFF}Состояние: деньги, оружие, бронежилет", COLOR_WHITE, x[i] + 1.5, y[i] + 1.5, z[i] + 1.0, 18.0, 0, 1);
+        Create3DTextLabel("{33CCFF}СКЛАД БАНДЫ\n{FFFFFF}Взять оружие, бронежилет и деньги", COLOR_WHITE, x[i] + 1.5, y[i] + 1.5, z[i] + 1.6, 18.0, 0, 1);
         Create3DTextLabel(label, COLOR_WHITE, x[i], y[i], z[i] + 1.0, 25.0, 0, 1);
         for (new j = 0; j < 4; j++)
         {
@@ -3041,39 +3041,39 @@ public OnGameModeInit()
 {
     print("[VEXORIUM HUD 3.0] Player card refresh, VEX DRIVE speed gauge and timed notifications loaded.");
     print("[VEXORIUM HUD RU 3.0] Native textdraw HUD; /hudfont; toast notifications; CP1251 source.");
-    SetGameModeText("VEXORIUM RP | Р СѓСЃСЃРєРёР№ RolePlay");
-    // NPC-РїРѕРјРѕС‰РЅРёРєРё РЅР° РѕСЃРЅРѕРІРЅС‹С… СЂР°Р±РѕС‚Р°С… РЅРѕРІРёС‡РєРѕРІ (SA-MP 0.3.7+).
+    SetGameModeText("VEXORIUM RP | Русский RolePlay");
+    // NPC-помощники на основных работах новичков (SA-MP 0.3.7+).
     CreateActor(16, 820.0, 856.0, 12.0, 90.0);
-    Create3DTextLabel("{FFD700}Р Р°Р±РѕС‚РѕРґР°С‚РµР»СЊ: С€Р°С…С‚Р°\n{FFFFFF}/job вЂ” РІС‹Р±СЂР°С‚СЊ СЂР°Р±РѕС‚Сѓ, /work вЂ” РЅР°С‡Р°С‚СЊ СЃРјРµРЅСѓ", COLOR_WHITE, 820.0, 856.0, 13.0, 15.0, 0, 1);
+    Create3DTextLabel("{FFD700}Работодатель: шахта\n{FFFFFF}/job — выбрать работу, /work — начать смену", COLOR_WHITE, 820.0, 856.0, 13.0, 15.0, 0, 1);
     CreateActor(155, 2195.0, -2254.0, 13.5, 180.0);
-    Create3DTextLabel("{FFD700}Р”РёСЃРїРµС‚С‡РµСЂ РіСЂСѓР·РѕРїРµСЂРµРІРѕР·РѕРє\n{FFFFFF}/job вЂ” РІС‹Р±СЂР°С‚СЊ СЂР°Р±РѕС‚Сѓ, /work вЂ” РЅР°С‡Р°С‚СЊ РјР°СЂС€СЂСѓС‚", COLOR_WHITE, 2195.0, -2254.0, 14.5, 15.0, 0, 1);
+    Create3DTextLabel("{FFD700}Диспетчер грузоперевозок\n{FFFFFF}/job — выбрать работу, /work — начать маршрут", COLOR_WHITE, 2195.0, -2254.0, 14.5, 15.0, 0, 1);
     CreateActor(17, 1810.0, -1900.0, 13.4, 0.0);
-    Create3DTextLabel("{FFD700}Р”РёСЃРїРµС‚С‡РµСЂ Р°РІС‚РѕР±СѓСЃРѕРІ\n{FFFFFF}/job вЂ” РІС‹Р±СЂР°С‚СЊ СЂР°Р±РѕС‚Сѓ, /work вЂ” РЅР°С‡Р°С‚СЊ РјР°СЂС€СЂСѓС‚", COLOR_WHITE, 1810.0, -1900.0, 14.4, 15.0, 0, 1);
+    Create3DTextLabel("{FFD700}Диспетчер автобусов\n{FFFFFF}/job — выбрать работу, /work — начать маршрут", COLOR_WHITE, 1810.0, -1900.0, 14.4, 15.0, 0, 1);
     gVX4BusPickup = CreatePickup(1239, 1, 1810.0, -1900.0, 13.4, 0);
-    Create3DTextLabel("{33CC66}VEXORIUM | РђР’РўРћР‘РЈРЎРќР«Р™ РњРђР РЁР РЈРў\n{FFFFFF}/busroute вЂ” РЅР°С‡Р°С‚СЊ РіРѕСЂРѕРґСЃРєРѕР№ РјР°СЂС€СЂСѓС‚", COLOR_WHITE, 1810.0, -1900.0, 15.0, 18.0, 0, 1);
+    Create3DTextLabel("{33CC66}VEXORIUM | АВТОБУСНЫЙ МАРШРУТ\n{FFFFFF}/busroute — начать городской маршрут", COLOR_WHITE, 1810.0, -1900.0, 15.0, 18.0, 0, 1);
     gVX4MechPickup = CreatePickup(1239, 1, 1940.0, -1772.0, 13.4, 0);
-    Create3DTextLabel("{FFAA33}VEXORIUM | РђР’РўРћРЎР•Р Р’РРЎ\n{FFFFFF}/mechonduty вЂ” РІС‹Р№С‚Рё РЅР° СЃРјРµРЅСѓ\n/mechcall вЂ” РІС‹Р·РІР°С‚СЊ РјРµС…Р°РЅРёРєР°", COLOR_WHITE, 1940.0, -1772.0, 14.8, 18.0, 0, 1);
+    Create3DTextLabel("{FFAA33}VEXORIUM | АВТОСЕРВИС\n{FFFFFF}/mechonduty — выйти на смену\n/mechcall — вызвать механика", COLOR_WHITE, 1940.0, -1772.0, 14.8, 18.0, 0, 1);
     CreateActor(61, 1479.0, -1739.0, 13.5, 90.0);
-    Create3DTextLabel("{FFD700}Р”РёСЃРїРµС‚С‡РµСЂ С‚Р°РєСЃРё\n{FFFFFF}/job вЂ” РІС‹Р±СЂР°С‚СЊ СЂР°Р±РѕС‚Сѓ, /work вЂ” РЅР°С‡Р°С‚СЊ РјР°СЂС€СЂСѓС‚", COLOR_WHITE, 1479.0, -1739.0, 14.5, 15.0, 0, 1);
+    Create3DTextLabel("{FFD700}Диспетчер такси\n{FFFFFF}/job — выбрать работу, /work — начать маршрут", COLOR_WHITE, 1479.0, -1739.0, 14.5, 15.0, 0, 1);
     CreateActor(277, 1771.5, -1706.0, 13.5, 90.0);
-    Create3DTextLabel("{FF5555}РџРћР–РђР РќРђРЇ Р§РђРЎРўР¬ VEXORIUM\n{FFFFFF}/job вЂ” СѓСЃС‚СЂРѕРёС‚СЊСЃСЏ РїРѕР¶Р°СЂРЅС‹Рј\n/work вЂ” РЅР°С‡Р°С‚СЊ РІС‹РµР·Рґ", COLOR_WHITE, VX_FIRE_STATION_X, VX_FIRE_STATION_Y, VX_FIRE_STATION_Z + 1.3, 22.0, 0, 0);
-    ShowPlayerMarkers(0); // РќРµ РїРѕРєР°Р·С‹РІР°РµРј РјРµС‚РєРё РёРіСЂРѕРєРѕРІ РЅР° РјРёРЅРёРєСЂР°С‚Рµ; РјРµС‚РєР° РїСЂРµСЃР»РµРґРѕРІР°РЅРёСЏ РѕС‚РґРµР»СЊРЅР°СЏ
+    Create3DTextLabel("{FF5555}ПОЖАРНАЯ ЧАСТЬ VEXORIUM\n{FFFFFF}/job — устроиться пожарным\n/work — начать выезд", COLOR_WHITE, VX_FIRE_STATION_X, VX_FIRE_STATION_Y, VX_FIRE_STATION_Z + 1.3, 22.0, 0, 0);
+    ShowPlayerMarkers(0); // Не показываем метки игроков на миникрате; метка преследования отдельная
     ShowNameTags(1);
     UsePlayerPedAnims();
-    DisableInteriorEnterExits(); // РћС‚РєР»СЋС‡Р°РµРј СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ РјР°СЂРєРµСЂС‹ РІС…РѕРґР° GTA:SA; РІС…РѕРґС‹ VEXORIUM СЃРѕР·РґР°СЋС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ.
-    Create3DTextLabel("{33CC66}LSPD | РџРѕР»РёС†РµР№СЃРєРёР№ СѓС‡Р°СЃС‚РѕРє\n{FFFFFF}/enterpd вЂ” РІРѕР№С‚Рё", COLOR_WHITE, 1540.8, -1675.5, 14.3, 25.0, 0, 1);
-    Create3DTextLabel("{FFD700}РњР­Р РРЇ\n{FFFFFF}Р’РѕР№РґРёС‚Рµ С‡РµСЂРµР· РјР°СЂРєРµСЂ | /orggarage", COLOR_WHITE, 1477.0, -1771.9234, 19.5, 18.0, 0, 1);
+    DisableInteriorEnterExits(); // Отключаем стандартные маркеры входа GTA:SA; входы VEXORIUM создаются отдельно.
+    Create3DTextLabel("{33CC66}LSPD | Полицейский участок\n{FFFFFF}/enterpd — войти", COLOR_WHITE, 1540.8, -1675.5, 14.3, 25.0, 0, 1);
+    Create3DTextLabel("{FFD700}МЭРИЯ\n{FFFFFF}Войдите через маркер | /orggarage", COLOR_WHITE, 1477.0, -1771.9234, 19.5, 18.0, 0, 1);
     CreateActor(17, -2026.8, -96.5, 35.2, 180.0);
-    Create3DTextLabel("{3399FF}VEXORIUM | РђРІС‚РѕС€РєРѕР»Р°\n{FFFFFF}РџРѕРґРѕР№РґРёС‚Рµ Рє РёРЅСЃС‚СЂСѓРєС‚РѕСЂСѓ Рё РЅР°Р¶РјРёС‚Рµ Y", COLOR_WHITE, -2026.8, -96.5, 36.2, 18.0, 0, 1);
-    Create3DTextLabel("{33CC66}Р‘Р¦Р Р‘ | Р“Р›РђР’РќР«Р™ Р’РҐРћР”\n{FFFFFF}Р’РѕР№РґРёС‚Рµ С‡РµСЂРµР· РјР°СЂРєРµСЂ Сѓ РґРІРµСЂРё",COLOR_WHITE,1176.7,-1322.5,14.6,17.0,0,1);
+    Create3DTextLabel("{3399FF}VEXORIUM | Автошкола\n{FFFFFF}Подойдите к инструктору и нажмите Y", COLOR_WHITE, -2026.8, -96.5, 36.2, 18.0, 0, 1);
+    Create3DTextLabel("{33CC66}БЦРБ | ГЛАВНЫЙ ВХОД\n{FFFFFF}Войдите через маркер у двери",COLOR_WHITE,1176.7,-1322.5,14.6,17.0,0,1);
     CreateActor(274, 1178.2, -1321.1, 13.5, 180.0);
     // Hospital heart market: pickup model 1240, full health for $500.
     gHospitalMarketPickup = CreatePickup(1240, 1, 1180.2, -1322.5, 13.5, 0);
-    Create3DTextLabel("{FF4444}<3 РђРџРўР•РљРђ Р‘РћР›Р¬РќРР¦Р« <3\n{FFFFFF}РџРѕР»РЅРѕРµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ Р·РґРѕСЂРѕРІСЊСЏ\n{33CC66}Р¦РµРЅР°: $500\n{FFD700}РџРѕРґРѕР№РґРёС‚Рµ Рє СЃРµСЂРґС†Сѓ", COLOR_WHITE, 1180.2, -1322.5, 14.3, 12.0, 0, 1);
-    Create3DTextLabel("{33CC66}РЁС‚Р°Р± Р°СЂРјРёРё\n{FFFFFF}/enterorg вЂ” РІРѕР№С‚Рё", COLOR_WHITE, 404.5, 2488.8, 17.5, 22.0, 0, 1);
-    Create3DTextLabel("{33CC66}РЁС‚Р°Р± Р’РњР¤\n{FFFFFF}/enterorg вЂ” РІРѕР№С‚Рё", COLOR_WHITE, -1380.0, 508.0, 19.0, 22.0, 0, 1);
-    Create3DTextLabel("{33CC66}РЁС‚Р°Р± Р’Р’РЎ\n{FFFFFF}/enterorg вЂ” РІРѕР№С‚Рё", COLOR_WHITE, 1940.0, -2620.0, 14.8, 22.0, 0, 1);
-    // РЎРѕР±СЃС‚РІРµРЅРЅС‹Рµ РјР°СЂРєРµСЂС‹ РІС…РѕРґР°/РІС‹С…РѕРґР° VEXORIUM РІРјРµСЃС‚Рѕ СЃС‚Р°РЅРґР°СЂС‚РЅС‹С… РІС…РѕРґРѕРІ GTA:SA.
+    Create3DTextLabel("{FF4444}<3 АПТЕКА БОЛЬНИЦЫ <3\n{FFFFFF}Полное восстановление здоровья\n{33CC66}Цена: $500\n{FFD700}Подойдите к сердцу", COLOR_WHITE, 1180.2, -1322.5, 14.3, 12.0, 0, 1);
+    Create3DTextLabel("{33CC66}Штаб армии\n{FFFFFF}/enterorg — войти", COLOR_WHITE, 404.5, 2488.8, 17.5, 22.0, 0, 1);
+    Create3DTextLabel("{33CC66}Штаб ВМФ\n{FFFFFF}/enterorg — войти", COLOR_WHITE, -1380.0, 508.0, 19.0, 22.0, 0, 1);
+    Create3DTextLabel("{33CC66}Штаб ВВС\n{FFFFFF}/enterorg — войти", COLOR_WHITE, 1940.0, -2620.0, 14.8, 22.0, 0, 1);
+    // Собственные маркеры входа/выхода VEXORIUM вместо стандартных входов GTA:SA.
     for (new f = 1; f <= 7; f++) { gOrgEnterPickup[f] = INVALID_PICKUP; gOrgExitPickup[f] = INVALID_PICKUP; gLockerPickup[f] = INVALID_PICKUP; }
     gOrgEnterPickup[FACTION_CITYHALL] = CreatePickup(1239, 1, 1477.0, -1771.9234, 18.7957, 0);
     gLicenseMarketPickup = CreatePickup(1239, 1, 362.4587, 174.0056, 1008.3828, 101);
@@ -3088,7 +3088,7 @@ public OnGameModeInit()
     // negative X would place the marker in a different part of the map.
     gOrgEnterPickup[FACTION_FBI] = CreatePickup(1239, 1, 1642.0, -2248.0, 13.5, 0);
     gFBIBuildingEnterPickup = gOrgEnterPickup[FACTION_FBI];
-    Create3DTextLabel("{3399FF}FBI | Р’РҐРћР”\n{FFFFFF}РџРѕРґРѕР¶РґРёС‚Рµ 2 СЃРµРєСѓРЅРґС‹ Сѓ РІС…РѕРґР°", COLOR_WHITE, 1642.0, -2248.0, 14.6, 25.0, 0, 1);
+    Create3DTextLabel("{3399FF}FBI | ВХОД\n{FFFFFF}Подождите 2 секунды у входа", COLOR_WHITE, 1642.0, -2248.0, 14.6, 25.0, 0, 1);
     gPoliceExitPickup = CreatePickup(1239, 1, 246.3213, 62.5062, 1003.6406, 0);
     // Interior-only 3D label removed: use the exterior entrance marker instead.
     for (new f = 1; f <= 7; f++)
@@ -3103,25 +3103,25 @@ public OnGameModeInit()
         else gOrgExitPickup[f] = CreatePickup(1239, 1, 2496.0, -1688.0, 1014.7, 100 + f);
     }
     // Interior-only 3D label removed: use the exterior entrance marker instead.
-    Create3DTextLabel("{FFD700}РђСЂРµРЅРґР° СЃРєСѓС‚РµСЂРѕРІ РґР»СЏ РЅРѕРІРёС‡РєРѕРІ\n{FFFFFF}РЎСЏРґСЊС‚Рµ РЅР° Faggio Рё РІС‹Р±РµСЂРёС‚Рµ Р°СЂРµРЅРґСѓ (250 СЂСѓР±.)", COLOR_WHITE, 1764.0, -1898.0, 14.0, 20.0, 0, 1);
-    // Р”РІРµСЂСЊ РёР· РёРЅС‚РµСЂСЊРµСЂР° LSPD Рє Р°РІС‚РѕРїР°СЂРєСѓ Рё РѕР±СЂР°С‚РЅР°СЏ РґРІРµСЂСЊ СЃРЅР°СЂСѓР¶Рё.
+    Create3DTextLabel("{FFD700}Аренда скутеров для новичков\n{FFFFFF}Сядьте на Faggio и выберите аренду (250 руб.)", COLOR_WHITE, 1764.0, -1898.0, 14.0, 20.0, 0, 1);
+    // Дверь из интерьера LSPD к автопарку и обратная дверь снаружи.
     gPoliceEntrancePickup = CreatePickup(1239, 1, 1553.4399, -1675.5238, 16.1953, 0);
-    Create3DTextLabel("{39D98A}VEXORIUM | Р’С…РѕРґ РІ LSPD\n{FFFFFF}РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°СЂРєРµСЂСѓ", COLOR_WHITE, 1553.4399, -1675.5238, 16.95, 8.0, 0, 0);
+    Create3DTextLabel("{39D98A}VEXORIUM | Вход в LSPD\n{FFFFFF}Подойдите к маркеру", COLOR_WHITE, 1553.4399, -1675.5238, 16.95, 8.0, 0, 0);
     // One entrance marker inside LSPD: step on it to enter the garage.
     gPoliceGarageDoorPickup = CreatePickup(1239, 1, 246.7147, 87.2885, 1003.6406, 0);
     gPoliceHallGaragePickup = INVALID_PICKUP;
     // Interior-only 3D label removed: use the exterior entrance marker instead.
     gPoliceGarageReturnPickup = CreatePickup(1239, 1, 1568.4843, -1690.4116, 5.8906, 0);
     // Interior-only 3D label removed: use the exterior entrance marker instead.
-    Create3DTextLabel("{33CC66}Р”РІРµСЂСЊ РІ СѓС‡Р°СЃС‚РѕРє LSPD\n{FFFFFF}РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°СЂРєРµСЂСѓ", COLOR_WHITE, 1568.4843, -1690.4116, 6.8, 7.0, 0, 0);
-    // РњР°СЂРєРµСЂС‹ СЂР°Р·РґРµРІР°Р»РѕРє: РїРѕР»РёС†РёСЏ РёСЃРїРѕР»СЊР·СѓРµС‚ РёРЅС‚РµСЂСЊРµСЂ LSPD, РѕСЃС‚Р°Р»СЊРЅС‹Рµ С„СЂР°РєС†РёРё вЂ” СЃРІРѕР№ РІРёСЂС‚СѓР°Р»СЊРЅС‹Р№ РјРёСЂ.
+    Create3DTextLabel("{33CC66}Дверь в участок LSPD\n{FFFFFF}Подойдите к маркеру", COLOR_WHITE, 1568.4843, -1690.4116, 6.8, 7.0, 0, 0);
+    // Маркеры раздевалок: полиция использует интерьер LSPD, остальные фракции — свой виртуальный мир.
     gLockerPickup[FACTION_POLICE] = CreatePickup(1275, 1, 255.3, 77.4, 1003.6, 0);
-    Create3DTextLabel("{33CC66}LSPD | Р РђР—Р”Р•Р’РђР›РљРђ\n{FFFFFF}РЎРјРµРЅРёС‚СЊ С„РѕСЂРјСѓ / РіСЂР°Р¶РґР°РЅСЃРєСѓСЋ РѕРґРµР¶РґСѓ", COLOR_WHITE, 255.3, 77.4, 1004.5, 8.0, 0, 1);
+    Create3DTextLabel("{33CC66}LSPD | РАЗДЕВАЛКА\n{FFFFFF}Сменить форму / гражданскую одежду", COLOR_WHITE, 255.3, 77.4, 1004.5, 8.0, 0, 1);
     gPoliceStashPickup = CreatePickup(1275, 1, 258.52, 76.8268, 1003.6406, 0);
     // FBI storage marker: Interior 6, virtual world 107.
     gFBIStashPickup = CreatePickup(1275, 1, 258.5231, 76.3146, 1003.6406, 107);
-    Create3DTextLabel("{3399FF}FBI | РћР РЈР–Р•Р™РќР«Р™ РЎРљР›РђР”\n{FFFFFF}РћСЂСѓР¶РёРµ Рё СЃРЅР°СЂСЏР¶РµРЅРёРµ", COLOR_WHITE, 258.5231, 76.3146, 1004.5, 8.0, 107, 1);
-    Create3DTextLabel("{33CC66}LSPD | РЎРљР›РђР”\n{FFFFFF}РџРѕР»СѓС‡РµРЅРёРµ СЃР»СѓР¶РµР±РЅРѕРіРѕ СЃРЅР°СЂСЏР¶РµРЅРёСЏ", COLOR_WHITE, 258.52, 76.8268, 1004.5, 8.0, 0, 1);
+    Create3DTextLabel("{3399FF}FBI | ОРУЖЕЙНЫЙ СКЛАД\n{FFFFFF}Оружие и снаряжение", COLOR_WHITE, 258.5231, 76.3146, 1004.5, 8.0, 107, 1);
+    Create3DTextLabel("{33CC66}LSPD | СКЛАД\n{FFFFFF}Получение служебного снаряжения", COLOR_WHITE, 258.52, 76.8268, 1004.5, 8.0, 0, 1);
     // Interior-only 3D label removed: use the exterior entrance marker instead.
     gLockerPickup[FACTION_CITYHALL] = CreatePickup(1275, 1, 391.0, 173.7, 1008.4, 100 + FACTION_CITYHALL);
     gLockerPickup[FACTION_HOSPITAL] = CreatePickup(1275, 1, 2504.0, -1692.0, 1014.7, 100 + FACTION_HOSPITAL);
@@ -3129,41 +3129,41 @@ public OnGameModeInit()
     gLockerPickup[FACTION_NAVY] = CreatePickup(1275, 1, 2504.0, -1692.0, 1014.7, 100 + FACTION_NAVY);
     gLockerPickup[FACTION_AIRFORCE] = CreatePickup(1275, 1, 2504.0, -1692.0, 1014.7, 100 + FACTION_AIRFORCE);
     gLockerPickup[FACTION_FBI] = CreatePickup(1275, 1, 255.3, 77.4, 1003.6410, 100 + FACTION_FBI);
-    Create3DTextLabel("{3399FF}FBI | Р РђР—Р”Р•Р’РђР›РљРђ\n{FFFFFF}Р¤РѕСЂРјР° РїРѕ СЂР°РЅРіСѓ", COLOR_WHITE, 255.3, 77.4, 1004.5, 10.0, 100 + FACTION_FBI, 1);
+    Create3DTextLabel("{3399FF}FBI | РАЗДЕВАЛКА\n{FFFFFF}Форма по рангу", COLOR_WHITE, 255.3, 77.4, 1004.5, 10.0, 100 + FACTION_FBI, 1);
     // Interior-only 3D label removed: use the exterior entrance marker instead.
     // Interior-only 3D label removed: use the exterior entrance marker instead.
-    // РђРІС‚РѕСЃР°Р»РѕРЅ Рё РђР—РЎ VEXORIUM RP: СЃРІРѕРё РјР°СЂРєРµСЂС‹ РІРјРµСЃС‚Рѕ СЃС‚Р°РЅРґР°СЂС‚РЅС‹С… РјР°СЂРєРµСЂРѕРІ РІС…РѕРґР° GTA.
+    // Автосалон и АЗС VEXORIUM RP: свои маркеры вместо стандартных маркеров входа GTA.
     gCarDealerPickup = CreatePickup(1239, 1, 2131.0, -1150.0, 24.1, 0);
     gAccessoryShopPickup = CreatePickup(1239, 1, 1457.0, -1137.0, 23.9, 0);
-    Create3DTextLabel("{39D98A}VEXORIUM | РњРђР“РђР—РРќ РђРљРЎР•РЎРЎРЈРђР РћР’\n{FFFFFF}РЁР»СЏРїС‹, РѕС‡РєРё Рё РјР°СЃРєРё\n/shopacc - РѕС‚РєСЂС‹С‚СЊ РјР°РіР°Р·РёРЅ", COLOR_WHITE, 1457.0, -1137.0, 25.0, 18.0, 0, 1);
-    Create3DTextLabel("{39D98A}VEXORIUM | РђРІС‚РѕСЃР°Р»РѕРЅ\n{FFFFFF}/carshop вЂ” РєСѓРїРёС‚СЊ РјР°С€РёРЅСѓ", COLOR_WHITE, 2131.0, -1150.0, 25.1, 18.0, 0, 1);
+    Create3DTextLabel("{39D98A}VEXORIUM | МАГАЗИН АКСЕССУАРОВ\n{FFFFFF}Шляпы, очки и маски\n/shopacc - открыть магазин", COLOR_WHITE, 1457.0, -1137.0, 25.0, 18.0, 0, 1);
+    Create3DTextLabel("{39D98A}VEXORIUM | Автосалон\n{FFFFFF}/carshop — купить машину", COLOR_WHITE, 2131.0, -1150.0, 25.1, 18.0, 0, 1);
     // Small world pickups; map icons are streamed only near the player.
     for (new m = 0; m < VX_MARKET_COUNT; m++)
     {
         gMarketPickups[m] = CreatePickup(1239, 1, gVXMarketPos[m][0], gVXMarketPos[m][1], gVXMarketPos[m][2], 0);
-        Create3DTextLabel("{33CC66}VEXORIUM | РњРђР“РђР—РРќ\n{FFFFFF}/shop - РїРѕРєСѓРїРєРё", COLOR_WHITE,
+        Create3DTextLabel("{33CC66}VEXORIUM | МАГАЗИН\n{FFFFFF}/shop - покупки", COLOR_WHITE,
             gVXMarketPos[m][0], gVXMarketPos[m][1], gVXMarketPos[m][2]+1.0, 12.0, 0, 1);
     }
     gMarketPickup = gMarketPickups[0];
     // Shared stock 24/7 interior (interior 4), isolated from the street by virtual world 5500.
     gMarketInteriorCounterPickup = CreatePickup(1239, 1, VX_MARKET_COUNTER_X, VX_MARKET_COUNTER_Y, VX_MARKET_COUNTER_Z, VX_MARKET_WORLD);
     gMarketInteriorExitPickup = CreatePickup(1239, 1, VX_MARKET_EXIT_X, VX_MARKET_EXIT_Y, VX_MARKET_EXIT_Z, VX_MARKET_WORLD);
-    Create3DTextLabel("{33CC66}VEXORIUM | РљРђРЎРЎРђ\n{FFFFFF}РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°СЂРєРµСЂСѓ РёР»Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /shop", COLOR_WHITE,
+    Create3DTextLabel("{33CC66}VEXORIUM | КАССА\n{FFFFFF}Подойдите к маркеру или используйте /shop", COLOR_WHITE,
         VX_MARKET_COUNTER_X, VX_MARKET_COUNTER_Y, VX_MARKET_COUNTER_Z + 0.8, 10.0, VX_MARKET_WORLD, 0);
-    Create3DTextLabel("{FFD700}Р’Р«РҐРћР” РР— РњРђР“РђР—РРќРђ\n{FFFFFF}Р’РµСЂРЅСѓС‚СЊСЃСЏ РЅР° СѓР»РёС†Сѓ", COLOR_WHITE,
+    Create3DTextLabel("{FFD700}ВЫХОД ИЗ МАГАЗИНА\n{FFFFFF}Вернуться на улицу", COLOR_WHITE,
         VX_MARKET_EXIT_X, VX_MARKET_EXIT_Y, VX_MARKET_EXIT_Z + 0.8, 10.0, VX_MARKET_WORLD, 0);
-    // РњР°РіР°Р·РёРЅС‹ РѕРґРµР¶РґС‹ РІ С‚СЂС‘С… РіРѕСЂРѕРґР°С…, СЃ РЅРµР±РѕР»СЊС€РёРјРё РјР°СЂРєРµСЂР°РјРё Сѓ РІС…РѕРґР°.
+    // Магазины одежды в трёх городах, с небольшими маркерами у входа.
     for(new cs=0;cs<VX_CLOTHES_LOCATIONS;cs++)
     {
         gVXClothesPickup[cs]=CreatePickup(1275,1,gVXClothesPos[cs][0],gVXClothesPos[cs][1],gVXClothesPos[cs][2],0);
-        Create3DTextLabel("{EBA6FF}VEXORIUM | РћР”Р•Р–Р”Рђ\n{FFFFFF}/clothes - РїСЂРёРјРµСЂРєР° Рё РїРѕРєСѓРїРєР°",COLOR_WHITE,
+        Create3DTextLabel("{EBA6FF}VEXORIUM | ОДЕЖДА\n{FFFFFF}/clothes - примерка и покупка",COLOR_WHITE,
             gVXClothesPos[cs][0],gVXClothesPos[cs][1],gVXClothesPos[cs][2]+1.0,13.0,0,1);
     }
 
     for (new g = 0; g < VX_GAS_COUNT; g++)
     {
         gGasStationPickup[g] = CreatePickup(1650, 1, gVXGasPos[g][0], gVXGasPos[g][1], gVXGasPos[g][2], 0);
-        Create3DTextLabel("{FFD700}VEXORIUM | РђР—РЎ\n{FFFFFF}/fuel - Р·Р°РїСЂР°РІРєР°", COLOR_WHITE,
+        Create3DTextLabel("{FFD700}VEXORIUM | АЗС\n{FFFFFF}/fuel - заправка", COLOR_WHITE,
             gVXGasPos[g][0], gVXGasPos[g][1], gVXGasPos[g][2]+1.0, 12.0, 0, 1);
     }
     SpawnBaseScooter();
@@ -3241,9 +3241,9 @@ public OnGameModeInit()
                 houseOwner[0] = '\0';
                 db_get_field(rpHouseLabels, 1, houseOwner, sizeof houseOwner);
                 if (houseOwner[0]) format(ownerLabel, sizeof ownerLabel, "%s", houseOwner);
-                else format(ownerLabel, sizeof ownerLabel, "РЅРµС‚Сѓ");
+                else format(ownerLabel, sizeof ownerLabel, "нету");
                 format(houseLabel, sizeof houseLabel,
-                    "{66CCFF}Р”РћРњ #%d\n{FFFFFF}Р’Р»Р°РґРµР»РµС†: %s\nР¦РµРЅР°: %d СЂСѓР±.\n{33CC66}/housebuy /houseenter",
+                    "{66CCFF}ДОМ #%d\n{FFFFFF}Владелец: %s\nЦена: %d руб.\n{33CC66}/housebuy /houseenter",
                     hid, ownerLabel, db_get_field_int(rpHouseLabels, 2));
                 new Float:hx = db_get_field_float(rpHouseLabels, 3);
                 new Float:hy = db_get_field_float(rpHouseLabels, 4);
@@ -3300,14 +3300,14 @@ public InterviewAnnouncement()
     new factionName[32], msg[192];
     GetFactionName(gInterviewFaction, factionName, sizeof factionName);
     if (gInterviewFaction == FACTION_POLICE)
-        format(factionName, sizeof factionName, "РџРѕР»РёС†РёСЏ LSPD");
+        format(factionName, sizeof factionName, "Полиция LSPD");
 
-    format(msg, sizeof msg, "РќР°С‡Р°Р»РѕСЃСЊ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ РІ РѕСЂРіР°РЅРёР·Р°С†РёСЋ - %s.", factionName);
+    format(msg, sizeof msg, "Началось собеседование в организацию - %s.", factionName);
     SendClientMessageToAll(COLOR_BLUE, msg);
-    SendClientMessageToAll(COLOR_BLUE, "Р§С‚РѕР±С‹ РїСЂРѕР№С‚Рё СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ РІР°Рј РЅСѓР¶РЅРѕ РёРјРµС‚СЊ РїСЂРё СЃРµР±Рµ РїР°СЃРїРѕСЂС‚, 4 Р»РІР», Р»РёС†РµРЅР·РёСЋ РЅР° Р°РІС‚Рѕ Рё РЅР° РѕСЂСѓР¶РёРµ.");
-    format(msg, sizeof msg, "РџСЂРёР№С‚Рё РЅР° СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ: /gps -> РћСЂРіР°РЅРёР·Р°С†РёРё -> %s.", factionName);
+    SendClientMessageToAll(COLOR_BLUE, "Чтобы пройти собеседование вам нужно иметь при себе паспорт, 4 лвл, лицензию на авто и на оружие.");
+    format(msg, sizeof msg, "Прийти на собеседование: /gps -> Организации -> %s.", factionName);
     SendClientMessageToAll(COLOR_BLUE, msg);
-    SendClientMessageToAll(COLOR_BLUE, "РњС‹ РІР°СЃ Р¶РґС‘Рј!");
+    SendClientMessageToAll(COLOR_BLUE, "Мы вас ждём!");
     return 1;
 }
 
@@ -3344,16 +3344,16 @@ public PayDay()
         }
         SetPlayerScore(playerid, gLevel[playerid]);
         new msg[192];
-        format(msg, sizeof msg, "[PayDay] Р’С‹РїР»Р°С‚Р°: %d СЂСѓР±. | РћРїС‹С‚: +%d (РІСЃРµРіРѕ %d/%d).", salary, multiplier, gExperience[playerid], GetExperienceForLevel(gLevel[playerid] + 1));
+        format(msg, sizeof msg, "[PayDay] Выплата: %d руб. | Опыт: +%d (всего %d/%d).", salary, multiplier, gExperience[playerid], GetExperienceForLevel(gLevel[playerid] + 1));
         SendClientMessage(playerid, COLOR_GREEN, msg);
         new paydayToast[64];
-        format(paydayToast, sizeof paydayToast, "+%d СЂСѓР±. | +%d XP", salary, multiplier);
+        format(paydayToast, sizeof paydayToast, "+%d руб. | +%d XP", salary, multiplier);
         VX_Notify(playerid, "PAYDAY", paydayToast, VEX_HUD_ACCENT);
         if (gLevel[playerid] > oldLevel)
         {
-            format(msg, sizeof msg, "[VEXORIUM] РџРѕР·РґСЂР°РІР»СЏРµРј! Р’Р°С€ СѓСЂРѕРІРµРЅСЊ РїРѕРІС‹С€РµРЅ РґРѕ %d!", gLevel[playerid]);
+            format(msg, sizeof msg, "[VEXORIUM] Поздравляем! Ваш уровень повышен до %d!", gLevel[playerid]);
             SendClientMessage(playerid, COLOR_YELLOW, msg);
-            VX_Notify(playerid, "РќРћР’Р«Р™ РЈР РћР’Р•РќР¬", "РџРѕР·РґСЂР°РІР»СЏРµРј СЃ РїРѕРІС‹С€РµРЅРёРµРј!", VEX_HUD_WARNING);
+            VX_Notify(playerid, "НОВЫЙ УРОВЕНЬ", "Поздравляем с повышением!", VEX_HUD_WARNING);
             RefreshVexHud(playerid);
         }
         SavePlayer(playerid);
@@ -3384,11 +3384,11 @@ stock UpdatePlayerRoleColor(playerid)
 {
     if (!IsPlayerConnected(playerid)) return 0;
     if (gLogged[playerid] && gFaction[playerid] == FACTION_FBI && gFactionRank[playerid] > 0)
-        SetPlayerColor(playerid, 0x101010FF); // FBI вЂ” С‡С‘СЂРЅС‹Р№ РЅРёРє Рё С†РІРµС‚ РёРіСЂРѕРєР° РЅР° РєР°СЂС‚Рµ
+        SetPlayerColor(playerid, 0x101010FF); // FBI — чёрный ник и цвет игрока на карте
     else if (gLogged[playerid] && gFaction[playerid] == FACTION_POLICE && gFactionRank[playerid] > 0)
-        SetPlayerColor(playerid, 0x3399FFFF); // LSPD вЂ” СЃРёРЅРёР№
+        SetPlayerColor(playerid, 0x3399FFFF); // LSPD — синий
     else
-        SetPlayerColor(playerid, 0xFFFFFFFF); // Р“СЂР°Р¶РґР°РЅСЃРєРёРµ Рё РѕСЃС‚Р°Р»СЊРЅС‹Рµ С„СЂР°РєС†РёРё вЂ” Р±РµР»С‹Р№
+        SetPlayerColor(playerid, 0xFFFFFFFF); // Гражданские и остальные фракции — белый
     return 1;
 }
 
@@ -3440,7 +3440,7 @@ stock PutPlayerInPvpArena(playerid, side)
 stock FinishPvp(winnerid, loserid)
 {
     new msg[144];
-    format(msg, sizeof msg, "[VEXORIUM | PvP] %s РїРѕР±РµРґРёР» СЃРѕ СЃС‡С‘С‚РѕРј 5:%d! Р”СѓСЌР»СЊ Р·Р°РІРµСЂС€РµРЅР°.", gName[winnerid], gPvpScore[loserid]);
+    format(msg, sizeof msg, "[VEXORIUM | PvP] %s победил со счётом 5:%d! Дуэль завершена.", gName[winnerid], gPvpScore[loserid]);
     if (IsPlayerConnected(winnerid)) SendClientMessage(winnerid, COLOR_GREEN, msg);
     if (IsPlayerConnected(loserid)) SendClientMessage(loserid, COLOR_RED, msg);
     if (IsPlayerConnected(winnerid)) { gPvpActive[winnerid] = false; gPvpRestorePending[winnerid] = true; gPvpOpponent[winnerid] = INVALID_PLAYER_ID; SpawnPlayer(winnerid); }
@@ -3456,7 +3456,7 @@ public PvpRespawn(playerid)
         if (opponent != INVALID_PLAYER_ID && IsPlayerConnected(opponent) && gPvpActive[opponent])
         {
             SpawnPlayer(playerid);
-            SendClientMessage(playerid, COLOR_YELLOW, "[PvP] Р Р°СѓРЅРґ РїСЂРѕРґРѕР»Р¶Р°РµС‚СЃСЏ. РџРѕР±РµР¶РґР°РµС‚ РїРµСЂРІС‹Р№, РєС‚Рѕ РЅР°Р±РµСЂС‘С‚ 5 РїРѕР±РµРґ.");
+            SendClientMessage(playerid, COLOR_YELLOW, "[PvP] Раунд продолжается. Побеждает первый, кто наберёт 5 побед.");
         }
     }
     return 1;
@@ -3560,7 +3560,7 @@ public OnPlayerConnect(playerid)
     TogglePlayerSpectating(playerid, true);
     if (gDatabase == DB:0)
     {
-        SendClientMessage(playerid, COLOR_RED, "[VEXORIUM] РћС€РёР±РєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С…. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.");
+        SendClientMessage(playerid, COLOR_RED, "[VEXORIUM] Ошибка базы данных. Попробуйте позже.");
         Kick(playerid);
         return 1;
     }
@@ -3570,22 +3570,22 @@ public OnPlayerConnect(playerid)
     new loginText[512], registerText[768];
     loginText[0] = '\0';
     strcat(loginText, "================================\n             V E X O R I U M\n", sizeof loginText);
-    strcat(loginText, "          Р“РћР РћР” Р–Р”РЃРў РўР•Р‘РЇ\n\n", sizeof loginText);
-    strcat(loginText, "РђРєРєР°СѓРЅС‚ РЅР°Р№РґРµРЅ. Р’РІРµРґРё СЃРІРѕР№ РїР°СЂРѕР»СЊ.\n", sizeof loginText);
-    strcat(loginText, "РџР°СЂРѕР»СЊ СЃРєСЂС‹С‚ РІРѕ РІСЂРµРјСЏ РІРІРѕРґР°.\n\nРќР°Р¶РјРё Р’РћР™РўР РґР»СЏ РІС…РѕРґР° РЅР° СЃРµСЂРІРµСЂ.", sizeof loginText);
+    strcat(loginText, "          ГОРОД ЖДЁТ ТЕБЯ\n\n", sizeof loginText);
+    strcat(loginText, "Аккаунт найден. Введи свой пароль.\n", sizeof loginText);
+    strcat(loginText, "Пароль скрыт во время ввода.\n\nНажми ВОЙТИ для входа на сервер.", sizeof loginText);
     registerText[0] = '\0';
     strcat(registerText, "================================\n             V E X O R I U M\n", sizeof registerText);
-    strcat(registerText, "       РўР’РћРЇ РРЎРўРћР РРЇ РќРђР§РРќРђР•РўРЎРЇ\n\n", sizeof registerText);
-    strcat(registerText, "РќРѕРІС‹Р№ Р°РєРєР°СѓРЅС‚ РЅРµ РЅР°Р№РґРµРЅ.\n", sizeof registerText);
-    strcat(registerText, "РџСЂРёРґСѓРјР°Р№ РїР°СЂРѕР»СЊ РѕС‚ 4 РґРѕ 64 СЃРёРјРІРѕР»РѕРІ.\n", sizeof registerText);
-    strcat(registerText, "Р—Р°РїРѕРјРЅРё РµРіРѕ: РѕРЅ РїРѕРЅР°РґРѕР±РёС‚СЃСЏ РїСЂРё СЃР»РµРґСѓСЋС‰РµРј РІС…РѕРґРµ.\n\n", sizeof registerText);
-    strcat(registerText, "РќР°Р¶РјРё РЎРћР—Р”РђРўР¬ РґР»СЏ СЂРµРіРёСЃС‚СЂР°С†РёРё.", sizeof registerText);
+    strcat(registerText, "       ТВОЯ ИСТОРИЯ НАЧИНАЕТСЯ\n\n", sizeof registerText);
+    strcat(registerText, "Новый аккаунт не найден.\n", sizeof registerText);
+    strcat(registerText, "Придумай пароль от 4 до 64 символов.\n", sizeof registerText);
+    strcat(registerText, "Запомни его: он понадобится при следующем входе.\n\n", sizeof registerText);
+    strcat(registerText, "Нажми СОЗДАТЬ для регистрации.", sizeof registerText);
     if (connectResult && db_num_rows(connectResult))
         ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD,
-            "VEXORIUM | Р”РћР‘Р Рћ РџРћР–РђР›РћР’РђРўР¬", loginText, "Р’РћР™РўР", "Р’Р«РҐРћР”");
+            "VEXORIUM | ДОБРО ПОЖАЛОВАТЬ", loginText, "ВОЙТИ", "ВЫХОД");
     else
         ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD,
-            "VEXORIUM | РЎРћР—Р”РђРќРР• РђРљРљРђРЈРќРўРђ", registerText, "РЎРћР—Р”РђРўР¬", "Р’Р«РҐРћР”");
+            "VEXORIUM | СОЗДАНИЕ АККАУНТА", registerText, "СОЗДАТЬ", "ВЫХОД");
     if (connectResult) db_free_result(connectResult);
     return 1;
 }
@@ -3613,7 +3613,7 @@ public OnPlayerDisconnect(playerid, reason)
             gPvpActive[opponent] = false;
             gPvpOpponent[opponent] = INVALID_PLAYER_ID;
             gPvpRestorePending[opponent] = true;
-            SendClientMessage(opponent, COLOR_GREEN, "[PvP] РЎРѕРїРµСЂРЅРёРє РІС‹С€РµР» СЃ СЃРµСЂРІРµСЂР°. Р’С‹ РІС‹РёРіСЂР°Р»Рё РґСѓСЌР»СЊ.");
+            SendClientMessage(opponent, COLOR_GREEN, "[PvP] Соперник вышел с сервера. Вы выиграли дуэль.");
             SpawnPlayer(opponent);
         }
     }
@@ -3711,7 +3711,7 @@ public OnPlayerSpawn(playerid)
         return 1;
     }
 
-    // Р•СЃР»Рё РјРµСЃС‚Рѕ СѓР¶Рµ РІС‹Р±СЂР°РЅРѕ, СЃРѕС…СЂР°РЅСЏРµРј РµРіРѕ РґР»СЏ РІС…РѕРґРѕРІ Рё РїРѕСЃР»Рµ СЃРјРµСЂС‚Рё.
+    // Если место уже выбрано, сохраняем его для входов и после смерти.
     if (gSpawnPreference[playerid] == 1 || gSpawnPreference[playerid] == 2)
         ApplySavedSpawn(playerid);
     else
@@ -3722,7 +3722,7 @@ public OnPlayerSpawn(playerid)
 stock IsPlayerInGreenZone(playerid)
 {
     if(GetPlayerVirtualWorld(playerid)==VX_HOSPITAL_WORLD) return 1;
-    // Р’РЅСѓС‚СЂРµРЅРЅРёРµ РїРѕРјРµС‰РµРЅРёСЏ (СѓС‡Р°СЃС‚РѕРє, РјСЌСЂРёСЏ, Р±РѕР»СЊРЅРёС†Р° Рё РґСЂСѓРіРёРµ РёРЅС‚РµСЂСЊРµСЂС‹) вЂ” Р±РµР·РѕРїР°СЃРЅР°СЏ Р·РѕРЅР°.
+    // Внутренние помещения (участок, мэрия, больница и другие интерьеры) — безопасная зона.
     if (!IsPlayerConnected(playerid)) return 0;
     return (GetPlayerInterior(playerid) != 0);
 }
@@ -3741,8 +3741,8 @@ public OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
         GetPlayerHealth(playerid, health);
         SetPlayerHealth(playerid, VX_FloatMin(100.0,health));
         if (issuerid != INVALID_PLAYER_ID)
-            SendClientMessage(issuerid, COLOR_GREEN, "[GREEN ZONE] Р’РЅСѓС‚СЂРё Р·РґР°РЅРёР№ РЅРµР»СЊР·СЏ РЅР°РЅРѕСЃРёС‚СЊ СѓСЂРѕРЅ.");
-        SendClientMessage(playerid, COLOR_GREEN, "[GREEN ZONE] Р’С‹ РЅР°С…РѕРґРёС‚РµСЃСЊ РІ Р±РµР·РѕРїР°СЃРЅРѕР№ Р·РѕРЅРµ.");
+            SendClientMessage(issuerid, COLOR_GREEN, "[GREEN ZONE] Внутри зданий нельзя наносить урон.");
+        SendClientMessage(playerid, COLOR_GREEN, "[GREEN ZONE] Вы находитесь в безопасной зоне.");
         return 0;
     }
     RP_OnDamage(playerid,issuerid,amount,weaponid,bodypart);
@@ -3760,7 +3760,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
         new taserTick = GetTickCount();
         if (gLastTaserTick[playerid] != 0 && taserTick - gLastTaserTick[playerid] < 15000)
         {
-            SendClientMessage(playerid, COLOR_YELLOW, "[РўРђР™Р—Р•Р ] РџРµСЂРµР·Р°СЂСЏРґРєР°: РїРѕРґРѕР¶РґРёС‚Рµ 15 СЃРµРєСѓРЅРґ.");
+            SendClientMessage(playerid, COLOR_YELLOW, "[ТАЙЗЕР] Перезарядка: подождите 15 секунд.");
             return 1;
         }
         gLastTaserTick[playerid] = taserTick;
@@ -3769,8 +3769,8 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
         ApplyAnimation(damagedid, "CRACK", "crckdeth2", 4.1, 1, 0, 0, 1, 10000, 1);
         SetPlayerDrunkLevel(damagedid, 50000);
         TogglePlayerControllable(damagedid, 0);
-        SendClientMessage(damagedid, COLOR_RED, "Р’С‹ РїРѕРїР°Р»Рё РїРѕ С‚Р°Р№Р·РµСЂСѓ! Р’С‹ РѕС‚РєР»СЋС‡РµРЅС‹ РЅР° 10 СЃРµРєСѓРЅРґ.");
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕРїР°Р»Рё РІ РёРіСЂРѕРєР° С‚Р°Р№Р·РµСЂРѕРј USP.");
+        SendClientMessage(damagedid, COLOR_RED, "Вы попали по тайзеру! Вы отключены на 10 секунд.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы попали в игрока тайзером USP.");
         gRPTaserUntil[damagedid]=gettime()+10;
     }
     return 1;
@@ -3842,7 +3842,7 @@ public VexRespawnAfterDeath(playerid)
 
 public OnPlayerDeath(playerid, killerid, reason)
 {
-    VX_TaxiCancelForPlayer(playerid, "[РўРђРљРЎР] Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ: РїРѕРµР·РґРєР° РїСЂРµСЂРІР°РЅР°.", false);
+    VX_TaxiCancelForPlayer(playerid, "[ТАКСИ] Заказ отменён: поездка прервана.", false);
     RP_DropStretcher(playerid);
     gRPOpDoctor[playerid]=INVALID_PLAYER_ID; gRPOpUntil[playerid]=0;
     gRPTaserUntil[playerid]=0;
@@ -3853,7 +3853,7 @@ public OnPlayerDeath(playerid, killerid, reason)
         {
             gPvpScore[opponent]++;
             new scoreMsg[128];
-            format(scoreMsg, sizeof scoreMsg, "[PvP] РЎС‡С‘С‚: %s %d : %d %s", gName[opponent], gPvpScore[opponent], gPvpScore[playerid], gName[playerid]);
+            format(scoreMsg, sizeof scoreMsg, "[PvP] Счёт: %s %d : %d %s", gName[opponent], gPvpScore[opponent], gPvpScore[playerid], gName[playerid]);
             SendClientMessage(opponent, COLOR_GREEN, scoreMsg);
             SendClientMessage(playerid, COLOR_YELLOW, scoreMsg);
             if (gPvpScore[opponent] >= 5) { FinishPvp(opponent, playerid); return 1; }
@@ -3884,7 +3884,7 @@ public FinishFBIEnter(playerid)
     if (!gLogged[playerid]) return 1;
     if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || !IsPlayerInRangeOfPoint(playerid, 4.0, 1642.0, -2248.0, 13.5))
     {
-        SendClientMessage(playerid, COLOR_YELLOW, "[FBI] Р’С…РѕРґ РѕС‚РјРµРЅС‘РЅ. РЎС‚РѕР№С‚Рµ Сѓ РјР°СЂРєРµСЂР° 2 СЃРµРєСѓРЅРґС‹.");
+        SendClientMessage(playerid, COLOR_YELLOW, "[FBI] Вход отменён. Стойте у маркера 2 секунды.");
         return 1;
     }
     EnterOrgInteriorForFaction(playerid, FACTION_FBI);
@@ -3921,7 +3921,7 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         new teleportTick = GetTickCount();
         if (gLastTeleportTick[playerid] != 0 && teleportTick - gLastTeleportTick[playerid] < PICKUP_TELEPORT_COOLDOWN)
         {
-            SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] РџРѕРґРѕР¶РґРёС‚Рµ 4 СЃРµРєСѓРЅРґС‹ РїРµСЂРµРґ СЃР»РµРґСѓСЋС‰РёРј РїРµСЂРµС…РѕРґРѕРј.");
+            SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Подождите 4 секунды перед следующим переходом.");
             return 1;
         }
         gLastTeleportTick[playerid] = teleportTick;
@@ -3942,8 +3942,8 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gGang[playerid], bx, by, bz);
         if (GetPlayerInterior(playerid) == 0 && GetPlayerVirtualWorld(playerid) == 0 && GetPlayerDistanceFromPoint(playerid, bx, by, bz) <= 12.0)
-            ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "РЎРєР»Р°Рґ Р±Р°РЅРґС‹", "РџРѕР»РѕР¶РёС‚СЊ РґРµРЅСЊРіРё\nРЎРЅСЏС‚СЊ РґРµРЅСЊРіРё\nР‘Р°Р»Р°РЅСЃ СЃРєР»Р°РґР°\nРћСЂСѓР¶РёРµ Рё РїР°С‚СЂРѕРЅС‹\nРџРѕР»СѓС‡РёС‚СЊ Р±СЂРѕРЅРµР¶РёР»РµС‚", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
-        else SendClientMessage(playerid, COLOR_RED, "РЎРєР»Р°Рґ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РЅР° Р±Р°Р·Рµ РІР°С€РµР№ Р±Р°РЅРґС‹.");
+            ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "Склад банды", "Положить деньги\nСнять деньги\nБаланс склада\nОружие и патроны\nПолучить бронежилет", "Выбрать", "Закрыть");
+        else SendClientMessage(playerid, COLOR_RED, "Склад доступен только на базе вашей банды.");
         return 1;
     }
     if (!gLogged[playerid]) return 1;
@@ -3963,12 +3963,12 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         new Float:currentHealth;
         GetPlayerHealth(playerid, currentHealth);
         if (currentHealth >= 99.9)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘Р¦Р Р‘] РЈ РІР°СЃ СѓР¶Рµ РїРѕР»РЅРѕРµ Р·РґРѕСЂРѕРІСЊРµ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[БЦРБ] У вас уже полное здоровье."), 1;
         if (!TakeCash(playerid, 500))
-            return SendClientMessage(playerid, COLOR_RED, "[Р‘Р¦Р Р‘] РђРїС‚РµС‡РєР° СЃС‚РѕРёС‚ $500. РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С…."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "[БЦРБ] Аптечка стоит $500. Недостаточно наличных."), 1;
         SetPlayerHealth(playerid, 100.0);
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "[Р‘Р¦Р Р‘] РђРїС‚РµС‡РєР°-СЃРµСЂРґС†Рµ РєСѓРїР»РµРЅР° Р·Р° $500. Р—РґРѕСЂРѕРІСЊРµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРѕ!");
+        SendClientMessage(playerid, COLOR_GREEN, "[БЦРБ] Аптечка-сердце куплена за $500. Здоровье восстановлено!");
         return 1;
     }
     if (pickupid == gLicenseMarketPickup)
@@ -3976,13 +3976,13 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         // Do not reopen the license dialog while the player remains inside the marker.
         if (gLicenseMarketLocked[playerid]) return 1;
         gLicenseMarketLocked[playerid] = true;
-        ShowPlayerDialog(playerid, DIALOG_LICENSE_MARKET, DIALOG_STYLE_LIST, "VEXORIUM RP | Р С‹РЅРѕРє Р»РёС†РµРЅР·РёР№", "Р›РёС†РµРЅР·РёСЏ РЅР° РѕСЂСѓР¶РёРµ вЂ” 30 000 СЂСѓР±.\nР›РёС†РµРЅР·РёСЏ РЅР° Р»РѕРґРєСѓ вЂ” 20 000 СЂСѓР±.\nР›РёС†РµРЅР·РёСЏ РЅР° СЃР°РјРѕР»С‘С‚ вЂ” 40 000 СЂСѓР±.\nР’РѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР° вЂ” РїРѕСЃР»Рµ СЌРєР·Р°РјРµРЅР°", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        ShowPlayerDialog(playerid, DIALOG_LICENSE_MARKET, DIALOG_STYLE_LIST, "VEXORIUM RP | Рынок лицензий", "Лицензия на оружие — 30 000 руб.\nЛицензия на лодку — 20 000 руб.\nЛицензия на самолёт — 40 000 руб.\nВодительские права — после экзамена", "Выбрать", "Закрыть");
         return 1;
     }
     if (pickupid == gPassportPickup)
     {
-        if (gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РїР°СЃРїРѕСЂС‚."), 1;
-        ShowPlayerDialog(playerid, DIALOG_PASSPORT, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | РћС„РѕСЂРјР»РµРЅРёРµ РїР°СЃРїРѕСЂС‚Р°", "Р”Р»СЏ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅР° СЂР°Р±РѕС‚Сѓ Рё РґРѕСЃС‚СѓРїР° Рє РіРѕСЂРѕРґСЃРєРёРј СѓСЃР»СѓРіР°Рј РЅРµРѕР±С…РѕРґРёРјРѕ РѕС„РѕСЂРјРёС‚СЊ РїР°СЃРїРѕСЂС‚.\n\nРћС„РѕСЂРјР»РµРЅРёРµ Р±РµСЃРїР»Р°С‚РЅРѕРµ. РџРѕР»СѓС‡РёС‚СЊ РїР°СЃРїРѕСЂС‚?", "РџРѕР»СѓС‡РёС‚СЊ", "РћС‚РјРµРЅР°");
+        if (gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть паспорт."), 1;
+        ShowPlayerDialog(playerid, DIALOG_PASSPORT, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | Оформление паспорта", "Для устройства на работу и доступа к городским услугам необходимо оформить паспорт.\n\nОформление бесплатное. Получить паспорт?", "Получить", "Отмена");
         return 1;
     }
     if (pickupid == gMarketInteriorExitPickup)
@@ -3996,7 +3996,7 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         SetPlayerFacingAngle(playerid, gMarketReturnPos[playerid][3]);
         SetCameraBehindPlayer(playerid);
         gMarketInside[playerid] = false;
-        SendClientMessage(playerid, COLOR_GREEN, "[РњРђР РљР•Рў] Р’С‹ РІС‹С€Р»Рё РёР· РјР°РіР°Р·РёРЅР° Рё РІРµСЂРЅСѓР»РёСЃСЊ Рє РїСЂРµР¶РЅРµРјСѓ РІС…РѕРґСѓ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[МАРКЕТ] Вы вышли из магазина и вернулись к прежнему входу.");
         return 1;
     }
     if (pickupid == gMarketInteriorCounterPickup)
@@ -4004,9 +4004,9 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         if (GetPlayerInterior(playerid) != VX_MARKET_INTERIOR || GetPlayerVirtualWorld(playerid) != VX_MARKET_WORLD ||
             !gMarketInside[playerid] || !IsPlayerInRangeOfPoint(playerid, 3.5, VX_MARKET_COUNTER_X, VX_MARKET_COUNTER_Y, VX_MARKET_COUNTER_Z)) return 1;
         new shopItems[420];
-        format(shopItems, sizeof shopItems, "РђРїС‚РµС‡РєР° - 1 000 СЂСѓР±.\nР•РґР° - 250 СЂСѓР±.\nР’РѕРґР° - 200 СЂСѓР±.\nР‘СѓРєРµС‚: РµРґР° + РІРѕРґР° - 400 СЂСѓР±.");
-        strcat(shopItems, "\nР РµРјРѕРЅС‚РЅС‹Р№ РєРѕРјРїР»РµРєС‚ - 2 500 СЂСѓР±.\nSIM-РєР°СЂС‚Р° - 1 500 СЂСѓР±.");
-        strcat(shopItems, "\nРћС‚РјС‹С‡РєР° РґР»СЏ Р°РІС‚РѕСѓРіРѕРЅР° - 7 500 СЂСѓР±.");
+        format(shopItems, sizeof shopItems, "Аптечка - 1 000 руб.\nЕда - 250 руб.\nВода - 200 руб.\nБукет: еда + вода - 400 руб.");
+        strcat(shopItems, "\nРемонтный комплект - 2 500 руб.\nSIM-карта - 1 500 руб.");
+        strcat(shopItems, "\nОтмычка для автоугона - 7 500 руб.");
         return 1;
     }
     for (new m = 0; m < VX_MARKET_COUNT; m++)
@@ -4014,7 +4014,7 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         if (pickupid != gMarketPickups[m]) continue;
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0) return 1;
         if (!IsPlayerInRangeOfPoint(playerid, 4.0, gVXMarketPos[m][0], gVXMarketPos[m][1], gVXMarketPos[m][2])) return 1;
-        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "[РњРђР РљР•Рў] Р’С‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р°, С‡С‚РѕР±С‹ РІРѕР№С‚Рё РІ РјР°РіР°Р·РёРЅ."), 1;
+        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "[МАРКЕТ] Выйдите из транспорта, чтобы войти в магазин."), 1;
         GetPlayerPos(playerid, gMarketReturnPos[playerid][0], gMarketReturnPos[playerid][1], gMarketReturnPos[playerid][2]);
         GetPlayerFacingAngle(playerid, gMarketReturnPos[playerid][3]);
         gMarketInside[playerid] = true;
@@ -4023,39 +4023,39 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         SetPlayerPos(playerid, VX_MARKET_ENTRY_X, VX_MARKET_ENTRY_Y, VX_MARKET_ENTRY_Z);
         SetPlayerFacingAngle(playerid, VX_MARKET_ENTRY_A);
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "[РњРђР РљР•Рў] Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ РјР°РіР°Р·РёРЅ 24/7. РџРѕРґРѕР№РґРёС‚Рµ Рє РєР°СЃСЃРµ РёР»Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /shop. Р’С‹С…РѕРґ вЂ” Сѓ РІС…РѕРґРЅРѕР№ РґРІРµСЂРё.");
+        SendClientMessage(playerid, COLOR_GREEN, "[МАРКЕТ] Добро пожаловать в магазин 24/7. Подойдите к кассе или используйте /shop. Выход — у входной двери.");
         return 1;
     }
     if (pickupid == gCarDealerPickup)
     {
-        SendClientMessage(playerid, COLOR_GREEN, "РђРІС‚РѕСЃР°Р»РѕРЅ VEXORIUM: РїРѕРґРѕР№РґРёС‚Рµ Р±Р»РёР¶Рµ Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /carshop.");
+        SendClientMessage(playerid, COLOR_GREEN, "Автосалон VEXORIUM: подойдите ближе и используйте /carshop.");
         return 1;
     }
     if (pickupid == gAccessoryShopPickup)
     {
-        SendClientMessage(playerid, COLOR_GREEN, "[РђРљРЎР•РЎРЎРЈРђР Р«] РСЃРїРѕР»СЊР·СѓР№С‚Рµ /shopacc, С‡С‚РѕР±С‹ РѕС‚РєСЂС‹С‚СЊ РјР°РіР°Р·РёРЅ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[АКСЕССУАРЫ] Используйте /shopacc, чтобы открыть магазин.");
         return 1;
     }
     for (new gas = 0; gas < VX_GAS_COUNT; gas++)
     {
         if (pickupid == gGasStationPickup[gas])
         {
-            SendClientMessage(playerid, COLOR_YELLOW, "РђР—РЎ VEXORIUM: РѕСЃС‚Р°РЅРѕРІРёС‚РµСЃСЊ СЂСЏРґРѕРј СЃ РєРѕР»РѕРЅРєРѕР№ Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /fuel.");
+            SendClientMessage(playerid, COLOR_YELLOW, "АЗС VEXORIUM: остановитесь рядом с колонкой и используйте /fuel.");
             return 1;
         }
     }
     if (pickupid == gFBIStashPickup && IsInOwnOrgInterior(playerid))
     {
         if (gFaction[playerid] != FACTION_FBI || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "РЎРєР»Р°Рґ FBI РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј FBI."), 1;
-        ShowPlayerDialog(playerid, DIALOG_POLICE_STASH, DIALOG_STYLE_LIST, "FBI | РћСЂСѓР¶РµР№РЅС‹Р№ СЃРєР»Р°Рґ", "РўР°Р№Р·РµСЂ USP (30 РїР°С‚СЂРѕРЅРѕРІ)\nР”СЂРѕР±РѕРІРёРє Рё РїР°С‚СЂРѕРЅС‹ (60)\nMP5 Рё РїР°С‚СЂРѕРЅС‹ (120)\nРђРљ-47 Рё РїР°С‚СЂРѕРЅС‹ (120)\nРњ4 Рё РїР°С‚СЂРѕРЅС‹ (120)\nР’РёРЅС‚РѕРІРєР° (20)\nР‘СЂРѕРЅРµР¶РёР»РµС‚", "Р’Р·СЏС‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            return SendClientMessage(playerid, COLOR_RED, "Склад FBI доступен только сотрудникам FBI."), 1;
+        ShowPlayerDialog(playerid, DIALOG_POLICE_STASH, DIALOG_STYLE_LIST, "FBI | Оружейный склад", "Тайзер USP (30 патронов)\nДробовик и патроны (60)\nMP5 и патроны (120)\nАК-47 и патроны (120)\nМ4 и патроны (120)\nВинтовка (20)\nБронежилет", "Взять", "Закрыть");
         return 1;
     }
     if (pickupid == gPoliceStashPickup && IsInPoliceStation(playerid))
     {
         if (gFaction[playerid] != FACTION_POLICE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "РЎРєР»Р°Рґ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј LSPD."), 1;
-        ShowPlayerDialog(playerid, DIALOG_POLICE_STASH, DIALOG_STYLE_LIST, "LSPD | РћСЂСѓР¶РµР№РЅС‹Р№ СЃРєР»Р°Рґ", "Р”СѓР±РёРЅРєР°\nM4 Рё РїР°С‚СЂРѕРЅС‹ (РґРѕ 100)\nРџРёСЃС‚РѕР»РµС‚ Рё РїР°С‚СЂРѕРЅС‹ (РґРѕ 100)\nР‘СЂРѕРЅРµР¶РёР»РµС‚", "Р’Р·СЏС‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            return SendClientMessage(playerid, COLOR_RED, "Склад доступен только сотрудникам LSPD."), 1;
+        ShowPlayerDialog(playerid, DIALOG_POLICE_STASH, DIALOG_STYLE_LIST, "LSPD | Оружейный склад", "Дубинка\nM4 и патроны (до 100)\nПистолет и патроны (до 100)\nБронежилет", "Взять", "Закрыть");
         return 1;
     }
     if (pickupid == gPoliceEntrancePickup && GetPlayerInterior(playerid) == 0 && GetPlayerVirtualWorld(playerid) == 0)
@@ -4063,27 +4063,27 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         if (!IsNearPoliceEntrance(playerid)) return 1;
         SetPlayerInterior(playerid, 6); SetPlayerVirtualWorld(playerid, 0);
         SetPlayerPos(playerid, 246.3213, 62.5062, 1003.6406); SetPlayerFacingAngle(playerid, 14.87); SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІРѕС€Р»Рё РІ СѓС‡Р°СЃС‚РѕРє LSPD. РњРµРЅСЋ РѕСЂРіР°РЅРёР·Р°С†РёРё: /org.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вошли в участок LSPD. Меню организации: /org.");
         ShowFactionCommands(playerid);
         return 1;
     }
     if (pickupid == gPoliceHallGaragePickup && GetPlayerInterior(playerid) == 6 && GetPlayerVirtualWorld(playerid) == 0)
     {
         if (gFaction[playerid] != FACTION_POLICE)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹С…РѕРґ РІ РіР°СЂР°Р¶ LSPD РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РїРѕР»РёС†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Выход в гараж LSPD доступен только полиции."), 1;
         SetPlayerInterior(playerid, 0);
         SetPlayerVirtualWorld(playerid, 0);
         SetPlayerPos(playerid, 1568.4843, -1690.4116, 5.8906);
         SetPlayerFacingAngle(playerid, 181.71);
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё РёР· LSPD Рє РіР°СЂР°Р¶Сѓ VEXORIUM.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вышли из LSPD к гаражу VEXORIUM.");
         return 1;
     }
     if (pickupid == gPoliceExitPickup && GetPlayerInterior(playerid) == 6 && GetPlayerVirtualWorld(playerid) == 0)
     {
         SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0);
         SetPlayerPos(playerid, 1547.0, -1678.8352, 14.9453); SetPlayerFacingAngle(playerid, 270.41); SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё РёР· СѓС‡Р°СЃС‚РєР° LSPD.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вышли из участка LSPD.");
         return 1;
     }
     if (pickupid == gOrgEnterPickup[FACTION_FBI] || pickupid == gFBIBuildingEnterPickup)
@@ -4093,7 +4093,7 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         if (gFBIPendingEnter[playerid]) return 1;
         gFBIPendingEnter[playerid] = true;
         gFBIEnterTimer[playerid] = SetTimerEx("FinishFBIEnter", 2000, false, "i", playerid);
-        SendClientMessage(playerid, COLOR_YELLOW, "[FBI] РџРѕРґРѕР¶РґРёС‚Рµ 2 СЃРµРєСѓРЅРґС‹ Сѓ РјР°СЂРєРµСЂР° РІС…РѕРґР°.");
+        SendClientMessage(playerid, COLOR_YELLOW, "[FBI] Подождите 2 секунды у маркера входа.");
         return 1;
     }
     for (new faction = 1; faction <= 7; faction++)
@@ -4114,7 +4114,7 @@ public OnPlayerPickUpPickup(playerid, pickupid)
             else
                 SetPlayerPos(playerid, ox + 1.5, oy, oz);
             SetPlayerFacingAngle(playerid, (faction == FACTION_CITYHALL) ? 180.91 : ((faction == FACTION_FBI) ? 310.92 : 180.0)); SetCameraBehindPlayer(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё РёР· С€С‚Р°Р±Р° РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+            SendClientMessage(playerid, COLOR_GREEN, "Вы вышли из штаба организации.");
             return 1;
         }
     }
@@ -4125,7 +4125,7 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         SetPlayerPos(playerid, 1568.4843, -1690.4116, 5.8906);
         SetPlayerFacingAngle(playerid, 181.71);
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё С‡РµСЂРµР· РґРІРµСЂСЊ СѓС‡Р°СЃС‚РєР° Рє Р°РІС‚РѕРїР°СЂРєСѓ LSPD.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вышли через дверь участка к автопарку LSPD.");
         return 1;
     }
     if (pickupid == gPoliceGarageReturnPickup && GetPlayerInterior(playerid) == 0 && GetPlayerVirtualWorld(playerid) == 0 && gFaction[playerid] == FACTION_POLICE)
@@ -4135,7 +4135,7 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         SetPlayerPos(playerid, 246.7147, 87.2885, 1003.6406);
         SetPlayerFacingAngle(playerid, 14.87);
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІРѕС€Р»Рё РІ СѓС‡Р°СЃС‚РѕРє С‡РµСЂРµР· РґРІРµСЂСЊ Р°РІС‚РѕРїР°СЂРєР°.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вошли в участок через дверь автопарка.");
         return 1;
     }
     if (gFaction[playerid] < FACTION_CITYHALL || gFaction[playerid] > FACTION_FBI || gFactionRank[playerid] < 1)
@@ -4150,16 +4150,16 @@ public OnPlayerPickUpPickup(playerid, pickupid)
     if(GetPlayerSkin(playerid)==uniformSkin)
     {
         if(gFaction[playerid]==FACTION_HOSPITAL && gVXMedDuty[playerid])
-            return SendClientMessage(playerid,COLOR_YELLOW,"[Р‘Р¦Р Р‘] РЎРЅР°С‡Р°Р»Р° Р·Р°РєРѕРЅС‡РёС‚Рµ СЃРјРµРЅСѓ: /mduty."),1;
+            return SendClientMessage(playerid,COLOR_YELLOW,"[БЦРБ] Сначала закончите смену: /mduty."),1;
         SetPlayerSkin(playerid,gVXAccountSkin[playerid]);
         gPoliceCivilianSkin[playerid]=(gFaction[playerid]==FACTION_POLICE);
-        SendClientMessage(playerid,COLOR_GREEN,"[РћР Р“РђРќРР—РђР¦РРЇ] Р’С‹ СЃРЅСЏР»Рё С„РѕСЂРјСѓ. РўРµРїРµСЂСЊ РјРѕР¶РЅРѕ РїРѕРєСѓРїР°С‚СЊ РіСЂР°Р¶РґР°РЅСЃРєСѓСЋ РѕРґРµР¶РґСѓ.");
+        SendClientMessage(playerid,COLOR_GREEN,"[ОРГАНИЗАЦИЯ] Вы сняли форму. Теперь можно покупать гражданскую одежду.");
     }
     else
     {
         SetPlayerSkin(playerid,uniformSkin);
         gPoliceCivilianSkin[playerid]=false;
-        SendClientMessage(playerid,COLOR_GREEN,"[РћР Р“РђРќРР—РђР¦РРЇ] Р’С‹ РЅР°РґРµР»Рё СЃР»СѓР¶РµР±РЅСѓСЋ С„РѕСЂРјСѓ РїРѕ СЂР°РЅРіСѓ.");
+        SendClientMessage(playerid,COLOR_GREEN,"[ОРГАНИЗАЦИЯ] Вы надели служебную форму по рангу.");
     }
     return 1;
 }
@@ -4188,7 +4188,7 @@ public OnPlayerUpdate(playerid)
         if(IsPlayerInRangeOfPoint(playerid,9.0,gx,gy,gz))
         {
             VX_GarageRouteClear(playerid);
-            SendClientMessage(playerid,COLOR_GREEN,"[Р“РђР РђР–] Р’С‹ РІРѕР·Р»Рµ РіР°СЂР°Р¶Р°. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /garage РґР»СЏ РІС‹Р±РѕСЂР° С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+            SendClientMessage(playerid,COLOR_GREEN,"[ГАРАЖ] Вы возле гаража. Используйте /garage для выбора транспорта.");
         }
     }
     // Poll the N key in OnPlayerUpdate so engine toggling does not depend on ALT controls.
@@ -4247,7 +4247,7 @@ public OnPlayerUpdate(playerid)
             GetVehicleParamsEx(driven,e,l,al,d,b,t,o);
             if(e!=VEHICLE_PARAMS_ON || speedKm<=3) RP_Engine(playerid);
             else SendClientMessage(playerid,COLOR_YELLOW,
-                "[РўР РђРќРЎРџРћР Рў] Р”РІРёРіР°С‚РµР»СЊ РјРѕР¶РЅРѕ РІС‹РєР»СЋС‡РёС‚СЊ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ РїРѕР»РЅРѕР№ РѕСЃС‚Р°РЅРѕРІРєРё.");
+                "[ТРАНСПОРТ] Двигатель можно выключить только после полной остановки.");
         }
     }
 
@@ -4269,8 +4269,8 @@ public OnPlayerUpdate(playerid)
     if (observedWeapon != gLastObservedWeapon[playerid])
     {
         new actionText[128];
-        if (observedWeapon > 0) format(actionText, sizeof actionText, "* %s РґРѕСЃС‚Р°Р» РѕСЂСѓР¶РёРµ.", gName[playerid]);
-        else if (gLastObservedWeapon[playerid] > 0) format(actionText, sizeof actionText, "* %s СѓР±СЂР°Р» РѕСЂСѓР¶РёРµ.", gName[playerid]);
+        if (observedWeapon > 0) format(actionText, sizeof actionText, "* %s достал оружие.", gName[playerid]);
+        else if (gLastObservedWeapon[playerid] > 0) format(actionText, sizeof actionText, "* %s убрал оружие.", gName[playerid]);
         if (observedWeapon > 0 || gLastObservedWeapon[playerid] > 0) SendLocalMessage(playerid, COLOR_PINK, actionText, 20.0);
         gLastObservedWeapon[playerid] = observedWeapon;
     }
@@ -4294,9 +4294,9 @@ public OnPlayerUpdate(playerid)
                 DisablePlayerCheckpoint(playerid);
                 RemovePlayerMapIcon(playerid, 48);
                 new deliveredMessage[160];
-                format(deliveredMessage, sizeof deliveredMessage, "РњР°С€РёРЅР° СЃРґР°РЅР° РЅР° Р±Р°Р·Рµ РЅРµР»РµРіР°Р»СЊРЅРѕР№ РѕСЂРіР°РЅРёР·Р°С†РёРё! РќР°С‡РёСЃР»РµРЅРѕ %d СЂСѓР±Р»РµР№.", deliveredReward);
+                format(deliveredMessage, sizeof deliveredMessage, "Машина сдана на базе нелегальной организации! Начислено %d рублей.", deliveredReward);
                 if (GiveCash(playerid, deliveredReward)) SendClientMessage(playerid, COLOR_GREEN, deliveredMessage);
-                else SendClientMessage(playerid, COLOR_RED, "РњР°С€РёРЅР° СЃРґР°РЅР°, РЅРѕ Р±Р°Р»Р°РЅСЃ РґРѕСЃС‚РёРі РјР°РєСЃРёРјСѓРјР° вЂ” РЅР°РіСЂР°РґР° РЅРµ РЅР°С‡РёСЃР»РµРЅР°.");
+                else SendClientMessage(playerid, COLOR_RED, "Машина сдана, но баланс достиг максимума — награда не начислена.");
                 SavePlayer(playerid);
                 return 1;
             }
@@ -4322,7 +4322,7 @@ public OnPlayerUpdate(playerid)
             new engine, lights, alarm, doors, bonnet, boot, objective;
             GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
             SetVehicleParamsEx(vehicleid, 0, lights, alarm, doors, bonnet, boot, objective);
-            SendClientMessage(playerid, COLOR_RED, "Р‘РµРЅР·РёРЅ Р·Р°РєРѕРЅС‡РёР»СЃСЏ. Р”РѕРµРґСЊС‚Рµ РґРѕ РђР—РЎ Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /fuel.");
+            SendClientMessage(playerid, COLOR_RED, "Бензин закончился. Доедьте до АЗС и используйте /fuel.");
         }
     }
     return 1;
@@ -4340,7 +4340,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
         if(rpOwner!=INVALID_PLAYER_ID && !RP_HasKeys(playerid,rpVehicle))
         {
             RemovePlayerFromVehicle(playerid);
-            return RP_Message(playerid,"РќРµС‚ РєР»СЋС‡РµР№ РѕС‚ СЌС‚РѕРіРѕ Р»РёС‡РЅРѕРіРѕ Р°РІС‚РѕРјРѕР±РёР»СЏ.");
+            return RP_Message(playerid,"Нет ключей от этого личного автомобиля.");
         }
     }
     if(gVXHospital[playerid] && (newstate==PLAYER_STATE_DRIVER || newstate==PLAYER_STATE_PASSENGER)) { RemovePlayerFromVehicle(playerid);return 1; }
@@ -4351,7 +4351,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
         if (gLogged[playerid])
         {
             new enterText[128];
-            format(enterText, sizeof enterText, "* %s СЃРµР» Р·Р° СЂСѓР»СЊ Р°РІС‚РѕРјРѕР±РёР»СЏ.", gName[playerid]);
+            format(enterText, sizeof enterText, "* %s сел за руль автомобиля.", gName[playerid]);
             SendLocalMessage(playerid, COLOR_PINK, enterText, 20.0);
         }
         new enteredVehicle = GetPlayerVehicleID(playerid);
@@ -4361,7 +4361,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
             GetGangBase(gCarjackDestination[playerid], bx, by, bz);
             gWorkStage[playerid] = 11;
             SetPlayerCheckpoint(playerid, bx, by, bz, 10.0);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ Р·Р° СЂСѓР»С‘Рј СѓРіРЅР°РЅРЅРѕР№ РјР°С€РёРЅС‹. Р”РѕСЃС‚Р°РІСЊС‚Рµ РµС‘ РЅР° Р±Р°Р·Сѓ Р»СЋР±РѕР№ РЅРµР»РµРіР°Р»СЊРЅРѕР№ РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+            SendClientMessage(playerid, COLOR_GREEN, "Вы за рулём угнанной машины. Доставьте её на базу любой нелегальной организации.");
         }
         if (enteredVehicle > 0 && enteredVehicle < MAX_VEHICLES)
         {
@@ -4369,7 +4369,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
             GetVehicleParamsEx(enteredVehicle, engine, lights, alarm, doors, bonnet, boot, objective);
             SetVehicleParamsEx(enteredVehicle, VEHICLE_PARAMS_OFF, lights, alarm, doors, bonnet, boot, objective);
             new engineHint[96];
-            format(engineHint, sizeof engineHint, "РќР°Р¶РјРёС‚Рµ N, С‡С‚РѕР±С‹ Р·Р°РІРµСЃС‚Рё РґРІРёРіР°С‚РµР»СЊ. РўРѕРїР»РёРІРѕ: %d Р».", gVehicleFuel[enteredVehicle]);
+            format(engineHint, sizeof engineHint, "Нажмите N, чтобы завести двигатель. Топливо: %d л.", gVehicleFuel[enteredVehicle]);
             SendClientMessage(playerid, COLOR_YELLOW, engineHint);
         }
         if (enteredVehicle > 0 && enteredVehicle < MAX_VEHICLES && gVehicleFaction[enteredVehicle] > 0)
@@ -4377,13 +4377,13 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
             if (gFactionVehicleOwner[enteredVehicle] == INVALID_PLAYER_ID || gFactionVehicleOwner[enteredVehicle] != playerid)
             {
                 RemovePlayerFromVehicle(playerid);
-                SendClientMessage(playerid, COLOR_YELLOW, "Р­С‚РѕС‚ С‚СЂР°РЅСЃРїРѕСЂС‚ Р·Р°РєСЂС‹С‚. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /garage, С‡С‚РѕР±С‹ РІР·СЏС‚СЊ СЃР»СѓР¶РµР±РЅСѓСЋ РјР°С€РёРЅСѓ.");
+                SendClientMessage(playerid, COLOR_YELLOW, "Этот транспорт закрыт. Используйте /garage, чтобы взять служебную машину.");
                 return 1;
             }
             if (!gLogged[playerid] || gFaction[playerid] != gVehicleFaction[enteredVehicle] || gFactionRank[playerid] < (gVehicleTier[enteredVehicle] * 2 + 1))
             {
                 RemovePlayerFromVehicle(playerid);
-                SendClientMessage(playerid, COLOR_RED, "Р­С‚РѕС‚ СЃР»СѓР¶РµР±РЅС‹Р№ С‚СЂР°РЅСЃРїРѕСЂС‚ РЅРµРґРѕСЃС‚СѓРїРµРЅ РІР°С€РµР№ С„СЂР°РєС†РёРё РёР»Рё СЂР°РЅРіСѓ.");
+                SendClientMessage(playerid, COLOR_RED, "Этот служебный транспорт недоступен вашей фракции или рангу.");
                 return 1;
             }
             if (gVehicleReturnTimer[enteredVehicle]) { KillTimer(gVehicleReturnTimer[enteredVehicle]); gVehicleReturnTimer[enteredVehicle] = 0; }
@@ -4408,7 +4408,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
             if (!gLogged[playerid])
             {
                 RemovePlayerFromVehicle(playerid);
-                SendClientMessage(playerid, COLOR_RED, "Р Р°Р·РґРµР» РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚, РїРµСЂРґРµ С‡РµРј СѓРїСЂР°РІР»СЏС‚СЊ С‚СЂР°РЅСЃРїРѕСЂС‚РѕРј.");
+                SendClientMessage(playerid, COLOR_RED, "Раздел войдите в аккаунт, перде чем управлять транспортом.");
                 return 1;
             }
             if (testVehicle == gDrivingTestVehicle[playerid] && gDrivingTestStage[playerid] > 0) { /* Driving exam vehicle is allowed. */ }
@@ -4418,7 +4418,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
                 if (!gLicenseBoat[playerid])
                 {
                     RemovePlayerFromVehicle(playerid);
-                    SendClientMessage(playerid, COLOR_RED, "РЈ РІР°СЃ РЅРµС‚ Р»РёС†РµРЅР·РёРё РЅР° СѓРїСЂР°РІР»РµРЅРёРµ Р»РѕРґРєРѕР№. РџРѕР»СѓС‡РёС‚Рµ РµС‘ РІ РјСЌСЂРёРё.");
+                    SendClientMessage(playerid, COLOR_RED, "У вас нет лицензии на управление лодкой. Получите её в мэрии.");
                     return 1;
                 }
             }
@@ -4427,14 +4427,14 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
                 if (!gLicenseAir[playerid])
                 {
                     RemovePlayerFromVehicle(playerid);
-                    SendClientMessage(playerid, COLOR_RED, "РЈ РІР°СЃ РЅРµС‚ Р»РёС†РµРЅР·РёРё РЅР° СѓРїСЂР°РІР»РµРЅРёРµ РІРѕР·РґСѓС€РЅС‹Рј С‚СЂР°РЅСЃРїРѕСЂС‚РѕРј. РџРѕР»СѓС‡РёС‚Рµ РµС‘ РІ РјСЌСЂРёРё.");
+                    SendClientMessage(playerid, COLOR_RED, "У вас нет лицензии на управление воздушным транспортом. Получите её в мэрии.");
                     return 1;
                 }
             }
             else if (!gLicenseDriver[playerid])
             {
                 RemovePlayerFromVehicle(playerid);
-                SendClientMessage(playerid, COLOR_RED, "РЈ РІР°СЃ РЅРµС‚ Р°РІС‚РѕРјРѕР±РёР»СЊРЅРѕР№ Р»РёС†РµРЅР·РёРё. РџРѕРґРѕР№РґРёС‚Рµ РІ Р°РІС‚РѕС€РєРѕР»Сѓ Рё СЃРґР°Р№С‚Рµ СЌРєР·Р°РјРµРЅ.");
+                SendClientMessage(playerid, COLOR_RED, "У вас нет автомобильной лицензии. Подойдите в автошколу и сдайте экзамен.");
                 return 1;
             }
         }
@@ -4448,20 +4448,20 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
         {
             RemovePlayerFromVehicle(playerid);
             if (gFaction[playerid] != FACTION_NONE)
-                SendClientMessage(playerid, COLOR_RED, "РЎРєСѓС‚РµСЂ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РіСЂР°Р¶РґР°РЅСЃРєРёРј РЅРѕРІРёС‡РєР°Рј Р±РµР· РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+                SendClientMessage(playerid, COLOR_RED, "Скутер доступен только гражданским новичкам без организации.");
             else if (gLevel[playerid] > 3)
-                SendClientMessage(playerid, COLOR_RED, "РЎРєСѓС‚РµСЂ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РёРіСЂРѕРєР°Рј 1вЂ“3 СѓСЂРѕРІРЅСЏ.");
+                SendClientMessage(playerid, COLOR_RED, "Скутер доступен только игрокам 1–3 уровня.");
             else
-                SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚, С‡С‚РѕР±С‹ Р°СЂРµРЅРґРѕРІР°С‚СЊ СЃРєСѓС‚РµСЂ.");
+                SendClientMessage(playerid, COLOR_RED, "Сначала войдите в аккаунт, чтобы арендовать скутер.");
             return 1;
         }
         if (!gPendingScooterChoice[playerid])
         {
             gPendingScooterChoice[playerid] = true;
             ShowPlayerDialog(playerid, DIALOG_RENT_SCOOTER, DIALOG_STYLE_MSGBOX,
-                "VEXORIUM RP | РђСЂРµРЅРґР° СЃРєСѓС‚РµСЂР°",
-                "Р’С‹ СЃРµР»Рё РЅР° Faggio.\nРђСЂРµРЅРґРѕРІР°С‚СЊ РµРіРѕ Р·Р° 250 СЂСѓР±Р»РµР№?\nРџРѕСЃР»Рµ Р°СЂРµРЅРґС‹ РЅРѕРІС‹Р№ СЃРєСѓС‚РµСЂ РїРѕСЏРІРёС‚СЃСЏ РЅР° Р±Р°Р·Рµ.\nРђСЂРµРЅРґРѕРІР°РЅРЅС‹Р№ СЃРєСѓС‚РµСЂ РїРµСЂРµРјРµСЃС‚РёС‚СЃСЏ Рє РІРѕСЂРѕС‚Р°Рј, РѕС‚РєСѓРґР° РјРѕР¶РЅРѕ РІС‹РµС…Р°С‚СЊ РЅР° РґРѕСЂРѕРіСѓ.",
-                "РђСЂРµРЅРґРѕРІР°С‚СЊ", "РќРµ Р±СЂР°С‚СЊ");
+                "VEXORIUM RP | Аренда скутера",
+                "Вы сели на Faggio.\nАрендовать его за 250 рублей?\nПосле аренды новый скутер появится на базе.\nАрендованный скутер переместится к воротам, откуда можно выехать на дорогу.",
+                "Арендовать", "Не брать");
         }
     }
     if(newstate==PLAYER_STATE_DRIVER && gCarjackActive[playerid] && gCarjackUnlocked[playerid] && GetPlayerVehicleID(playerid)==gCarjackVehicle[playerid] && !gVXCarjackCharged[playerid])
@@ -4469,7 +4469,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
         gVXCarjackCharged[playerid]=true;
         VX_AddWanted(playerid);
         AnnounceCarjack(playerid);
-        SendClientMessage(playerid,COLOR_RED,"[Р РћР—Р«РЎРљ] РЈРіРѕРЅ С‚СЂР°РЅСЃРїРѕСЂС‚Р°: +1 Р·РІРµР·РґР°. РљР°Р¶РґС‹Рµ 30 РјРёРЅСѓС‚ СЃРЅРёРјР°РµС‚СЃСЏ РѕРґРЅР° Р·РІРµР·РґР°.");
+        SendClientMessage(playerid,COLOR_RED,"[РОЗЫСК] Угон транспорта: +1 звезда. Каждые 30 минут снимается одна звезда.");
     }
     return 1;
 }
@@ -4479,7 +4479,7 @@ public OnPlayerExitVehicle(playerid, vehicleid)
     if (gLogged[playerid])
     {
         new exitText[128];
-        format(exitText, sizeof exitText, "* %s РІС‹С€РµР» РёР· Р°РІС‚РѕРјРѕР±РёР»СЏ.", gName[playerid]);
+        format(exitText, sizeof exitText, "* %s вышел из автомобиля.", gName[playerid]);
         SendLocalMessage(playerid, COLOR_PINK, exitText, 20.0);
     }
     if (vehicleid > 0 && vehicleid < MAX_VEHICLES && gVehicleFaction[vehicleid] > 0)
@@ -4520,7 +4520,7 @@ public OnVehicleDeath(vehicleid, killerid)
     }
     if (vehicleid > 0 && vehicleid < MAX_VEHICLES && gPersonalVehicleOwner[vehicleid] != INVALID_PLAYER_ID)
     {
-        // Р›РёС‡РЅС‹Р№ Р°РІС‚РѕРјРѕР±РёР»СЊ РѕСЃС‚Р°С‘С‚СЃСЏ РїСЂРёРІСЏР·Р°РЅРЅС‹Рј Рє РІР»Р°РґРµР»СЊС†Сѓ Рё РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ Рє С‚РѕС‡РєРµ РІС‹РґР°С‡Рё.
+        // Личный автомобиль остаётся привязанным к владельцу и возвращается к точке выдачи.
         SetVehicleToRespawn(vehicleid);
         gVehicleFuel[vehicleid] = 100;
         gFuelLastX[vehicleid] = 0.0; gFuelLastY[vehicleid] = 0.0; gFuelLastZ[vehicleid] = 0.0;
@@ -4542,7 +4542,7 @@ public OnPlayerEnterCheckpoint(playerid)
             gDrivingTestStage[playerid] = 0;
             if (gDrivingTestVehicle[playerid] != INVALID_VEHICLE_ID) DestroyVehicle(gDrivingTestVehicle[playerid]);
             gDrivingTestVehicle[playerid] = INVALID_VEHICLE_ID;
-            SendClientMessage(playerid, COLOR_RED, "[РђР’РўРћРЁРљРћР›Рђ] Р­РєР·Р°РјРµРЅ РїСЂРІР°РЅ: РЅСѓР¶РЅРѕ РІРѕРґРёС‚СЊ РІ СѓС‡РµР±РЅРѕР№ РјР°С€РёРЅРµ." );
+            SendClientMessage(playerid, COLOR_RED, "[АВТОШКОЛА] Экзамен прван: нужно водить в учебной машине." );
             return 1;
         }
         DisablePlayerCheckpoint(playerid);
@@ -4556,7 +4556,7 @@ public OnPlayerEnterCheckpoint(playerid)
                 RemovePlayerFromVehicle(playerid);
                 if (gDrivingTestVehicle[playerid] != INVALID_VEHICLE_ID) DestroyVehicle(gDrivingTestVehicle[playerid]);
                 gDrivingTestVehicle[playerid] = INVALID_VEHICLE_ID;
-                SendClientMessage(playerid, COLOR_RED, "[РђР’РўРћРЁРљРћР›Рђ] РќРµ С…РІР°С‚РёР»Рѕ РґРµРЅРµРі РґР»СЏ РѕРїР»Р°С‚С‹ Р·Р°РµР·РґРѕРІ. Р’РѕР¶РґРµРЅРёРµ РЅРµ Р·Р°С‡С‚РµРЅРѕ.");
+                SendClientMessage(playerid, COLOR_RED, "[АВТОШКОЛА] Не хватило денег для оплаты заездов. Вождение не зачтено.");
                 return 1;
             }
             gMoney[playerid] -= 15000;
@@ -4573,8 +4573,8 @@ public OnPlayerEnterCheckpoint(playerid)
             SetPlayerPos(playerid, 1481.0, -1771.9, 18.8);
             SetPlayerFacingAngle(playerid, 180.0);
             SetCameraBehindPlayer(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "[РђРІС‚РѕС€РєРѕР»Р°] Р­РєР·Р°РјРµРЅ СЃРґР°РЅ! РћРїР»Р°С‚Р° РјР°СЂС€СЂСѓС‚Р°: $15000.");
-            SendClientMessage(playerid, COLOR_YELLOW, "Р’РѕР№РґРёС‚Рµ РІ РјСЌСЂРёСЋ Рё РїРѕРґРѕР№РґРёС‚Рµ Рє СЂС‹РЅРєСѓ Р»РёС†РµРЅР·РёР№, С‡С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ РІРѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР°.");
+            SendClientMessage(playerid, COLOR_GREEN, "[Автошкола] Экзамен сдан! Оплата маршрута: $15000.");
+            SendClientMessage(playerid, COLOR_YELLOW, "Войдите в мэрию и подойдите к рынку лицензий, чтобы получить водительские права.");
             return 1;
         }
         switch (gDrivingTestStage[playerid])
@@ -4584,7 +4584,7 @@ public OnPlayerEnterCheckpoint(playerid)
             case 4: SetPlayerCheckpoint(playerid, -2000.8323, 471.5700, 35.0156, 5.0);
             case 5: SetPlayerCheckpoint(playerid, -2028.8990, -71.3546, 35.1718, 5.0);
         }
-        SendClientMessage(playerid, COLOR_BLUE, "[РђР’РўРћРЁРљРћР›Рђ] РљРѕРЅС‚СЂРѕР»СЊРЅР°СЏ С‚РѕС‡РєР° РїСЂРѕР№РґРµРЅР°. РЎР»РµРґСѓР№С‚Рµ Рє СЃР»РµРґСѓСЋС‰РµР№." );
+        SendClientMessage(playerid, COLOR_BLUE, "[АВТОШКОЛА] Контрольная точка пройдена. Следуйте к следующей." );
         return 1;
     }
     if (gTaxiOrderTarget[playerid] != INVALID_PLAYER_ID)
@@ -4593,22 +4593,22 @@ public OnPlayerEnterCheckpoint(playerid)
         if (taxiPassenger < 0 || taxiPassenger >= MAX_PLAYERS || !IsPlayerConnected(taxiPassenger)
             || !gLogged[taxiPassenger] || gTaxiOrderDriver[taxiPassenger] != playerid)
         {
-            VX_TaxiClearDriver(playerid, "[РўРђРљРЎР] Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ: РїР°СЃСЃР°Р¶РёСЂ РЅРµРґРѕСЃС‚СѓРїРµРЅ.", true);
+            VX_TaxiClearDriver(playerid, "[ТАКСИ] Заказ отменён: пассажир недоступен.", true);
             return 1;
         }
         if (!gTaxiAtPickup[playerid])
         {
             if (GetPlayerDistanceFromPoint(taxiPassenger, gTaxiPickupPos[taxiPassenger][0], gTaxiPickupPos[taxiPassenger][1], gTaxiPickupPos[taxiPassenger][2]) > 30.0)
             {
-                VX_TaxiClearDriver(playerid, "[РўРђРљРЎР] Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ: РїР°СЃСЃР°Р¶РёСЂ РїРѕРєРёРЅСѓР» С‚РѕС‡РєСѓ РІС‹Р·РѕРІР°.", true);
-                SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] РџР°СЃСЃР°Р¶РёСЂР° РЅРµС‚ РЅР° РјРµСЃС‚Рµ РІС‹Р·РѕРІР°. РњР°СЂС€СЂСѓС‚ СЃРјРµРЅС‹ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅ.");
+                VX_TaxiClearDriver(playerid, "[ТАКСИ] Заказ отменён: пассажир покинул точку вызова.", true);
+                SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Пассажира нет на месте вызова. Маршрут смены восстановлен.");
                 return 1;
             }
             new taxiVehicle = gWorkVehicle[playerid];
             if (GetPlayerState(playerid) != PLAYER_STATE_DRIVER || taxiVehicle <= 0 || GetPlayerVehicleID(playerid) != taxiVehicle)
             {
-                VX_TaxiClearDriver(playerid, "[РўРђРљРЎР] Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ: РІРѕРґРёС‚РµР»СЊ РїРѕРєРёРЅСѓР» СЂР°Р±РѕС‡СѓСЋ РјР°С€РёРЅСѓ.", true);
-                SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ вЂ” РЅСѓР¶РЅРѕ РѕСЃС‚Р°РІР°С‚СЊСЃСЏ Р·Р° СЂСѓР»С‘Рј С‚Р°РєСЃРё.");
+                VX_TaxiClearDriver(playerid, "[ТАКСИ] Заказ отменён: водитель покинул рабочую машину.", true);
+                SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Заказ отменён — нужно оставаться за рулём такси.");
                 return 1;
             }
             DisablePlayerCheckpoint(playerid);
@@ -4616,8 +4616,8 @@ public OnPlayerEnterCheckpoint(playerid)
             RemovePlayerMapIcon(playerid, 47);
             SetPlayerMapIcon(playerid, 47, gTaxiPickupPos[taxiPassenger][0], gTaxiPickupPos[taxiPassenger][1],
                 gTaxiPickupPos[taxiPassenger][2], 0, COLOR_YELLOW, MAPICON_LOCAL);
-            SendClientMessage(playerid, COLOR_GREEN, "[РўРђРљРЎР] Р’С‹ РЅР° РјРµСЃС‚Рµ. Р”РѕР¶РґРёС‚РµСЃСЊ, РїРѕРєР° РїР°СЃСЃР°Р¶РёСЂ СЃСЏРґРµС‚ РІ РјР°С€РёРЅСѓ. Р—Р°РІРµСЂС€РёС‚СЊ Р·Р°РєР°Р·: /taxidone.");
-            SendClientMessage(taxiPassenger, COLOR_GREEN, "[РўРђРљРЎР] РњР°С€РёРЅР° РїСЂРёР±С‹Р»Р°! РЎСЏРґСЊС‚Рµ РЅР° РїР°СЃСЃР°Р¶РёСЂСЃРєРѕРµ РјРµСЃС‚Рѕ Рё РЅР°Р·РѕРІРёС‚Рµ РІРѕРґРёС‚РµР»СЋ РїСѓРЅРєС‚ РЅР°Р·РЅР°С‡РµРЅРёСЏ.");
+            SendClientMessage(playerid, COLOR_GREEN, "[ТАКСИ] Вы на месте. Дождитесь, пока пассажир сядет в машину. Завершить заказ: /taxidone.");
+            SendClientMessage(taxiPassenger, COLOR_GREEN, "[ТАКСИ] Машина прибыла! Сядьте на пассажирское место и назовите водителю пункт назначения.");
             return 1;
         }
         return 1;
@@ -4626,36 +4626,36 @@ public OnPlayerEnterCheckpoint(playerid)
     {
         DisablePlayerCheckpoint(playerid);
         gGpsActive[playerid] = false;
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM GPS] Р’С‹ РїСЂРёР±С‹Р»Рё РІ РїСѓРЅРєС‚ РЅР°Р·РЅР°С‡РµРЅРёСЏ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM GPS] Вы прибыли в пункт назначения.");
         return 1;
     }
     if (gCarjackActive[playerid] && gWorkStage[playerid] == 10)
     {
         if (!gCarjackUnlocked[playerid])
         {
-            SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РЅР°С€Р»Рё РјР°С€РёРЅСѓ. РџРѕРґРѕР№РґРёС‚Рµ Рє РЅРµР№ Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /hack.");
+            SendClientMessage(playerid, COLOR_YELLOW, "Вы нашли машину. Подойдите к ней и используйте /hack.");
             return 1;
         }
         if (!IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != gCarjackVehicle[playerid] || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
         {
-            SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° СЃСЏРґСЊС‚Рµ Р·Р° СЂСѓР»СЊ СѓРіРЅР°РЅРЅРѕР№ РјР°С€РёРЅС‹.");
+            SendClientMessage(playerid, COLOR_YELLOW, "Сначала сядьте за руль угнанной машины.");
             return 1;
         }
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gCarjackDestination[playerid], bx, by, bz);
         SetPlayerCheckpoint(playerid, bx, by, bz, 10.0);
         gWorkStage[playerid] = 11;
-        SendClientMessage(playerid, COLOR_GREEN, "Р’РµР·РёС‚Рµ РјР°С€РёРЅСѓ РЅР° РѕС‚РјРµС‡РµРЅРЅСѓСЋ Р±Р°Р·Сѓ РЅРµР»РµРіР°Р»СЊРЅРѕР№ РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+        SendClientMessage(playerid, COLOR_GREEN, "Везите машину на отмеченную базу нелегальной организации.");
         return 1;
     }
     if (gCarjackActive[playerid] && gWorkStage[playerid] == 11)
     {
         if (!IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != gCarjackVehicle[playerid] || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
-            return SendClientMessage(playerid, COLOR_RED, "Р§С‚РѕР±С‹ СЃРґР°С‚СЊ СѓРіРЅР°РЅРЅСѓСЋ РјР°С€РёРЅСѓ, РІС‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ Р·Р° РµС‘ СЂСѓР»С‘Рј."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Чтобы сдать угнанную машину, вы должны быть за её рулём."), 1;
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gCarjackDestination[playerid], bx, by, bz);
         if (GetPlayerDistanceFromPoint(playerid, bx, by, bz) > 18.0)
-            return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґСЉРµРґСЊС‚Рµ Р±Р»РёР¶Рµ Рє Р±Р°Р·Рµ Р±Р°РЅРґС‹, РѕС‚РјРµС‡РµРЅРЅРѕР№ РЅР° РєР°СЂС‚Рµ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Подъедьте ближе к базе банды, отмеченной на карте."), 1;
         new stolenVehicle = gCarjackVehicle[playerid];
         new stolenModel = (stolenVehicle != INVALID_VEHICLE_ID) ? GetVehicleModel(stolenVehicle) : 0;
         new stolenReward = VX_CarjackReward(stolenModel);
@@ -4666,9 +4666,9 @@ public OnPlayerEnterCheckpoint(playerid)
         DisablePlayerCheckpoint(playerid);
         RemovePlayerMapIcon(playerid, 48);
         new stolenRewardMessage[144];
-        format(stolenRewardMessage, sizeof stolenRewardMessage, "РЈРіРѕРЅ Р·Р°РІРµСЂС€С‘РЅ! Р’С‹ РїРѕР»СѓС‡РёР»Рё %d СЂСѓР±Р»РµР№.", stolenReward);
+        format(stolenRewardMessage, sizeof stolenRewardMessage, "Угон завершён! Вы получили %d рублей.", stolenReward);
         if (GiveCash(playerid, stolenReward)) SendClientMessage(playerid, COLOR_GREEN, stolenRewardMessage);
-        else SendClientMessage(playerid, COLOR_RED, "РњР°С€РёРЅР° СЃРґР°РЅР°, РЅРѕ РЅРµ СѓРґР°Р»РѕСЃСЊ РЅР°С‡РёСЃР»РёС‚СЊ РґРµРЅСЊРіРё РёР·-Р·Р° Р»РёРјРёС‚Р° Р±Р°Р»Р°РЅСЃР°.");
+        else SendClientMessage(playerid, COLOR_RED, "Машина сдана, но не удалось начислить деньги из-за лимита баланса.");
         SavePlayer(playerid);
         return 1;
     }
@@ -4676,7 +4676,7 @@ public OnPlayerEnterCheckpoint(playerid)
     {
         if (((gJob[playerid] >= 1 && gJob[playerid] <= 3) || gJob[playerid] == 7) && (gWorkVehicle[playerid] == INVALID_VEHICLE_ID || !IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != gWorkVehicle[playerid]))
         {
-            SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ РїСЂРѕС…РѕР¶РґРµРЅРёСЏ СЂР°Р±РѕС‡РёС… С‚РѕС‡РµРє РЅСѓР¶РЅРѕ РЅР°С…РѕРґРёС‚СЊСЃСЏ РІ РІС‹РґР°РЅРЅРѕРј СЂР°Р±РѕС‡РµРј С‚СЂР°РЅСЃРїРѕСЂС‚Рµ.");
+            SendClientMessage(playerid, COLOR_RED, "Для прохождения рабочих точек нужно находиться в выданном рабочем транспорте.");
             return 1;
         }
         gWorkStage[playerid]++;
@@ -4685,12 +4685,12 @@ public OnPlayerEnterCheckpoint(playerid)
             new reward = (gJob[playerid] == 1) ? 4200 : ((gJob[playerid] == 2) ? 6000 : ((gJob[playerid] == 3) ? 5000 : ((gJob[playerid] == 7) ? 7500 : 7000)));
             if (GiveCash(playerid, reward))
             {
-                SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] РњР°СЂС€СЂСѓС‚ Р·Р°РІРµСЂС€С‘РЅ! Р—Р°СЂРїР»Р°С‚Р° РЅР°С‡РёСЃР»РµРЅР°.");
+                SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Маршрут завершён! Зарплата начислена.");
                 new msg[96];
-                format(msg, sizeof msg, "[VEXORIUM] Р’С‹ Р·Р°СЂР°Р±РѕС‚Р°Р»Рё %d СЂСѓР±Р»РµР№.", reward);
+                format(msg, sizeof msg, "[VEXORIUM] Вы заработали %d рублей.", reward);
                 SendClientMessage(playerid, COLOR_GREEN, msg);
             }
-            else SendClientMessage(playerid, COLOR_RED, "[VEXORIUM] РќРµ СѓРґР°Р»РѕСЃСЊ РЅР°С‡РёСЃР»РёС‚СЊ Р·Р°СЂРїР»Р°С‚Сѓ: РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РґРµРЅРµРі.");
+            else SendClientMessage(playerid, COLOR_RED, "[VEXORIUM] Не удалось начислить зарплату: достигнут лимит денег.");
             gWorkStage[playerid] = 0;
             gFireCallIndex[playerid] = -1;
             if (gCarjackActive[playerid])
@@ -4732,12 +4732,12 @@ public OnPlayerEnterCheckpoint(playerid)
                 gFireCallIndex[playerid] = nextFireCall;
                 SetPlayerCheckpoint(playerid, gVXFireCallPos[nextFireCall][0],
                     gVXFireCallPos[nextFireCall][1], gVXFireCallPos[nextFireCall][2], 7.0);
-                SendClientMessage(playerid, COLOR_ORANGE, "[РџРћР–РђР РќРђРЇ РЎР›РЈР–Р‘Рђ] Р’С‚РѕСЂРѕР№ Р°РґСЂРµСЃ РїСЂРёРЅСЏС‚. РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РґРІРёР¶РµРЅРёРµ РїРѕ РІС‹Р·РѕРІСѓ.");
+                SendClientMessage(playerid, COLOR_ORANGE, "[ПОЖАРНАЯ СЛУЖБА] Второй адрес принят. Продолжайте движение по вызову.");
             }
             else
             {
                 SetPlayerCheckpoint(playerid, VX_FIRE_STATION_X, VX_FIRE_STATION_Y, VX_FIRE_STATION_Z, 8.0);
-                SendClientMessage(playerid, COLOR_ORANGE, "[РџРћР–РђР РќРђРЇ РЎР›РЈР–Р‘Рђ] Р’С‹Р·РѕРІС‹ РѕР±СЂР°Р±РѕС‚Р°РЅС‹. Р’РѕР·РІСЂР°С‰Р°Р№С‚РµСЃСЊ РЅР° Р±Р°Р·Сѓ РґР»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ СЃРјРµРЅС‹.");
+                SendClientMessage(playerid, COLOR_ORANGE, "[ПОЖАРНАЯ СЛУЖБА] Вызовы обработаны. Возвращайтесь на базу для завершения смены.");
             }
         }
         else
@@ -4745,7 +4745,7 @@ public OnPlayerEnterCheckpoint(playerid)
             if (gWorkStage[playerid] == 2) SetPlayerCheckpoint(playerid, 838.0, 870.0, 12.0, 7.0);
             else SetPlayerCheckpoint(playerid, 852.0, 850.0, 12.0, 7.0);
         }
-        SendClientMessage(playerid, COLOR_BLUE, "[VEXORIUM] РљРѕРЅС‚СЂРѕР»СЊРЅР°СЏ С‚РѕС‡РєР° РїСЂРѕР№РґРµРЅР°. РЎР»РµРґСѓР№С‚Рµ Рє СЃР»РµРґСѓСЋС‰РµР№ РѕС‚РјРµС‚РєРµ.");
+        SendClientMessage(playerid, COLOR_BLUE, "[VEXORIUM] Контрольная точка пройдена. Следуйте к следующей отметке.");
         return 1;
     }
     return 1;
@@ -4755,23 +4755,23 @@ stock ShowMainMenu(playerid)
 {
     new menuText[512];
     menuText[0] = '\0';
-    strcat(menuText, "{33CC66}РџР•Р РЎРћРќРђР– Р РџР РћР“Р Р•РЎРЎ\n");
-    strcat(menuText, "{FFFFFF}РњРѕР№ РїСЂРѕС„РёР»СЊ Рё СЃС‚Р°С‚РёСЃС‚РёРєР°\n");
-    strcat(menuText, "РњРµСЃС‚Рѕ РїРѕСЏРІР»РµРЅРёСЏ\n");
-    strcat(menuText, "{66CCFF}Р“РћР РћР” Р РќРђР’РР“РђР¦РРЇ\n");
-    strcat(menuText, "GPS Рё РєР°СЂС‚Р°\n");
-    strcat(menuText, "Р Р°Р±РѕС‚Р° Рё Р·Р°СЂР°Р±РѕС‚РѕРє\n");
-    strcat(menuText, "РћСЂРіР°РЅРёР·Р°С†РёРё Рё Р»РёРґРµСЂС‹\n");
-    strcat(menuText, "{FFD700}РРќР¤РћР РњРђР¦РРЇ\n");
-    strcat(menuText, "РџСЂР°РІРёР»Р° СЃРµСЂРІРµСЂР°\n");
-    strcat(menuText, "РЎРїРёСЃРѕРє РєРѕРјР°РЅРґ\n");
-    strcat(menuText, "{FFCC66}РРќР’Р•РќРўРђР Р¬ Рё РїСЂРµРґРјРµС‚С‹\n");
-    strcat(menuText, "{FFFFFF}РњРѕР№ РёРЅРІРµРЅС‚Р°СЂСЊ\n");
-    strcat(menuText, "{66CCFF}РўР•Р›Р•Р¤РћРќ Рё СЃРІСЏР·СЊ\n");
-    strcat(menuText, "РњР°РіР°Р·РёРЅ РїСЂРµРґРјРµС‚РѕРІ\n");
+    strcat(menuText, "{33CC66}ПЕРСОНАЖ И ПРОГРЕСС\n");
+    strcat(menuText, "{FFFFFF}Мой профиль и статистика\n");
+    strcat(menuText, "Место появления\n");
+    strcat(menuText, "{66CCFF}ГОРОД И НАВИГАЦИЯ\n");
+    strcat(menuText, "GPS и карта\n");
+    strcat(menuText, "Работа и заработок\n");
+    strcat(menuText, "Организации и лидеры\n");
+    strcat(menuText, "{FFD700}ИНФОРМАЦИЯ\n");
+    strcat(menuText, "Правила сервера\n");
+    strcat(menuText, "Список команд\n");
+    strcat(menuText, "{FFCC66}ИНВЕНТАРЬ и предметы\n");
+    strcat(menuText, "{FFFFFF}Мой инвентарь\n");
+    strcat(menuText, "{66CCFF}ТЕЛЕФОН и связь\n");
+    strcat(menuText, "Магазин предметов\n");
     ShowPlayerDialog(playerid, DIALOG_MAIN_MENU, DIALOG_STYLE_LIST,
-        "{33CC66}VEXORIUM RP {FFFFFF}| Р¦РµРЅС‚СЂ РёРіСЂРѕРєР°", menuText,
-        "РћС‚РєСЂС‹С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        "{33CC66}VEXORIUM RP {FFFFFF}| Центр игрока", menuText,
+        "Открыть", "Закрыть");
     return 1;
 }
 
@@ -4843,7 +4843,7 @@ public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
     SetCameraBehindPlayer(playerid);
-    SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] РўРµР»РµРїРѕСЂС‚Р°С†РёСЏ РїРѕ РєР°СЂС‚Рµ РІС‹РїРѕР»РЅРµРЅР°.");
+    SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Телепортация по карте выполнена.");
     return 1;
 }
 
@@ -4891,10 +4891,10 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
             if (!IsPlayerConnected(challenger) || gPvpRequestTarget[challenger] != playerid)
             {
                 gPvpPendingFrom[playerid] = INVALID_PLAYER_ID;
-                SendClientMessage(playerid, COLOR_RED, "[PvP] РџСЂРёРіР»Р°С€РµРЅРёРµ СѓР¶Рµ РЅРµРґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ.");
+                SendClientMessage(playerid, COLOR_RED, "[PvP] Приглашение уже недействительно.");
                 return 1;
             }
-            if (gPvpActive[playerid] || gPvpActive[challenger]) return SendClientMessage(playerid, COLOR_RED, "[PvP] РћРґРёРЅ РёР· РёРіСЂРѕРєРѕРІ СѓР¶Рµ СѓС‡Р°СЃС‚РІСѓРµС‚ РІ РґСѓСЌР»Рё."), 1;
+            if (gPvpActive[playerid] || gPvpActive[challenger]) return SendClientMessage(playerid, COLOR_RED, "[PvP] Один из игроков уже участвует в дуэли."), 1;
             gPvpPendingFrom[playerid] = INVALID_PLAYER_ID;
             gPvpRequestTarget[challenger] = INVALID_PLAYER_ID;
             gPvpActive[playerid] = true; gPvpActive[challenger] = true;
@@ -4905,15 +4905,15 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
             SavePvpLoadout(playerid); SavePvpLoadout(challenger);
             PutPlayerInPvpArena(challenger, challenger < playerid ? 0 : 1);
             PutPlayerInPvpArena(playerid, playerid < challenger ? 0 : 1);
-            SendClientMessage(playerid, COLOR_GREEN, "[PvP] Р’С‹ РїСЂРёРЅСЏР»Рё РІС‹Р·РѕРІ! РўРѕР»СЊРєРѕ Desert Eagle, РґРѕ 5 РїРѕР±РµРґ.");
-            SendClientMessage(challenger, COLOR_GREEN, "[PvP] РЎРѕРїРµСЂРЅРёРє РїСЂРёРЅСЏР» РІС‹Р·РѕРІ! РўРѕР»СЊРєРѕ Desert Eagle, РґРѕ 5 РїРѕР±РµРґ.");
+            SendClientMessage(playerid, COLOR_GREEN, "[PvP] Вы приняли вызов! Только Desert Eagle, до 5 побед.");
+            SendClientMessage(challenger, COLOR_GREEN, "[PvP] Соперник принял вызов! Только Desert Eagle, до 5 побед.");
             return 1;
         }
         if (gLogged[playerid] && GetPlayerInterior(playerid) == 0 && GetPlayerVirtualWorld(playerid) == 0 && IsPlayerInRangeOfPoint(playerid, 3.5, -2026.8, -96.5, 35.2))
         {
-            if (gLicenseDriver[playerid]) SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РІРѕРґРёС‚РµР»СЊСЃРєР°СЏ Р»РёС†РµРЅР·РёСЏ." );
-            else if (gDrivingTestStage[playerid] > 0) SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ СѓР¶Рµ СЃРґР°С‘С‚Рµ СЌРєР·Р°РјРµРЅ. РЎР»РµРґСѓР№С‚Рµ РїРѕ РєРѕРЅС‚СЂРѕР»СЊРЅС‹Рј С‚РѕС‡РєР°Рј." );
-            else ShowPlayerDialog(playerid, DIALOG_AUTOSCHOOL, DIALOG_STYLE_MSGBOX, "РђРІС‚РѕС€РєРѕР»Р° | РРЅСЃС‚СЂСѓРєС‚РѕСЂ", "Р—РґСЂР°РІСЃС‚РІСѓР№С‚Рµ! РђСЂРµРЅРґРѕРІР°С‚СЊ СѓС‡РµР±РЅС‹Р№ Р°РІС‚РѕРјРѕР±РёР»СЊ Рё РЅР°С‡Р°С‚СЊ СЌРєР·Р°РјРµРЅ?\nРњР°СЂС€СЂСѓС‚ РїСЂРѕС…РѕРґРёС‚ РїРѕ РґРѕСЂРѕРіР°Рј РЎР°РЅ-Р¤РёРµСЂСЂРѕ.\nРћРїР»Р°С‚Р° 15000 СЂСѓР±. С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕР№ СЃРґР°С‡Рё.", "РќР°С‡Р°С‚СЊ", "РћС‚РјРµРЅР°");
+            if (gLicenseDriver[playerid]) SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть водительская лицензия." );
+            else if (gDrivingTestStage[playerid] > 0) SendClientMessage(playerid, COLOR_YELLOW, "Вы уже сдаёте экзамен. Следуйте по контрольным точкам." );
+            else ShowPlayerDialog(playerid, DIALOG_AUTOSCHOOL, DIALOG_STYLE_MSGBOX, "Автошкола | Инструктор", "Здравствуйте! Арендовать учебный автомобиль и начать экзамен?\nМаршрут проходит по дорогам Сан-Фиерро.\nОплата 15000 руб. только после успешной сдачи.", "Начать", "Отмена");
         }
     }
     return 1;
@@ -4965,12 +4965,12 @@ stock VX_RefreshHouseLabel(hid)
     houseOwner[0] = '\0';
     db_get_field(hr, 0, houseOwner, sizeof houseOwner);
     if (houseOwner[0]) format(ownerLabel, sizeof ownerLabel, "%s", houseOwner);
-    else format(ownerLabel, sizeof ownerLabel, "РЅРµС‚Сѓ");
+    else format(ownerLabel, sizeof ownerLabel, "нету");
     new price = db_get_field_int(hr, 1);
     new Float:hx = db_get_field_float(hr, 2), Float:hy = db_get_field_float(hr, 3), Float:hz = db_get_field_float(hr, 4);
     db_free_result(hr);
     if (gVXHouseLabelCreated[hid]) Delete3DTextLabel(gVXHouseLabel[hid]);
-    format(label, sizeof label, "{66CCFF}Р”РћРњ #%d\n{FFFFFF}Р’Р»Р°РґРµР»РµС†: %s\nР¦РµРЅР°: %d СЂСѓР±.\n{33CC66}/housebuy /houseenter", hid, ownerLabel, price);
+    format(label, sizeof label, "{66CCFF}ДОМ #%d\n{FFFFFF}Владелец: %s\nЦена: %d руб.\n{33CC66}/housebuy /houseenter", hid, ownerLabel, price);
     gVXHouseLabel[hid] = Create3DTextLabel(label, COLOR_WHITE, hx, hy, hz + 1.0, 18.0, 0, 1);
     gVXHouseLabelCreated[hid] = true;
     if (gHousePickup[hid] == INVALID_PICKUP) gHousePickup[hid] = CreatePickup(1273, 1, hx, hy, hz, 0);
@@ -4984,18 +4984,18 @@ stock VX_HouseEnterID(playerid, hid)
     format(query, sizeof query, "SELECT owner FROM houses WHERE id=%d", hid);
     new DBResult:hr = db_query(gDatabase, query);
     owner[0] = '\0';
-    if (!hr || !db_num_rows(hr)) { if (hr) db_free_result(hr); return SendClientMessage(playerid, COLOR_RED, "РќРµ СѓРґР°Р»РѕСЃСЊ РЅР°Р№С‚Рё РґРѕРј."), 1; }
+    if (!hr || !db_num_rows(hr)) { if (hr) db_free_result(hr); return SendClientMessage(playerid, COLOR_RED, "Не удалось найти дом."), 1; }
     db_get_field(hr, 0, owner, sizeof owner);
     db_free_result(hr);
-    if (!owner[0]) return SendClientMessage(playerid, COLOR_YELLOW, "Р’Р»Р°РґРµР»РµС†: РЅРµС‚Сѓ. РЎРЅР°С‡Р°Р»Р° РєСѓРїРёС‚Рµ РґРѕРј С‡РµСЂРµР· /housebuy."), 1;
-    if (strcmp(owner, gName[playerid], true)) return SendClientMessage(playerid, COLOR_RED, "Р’РѕР№С‚Рё РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ РІР»Р°РґРµР»РµС† РґРѕРјР°."), 1;
+    if (!owner[0]) return SendClientMessage(playerid, COLOR_YELLOW, "Владелец: нету. Сначала купите дом через /housebuy."), 1;
+    if (strcmp(owner, gName[playerid], true)) return SendClientMessage(playerid, COLOR_RED, "Войти может только владелец дома."), 1;
     gCurrentHouse[playerid] = hid;
     SetPlayerInterior(playerid, 1);
     SetPlayerVirtualWorld(playerid, hid);
     SetPlayerPos(playerid, 223.0, 1287.0, 1082.1);
     SetPlayerFacingAngle(playerid, 0.0);
     SetCameraBehindPlayer(playerid);
-    return SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІРѕС€Р»Рё РІ РґРѕРј. Р”Р»СЏ РІС‹С…РѕРґР° РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /houseexit."), 1;
+    return SendClientMessage(playerid, COLOR_GREEN, "Вы вошли в дом. Для выхода используйте /houseexit."), 1;
 }
 
 stock VX_HouseCompletePurchase(playerid, hid)
@@ -5004,32 +5004,32 @@ stock VX_HouseCompletePurchase(playerid, hid)
     new query[256], owner[MAX_PLAYER_NAME + 1], price = 0;
     format(query, sizeof query, "SELECT owner,price,x,y,z FROM houses WHERE id=%d", hid);
     new DBResult:hr = db_query(gDatabase, query);
-    if (!hr || !db_num_rows(hr)) { if (hr) db_free_result(hr); gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Р”РѕРј РЅРµ РЅР°Р№РґРµРЅ."), 1; }
+    if (!hr || !db_num_rows(hr)) { if (hr) db_free_result(hr); gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Дом не найден."), 1; }
     owner[0] = '\0'; db_get_field(hr, 0, owner, sizeof owner); price = db_get_field_int(hr, 1);
     new Float:hx = db_get_field_float(hr, 2), Float:hy = db_get_field_float(hr, 3), Float:hz = db_get_field_float(hr, 4);
     db_free_result(hr);
-    if (owner[0]) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Р­С‚РѕС‚ РґРѕРј СѓР¶Рµ РєСѓРїРёР»Рё."), 1; }
+    if (owner[0]) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Этот дом уже купили."), 1; }
     if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || !IsPlayerInRangeOfPoint(playerid, 5.0, hx, hy, hz))
-    { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "РџРѕРєСѓРїРєР° РѕС‚РјРµРЅРµРЅР°: РїРѕРґРѕР№РґРёС‚Рµ Рє РґРѕРјСѓ."), 1; }
-    if (gMoney[playerid] < price) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі."), 1; }
+    { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Покупка отменена: подойдите к дому."), 1; }
+    if (gMoney[playerid] < price) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Недостаточно денег."), 1; }
     format(query, sizeof query, "SELECT id FROM houses WHERE owner='%q' LIMIT 1", gName[playerid]);
     new DBResult:owned = db_query(gDatabase, query);
     if (!owned || db_num_rows(owned) > 0)
-    { if (owned) db_free_result(owned); gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "РњРѕР¶РЅРѕ РІР»Р°РґРµС‚СЊ С‚РѕР»СЊРєРѕ РѕРґРЅРёРј РґРѕРјРѕРј."), 1; }
+    { if (owned) db_free_result(owned); gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Можно владеть только одним домом."), 1; }
     db_free_result(owned);
     format(query, sizeof query, "UPDATE houses SET owner='%q' WHERE id=%d AND owner=''", gName[playerid], hid);
     new DBResult:buy = db_query(gDatabase, query);
-    if (!buy) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ РїРѕРєСѓРїРєРё."), 1; }
+    if (!buy) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Ошибка сохранения покупки."), 1; }
     db_free_result(buy);
     format(query, sizeof query, "SELECT owner FROM houses WHERE id=%d", hid);
     buy = db_query(gDatabase, query);
     owner[0] = '\0'; if (buy && db_num_rows(buy)) db_get_field(buy, 0, owner, sizeof owner); if (buy) db_free_result(buy);
-    if (strcmp(owner, gName[playerid], true)) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґС‚РІРµСЂРґРёС‚СЊ РїРѕРєСѓРїРєСѓ."), 1; }
+    if (strcmp(owner, gName[playerid], true)) { gHousePending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Не удалось подтвердить покупку."), 1; }
     gMoney[playerid] -= price;
     SavePlayer(playerid);
     gHousePending[playerid] = 0;
     VX_RefreshHouseLabel(hid);
-    return SendClientMessage(playerid, COLOR_GREEN, "РџРѕР·РґСЂР°РІР»СЏРµРј! Р’С‹ РєСѓРїРёР»Рё РґРѕРј. Р’Р»Р°РґРµР»РµС†: РІС‹."), 1;
+    return SendClientMessage(playerid, COLOR_GREEN, "Поздравляем! Вы купили дом. Владелец: вы."), 1;
 }
 
 stock VX_FindDealerSpawn(playerid, &Float:spawnX, &Float:spawnY, &Float:spawnZ, &Float:spawnA)
@@ -5200,8 +5200,8 @@ public VX_VehicleSpeedTick()
 
 public OnPlayerCommandText(playerid, cmdtext[])
 {
-    if(!gLogged[playerid]) return SendClientMessage(playerid,COLOR_RED,"РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚."),1;
-    if(!gRPLoaded[playerid]) return RP_Message(playerid,"Р”Р°РЅРЅС‹Рµ RP РЅРµ Р·Р°РіСЂСѓР¶РµРЅС‹. РџРµСЂРµР·Р°Р№РґРёС‚Рµ РёР»Рё РѕР±СЂР°С‚РёС‚РµСЃСЊ Рє Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+    if(!gLogged[playerid]) return SendClientMessage(playerid,COLOR_RED,"Сначала войдите в аккаунт."),1;
+    if(!gRPLoaded[playerid]) return RP_Message(playerid,"Данные RP не загружены. Перезайдите или обратитесь к администрации.");
     if(RP_CommandGuard(playerid,cmdtext)) return 1;
     if(RP_Command(playerid,cmdtext)) return 1;
     if(VX_Command(playerid,cmdtext)) return 1;
@@ -5209,15 +5209,15 @@ public OnPlayerCommandText(playerid, cmdtext[])
     {
         new params[32], token[16], targetid;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /taxiaccept ID РїР°СЃСЃР°Р¶РёСЂР°"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /taxiaccept ID пассажира"), 1;
         targetid = strval(token);
-        if (!VX_TaxiOnDuty(playerid)) return SendClientMessage(playerid, COLOR_RED, "[РўРђРљРЎР] РЎРЅР°С‡Р°Р»Р° СѓСЃС‚СЂРѕР№С‚РµСЃСЊ С‚Р°РєСЃРёСЃС‚РѕРј (/job), РІС‹Р№РґРёС‚Рµ РЅР° СЃРјРµРЅСѓ (/work) Рё РѕСЃС‚Р°РІР°Р№С‚РµСЃСЊ Р·Р° СЂСѓР»С‘Рј РІС‹РґР°РЅРЅРѕРіРѕ С‚Р°РєСЃРё."), 1;
+        if (!VX_TaxiOnDuty(playerid)) return SendClientMessage(playerid, COLOR_RED, "[ТАКСИ] Сначала устройтесь таксистом (/job), выйдите на смену (/work) и оставайтесь за рулём выданного такси."), 1;
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "[РўРђРљРЎР] РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "[ТАКСИ] Игрок не найден."), 1;
         if (!gTaxiRequestActive[targetid] || gTaxiOrderDriver[targetid] != INVALID_PLAYER_ID)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] РЈ СЌС‚РѕРіРѕ РёРіСЂРѕРєР° РЅРµС‚ РѕР¶РёРґР°СЋС‰РµРіРѕ Р·Р°РєР°Р·Р°."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] У этого игрока нет ожидающего заказа."), 1;
         if (GetPlayerInterior(targetid) != 0 || GetPlayerVirtualWorld(targetid) != 0)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] Р—Р°РєР°Р· РёР· РёРЅС‚РµСЂСЊРµСЂР° РЅРµРґРѕСЃС‚СѓРїРµРЅ. РџРѕРїСЂРѕСЃРёС‚Рµ РїР°СЃСЃР°Р¶РёСЂР° РІС‹Р№С‚Рё РЅР° СѓР»РёС†Сѓ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Заказ из интерьера недоступен. Попросите пассажира выйти на улицу."), 1;
         gTaxiRequestActive[targetid] = false;
         gVX4TaxiRequestAt[targetid] = 0;
         gTaxiOrderTarget[playerid] = targetid;
@@ -5227,9 +5227,9 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SetPlayerCheckpoint(playerid, gTaxiPickupPos[targetid][0], gTaxiPickupPos[targetid][1], gTaxiPickupPos[targetid][2], 6.0);
         SetPlayerMapIcon(playerid, 47, gTaxiPickupPos[targetid][0], gTaxiPickupPos[targetid][1], gTaxiPickupPos[targetid][2], 0, COLOR_YELLOW, MAPICON_LOCAL);
         new orderMessage[128];
-        format(orderMessage, sizeof orderMessage, "[РўРђРљРЎР] Р’РѕРґРёС‚РµР»СЊ %s РїСЂРёРЅСЏР» Р·Р°РєР°Р· Рё РµРґРµС‚ Рє РІР°Рј.", gName[playerid]);
+        format(orderMessage, sizeof orderMessage, "[ТАКСИ] Водитель %s принял заказ и едет к вам.", gName[playerid]);
         SendClientMessage(targetid, COLOR_GREEN, orderMessage);
-        format(orderMessage, sizeof orderMessage, "[РўРђРљРЎР] Р—Р°РєР°Р· РёРіСЂРѕРєР° %s РїСЂРёРЅСЏС‚. РЎР»РµРґСѓР№С‚Рµ Рє Р¶С‘Р»С‚РѕР№ РѕС‚РјРµС‚РєРµ.", gName[targetid]);
+        format(orderMessage, sizeof orderMessage, "[ТАКСИ] Заказ игрока %s принят. Следуйте к жёлтой отметке.", gName[targetid]);
         SendClientMessage(playerid, COLOR_GREEN, orderMessage);
         return 1;
     }
@@ -5237,13 +5237,13 @@ public OnPlayerCommandText(playerid, cmdtext[])
     {
         new targetid = gTaxiOrderTarget[playerid];
         if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gTaxiAtPickup[playerid])
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] РќРµС‚ Р°РєС‚РёРІРЅРѕР№ РїРѕРµР·РґРєРё. Р—Р°РєР°Р·С‹: /taxiaccept ID."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Нет активной поездки. Заказы: /taxiaccept ID."), 1;
         new vehicleid = gWorkVehicle[playerid];
         if (vehicleid <= 0 || vehicleid >= MAX_VEHICLES || GetVehicleModel(vehicleid) != 420
             || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || GetPlayerVehicleID(playerid) != vehicleid)
-            return SendClientMessage(playerid, COLOR_RED, "[РўРђРљРЎР] Р’С‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ Р·Р° СЂСѓР»С‘Рј РІС‹РґР°РЅРЅРѕРіРѕ С‚Р°РєСЃРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "[ТАКСИ] Вы должны быть за рулём выданного такси."), 1;
         if (!IsPlayerInVehicle(targetid, vehicleid) || GetPlayerVehicleSeat(targetid) < 1)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] РџР°СЃСЃР°Р¶РёСЂ РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ РІ РІР°С€РµРј С‚Р°РєСЃРё РЅР° РїР°СЃСЃР°Р¶РёСЂСЃРєРѕРј РјРµСЃС‚Рµ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Пассажир должен находиться в вашем такси на пассажирском месте."), 1;
         new Float:px, Float:py, Float:pz;
         GetPlayerPos(targetid, px, py, pz);
         new Float:dx = px - gTaxiPickupPos[targetid][0];
@@ -5254,13 +5254,13 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (fare < 250) fare = 250;
         if (fare > 12000) fare = 12000;
         if (gMoney[playerid] > MAX_MONEY - fare)
-            return SendClientMessage(playerid, COLOR_RED, "[РўРђРљРЎР] Р’Р°С€ Р±Р°Р»Р°РЅСЃ РґРѕСЃС‚РёРі Р»РёРјРёС‚Р°, РѕРїР»Р°С‚Сѓ Р·Р° Р·Р°РєР°Р· РЅР°С‡РёСЃР»РёС‚СЊ РЅРµР»СЊР·СЏ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "[ТАКСИ] Ваш баланс достиг лимита, оплату за заказ начислить нельзя."), 1;
         if (gMoney[targetid] < fare)
         {
             new paymentMessage[128];
-            format(paymentMessage, sizeof paymentMessage, "[РўРђРљРЎР] РџРѕРµР·РґРєР° СЃС‚РѕРёС‚ %d СЂСѓР±. РЈ РїР°СЃСЃР°Р¶РёСЂР° РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С….", fare);
+            format(paymentMessage, sizeof paymentMessage, "[ТАКСИ] Поездка стоит %d руб. У пассажира недостаточно наличных.", fare);
             SendClientMessage(playerid, COLOR_RED, paymentMessage);
-            format(paymentMessage, sizeof paymentMessage, "[РўРђРљРЎР] РћРїР»Р°С‚Р° РїРѕРµР·РґРєРё: %d СЂСѓР±. РџРѕРїРѕР»РЅРёС‚Рµ РЅР°Р»РёС‡РЅС‹Рµ РёР»Рё РґРѕРіРѕРІРѕСЂРёС‚РµСЃСЊ СЃ РІРѕРґРёС‚РµР»РµРј.", fare);
+            format(paymentMessage, sizeof paymentMessage, "[ТАКСИ] Оплата поездки: %d руб. Пополните наличные или договоритесь с водителем.", fare);
             SendClientMessage(targetid, COLOR_YELLOW, paymentMessage);
             return 1;
         }
@@ -5268,73 +5268,73 @@ public OnPlayerCommandText(playerid, cmdtext[])
         GiveCash(playerid, fare);
         SavePlayer(targetid); SavePlayer(playerid);
         new fareMessage[128];
-        format(fareMessage, sizeof fareMessage, "[РўРђРљРЎР] РџРѕРµР·РґРєР° Р·Р°РІРµСЂС€РµРЅР°. РЎ РїР°СЃСЃР°Р¶РёСЂР° РїРѕР»СѓС‡РµРЅРѕ %d СЂСѓР±.", fare);
+        format(fareMessage, sizeof fareMessage, "[ТАКСИ] Поездка завершена. С пассажира получено %d руб.", fare);
         SendClientMessage(playerid, COLOR_GREEN, fareMessage);
-        format(fareMessage, sizeof fareMessage, "[РўРђРљРЎР] РџРѕРµР·РґРєР° РѕРїР»Р°С‡РµРЅР°: %d СЂСѓР±. РЎРїР°СЃРёР±Рѕ Р·Р° РїРѕРµР·РґРєСѓ!", fare);
+        format(fareMessage, sizeof fareMessage, "[ТАКСИ] Поездка оплачена: %d руб. Спасибо за поездку!", fare);
         SendClientMessage(targetid, COLOR_GREEN, fareMessage);
-        VX_TaxiClearDriver(playerid, "[РўРђРљРЎР] РџРѕРµР·РґРєР° Р·Р°РІРµСЂС€РµРЅР°.", true);
+        VX_TaxiClearDriver(playerid, "[ТАКСИ] Поездка завершена.", true);
         return 1;
     }
     if (CommandMatch(cmdtext, "/taxicancel"))
     {
         if (gTaxiOrderTarget[playerid] != INVALID_PLAYER_ID)
         {
-            VX_TaxiClearDriver(playerid, "[РўРђРљРЎР] Р’РѕРґРёС‚РµР»СЊ РѕС‚РјРµРЅРёР» Р·Р°РєР°Р·.", true);
-            SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] Р’С‹ РѕС‚РјРµРЅРёР»Рё Р·Р°РєР°Р·. Р Р°Р±РѕС‡РёР№ РјР°СЂС€СЂСѓС‚ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅ.");
+            VX_TaxiClearDriver(playerid, "[ТАКСИ] Водитель отменил заказ.", true);
+            SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Вы отменили заказ. Рабочий маршрут восстановлен.");
             return 1;
         }
         if (gTaxiRequestActive[playerid] || gTaxiOrderDriver[playerid] != INVALID_PLAYER_ID)
         {
-            VX_TaxiCancelForPlayer(playerid, "[РўРђРљРЎР] РџР°СЃСЃР°Р¶РёСЂ РѕС‚РјРµРЅРёР» Р·Р°РєР°Р·.", true);
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] Р’Р°С€ РІС‹Р·РѕРІ РѕС‚РјРµРЅС‘РЅ."), 1;
+            VX_TaxiCancelForPlayer(playerid, "[ТАКСИ] Пассажир отменил заказ.", true);
+            return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Ваш вызов отменён."), 1;
         }
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] РЈ РІР°СЃ РЅРµС‚ Р°РєС‚РёРІРЅРѕРіРѕ Р·Р°РєР°Р·Р°."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] У вас нет активного заказа."), 1;
     }
     if (CommandMatch(cmdtext, "/taxi"))
     {
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] Р’С‹Р·РІР°С‚СЊ РјР°С€РёРЅСѓ РјРѕР¶РЅРѕ СЃ СѓР»РёС†С‹. Р’С‹Р№РґРёС‚Рµ РёР· РёРЅС‚РµСЂСЊРµСЂР°."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Вызвать машину можно с улицы. Выйдите из интерьера."), 1;
         if (gTaxiRequestActive[playerid] || gTaxiOrderDriver[playerid] != INVALID_PLAYER_ID)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] Р—Р°РєР°Р· СѓР¶Рµ СЃРѕР·РґР°РЅ. РћС‚РјРµРЅР°: /taxicancel."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Заказ уже создан. Отмена: /taxicancel."), 1;
         new Float:px, Float:py, Float:pz;
         GetPlayerPos(playerid, px, py, pz);
         new drivers = 0;
         for (new d = 0; d < MAX_PLAYERS; d++) if (VX_TaxiOnDuty(d)) drivers++;
-        if (drivers == 0) return SendClientMessage(playerid, COLOR_YELLOW, "[РўРђРљРЎР] РЎРµР№С‡Р°СЃ РЅРµС‚ СЃРІРѕР±РѕРґРЅС‹С… С‚Р°РєСЃРёСЃС‚РѕРІ РЅР° СЃРјРµРЅРµ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ."), 1;
+        if (drivers == 0) return SendClientMessage(playerid, COLOR_YELLOW, "[ТАКСИ] Сейчас нет свободных таксистов на смене. Попробуйте позже."), 1;
         gTaxiPickupPos[playerid][0] = px; gTaxiPickupPos[playerid][1] = py; gTaxiPickupPos[playerid][2] = pz;
         gTaxiRequestActive[playerid] = true;
         gVX4TaxiRequestAt[playerid] = gettime();
         new dispatchMessage[144];
-        format(dispatchMessage, sizeof dispatchMessage, "[РўРђРљРЎР] РќРѕРІС‹Р№ РІС‹Р·РѕРІ РѕС‚ %s (ID %d). РџСЂРёРЅСЏС‚СЊ: /taxiaccept %d", gName[playerid], playerid, playerid);
+        format(dispatchMessage, sizeof dispatchMessage, "[ТАКСИ] Новый вызов от %s (ID %d). Принять: /taxiaccept %d", gName[playerid], playerid, playerid);
         for (new d = 0; d < MAX_PLAYERS; d++) if (VX_TaxiOnDuty(d)) SendClientMessage(d, COLOR_YELLOW, dispatchMessage);
-        SendClientMessage(playerid, COLOR_GREEN, "[РўРђРљРЎР] Р’С‹Р·РѕРІ РѕС‚РїСЂР°РІР»РµРЅ РІРѕРґРёС‚РµР»СЏРј. РћР¶РёРґР°Р№С‚Рµ РѕС‚РІРµС‚Р°; РѕС‚РјРµРЅР° вЂ” /taxicancel.");
+        SendClientMessage(playerid, COLOR_GREEN, "[ТАКСИ] Вызов отправлен водителям. Ожидайте ответа; отмена — /taxicancel.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/hud"))
     {
-        if (!gLogged[playerid]) return SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚."), 1;
+        if (!gLogged[playerid]) return SendClientMessage(playerid, COLOR_RED, "Сначала войдите в аккаунт."), 1;
         gVexHudEnabled[playerid] = !gVexHudEnabled[playerid];
         if (gVexHudEnabled[playerid])
         {
             gVexHudBuildFailed[playerid] = false;
-            if (ShowVexHud(playerid)) SendClientMessage(playerid, COLOR_GREEN, "[HUD] РРЅС‚РµСЂС„РµР№СЃ РІРєР»СЋС‡С‘РЅ. Р СѓСЃСЃРєРёР№ С€СЂРёС„С‚: /hudfont.");
+            if (ShowVexHud(playerid)) SendClientMessage(playerid, COLOR_GREEN, "[HUD] Интерфейс включён. Русский шрифт: /hudfont.");
         }
         else
         {
             HideVexHud(playerid);
-            SendClientMessage(playerid, COLOR_YELLOW, "[HUD] РРЅС‚РµСЂС„РµР№СЃ СЃРєСЂС‹С‚. Р’РєР»СЋС‡РёС‚СЊ: /hud.");
+            SendClientMessage(playerid, COLOR_YELLOW, "[HUD] Интерфейс скрыт. Включить: /hud.");
         }
         SaveVexHudSettings(playerid);
         return 1;
     }
     if (CommandMatch(cmdtext, "/hudfont"))
     {
-        if (!gLogged[playerid]) return SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚."), 1;
+        if (!gLogged[playerid]) return SendClientMessage(playerid, COLOR_RED, "Сначала войдите в аккаунт."), 1;
         new params[32];
         GetParams(cmdtext, params, sizeof params);
         if (!strlen(params)) return ShowVexHudFonts(playerid);
         if (strlen(params) != 1 || params[0] < '1' || params[0] > '9')
-            return SendClientMessage(playerid, COLOR_YELLOW, "[HUD] Р’РІРµРґРёС‚Рµ /hudfont РёР»Рё /hudfont [1-9]."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[HUD] Введите /hudfont или /hudfont [1-9]."), 1;
         return SetVexHudFont(playerid, params[0] - '1');
     }
 
@@ -5395,14 +5395,14 @@ public OnPlayerCommandText(playerid, cmdtext[])
         GetPlayerFacingAngle(playerid, a);
         format(info, sizeof info, "[COOR] X: %.4f | Y: %.4f | Z: %.4f | A: %.2f | Interior: %d | VW: %d", x, y, z, a, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
         SendClientMessage(playerid, COLOR_GREEN, info);
-        SendClientMessage(playerid, COLOR_YELLOW, "РљРѕРјР°РЅРґР° /coor РґРѕСЃС‚СѓРїРЅР° РІСЃРµРј. РЎС‚СЂРѕРєСѓ [COOR] РјРѕР¶РЅРѕ РЅР°Р№С‚Рё РІ chatlog.txt РєР»РёРµРЅС‚Р° SA-MP.");
+        SendClientMessage(playerid, COLOR_YELLOW, "Команда /coor доступна всем. Строку [COOR] можно найти в chatlog.txt клиента SA-MP.");
         return 1;
     }
     if (!strcmp(cmdtext, "/spawn", true)) return ShowSpawnMenu(playerid), 1;
     if (CommandMatch(cmdtext, "/hub") || CommandMatch(cmdtext, "/menu")) return ShowMainMenu(playerid), 1;
     if (!gLogged[playerid])
     {
-        SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚.");
+        SendClientMessage(playerid, COLOR_RED, "Сначала войдите в аккаунт.");
         return 1;
     }
     // Police roleplay greeting: /heypolice (does not open a menu).
@@ -5413,8 +5413,8 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new rankName[32], greeting[192], action[224];
         new Float:px, Float:py, Float:pz;
         GetFactionRankName(FACTION_POLICE, gFactionRank[playerid], rankName, sizeof rankName);
-        format(greeting, sizeof greeting, "Р—РґСЂР°РІРёСЏ Р¶РµР»Р°СЋ! РЇ %s %s, РІРѕС‚ РјРѕРё РґРѕРєСѓРјРµРЅС‚С‹.", rankName, gName[playerid]);
-        format(action, sizeof action, "%s РіРѕРІРѕСЂРёС‚: %s", gName[playerid], greeting);
+        format(greeting, sizeof greeting, "Здравия желаю! Я %s %s, вот мои документы.", rankName, gName[playerid]);
+        format(action, sizeof action, "%s говорит: %s", gName[playerid], greeting);
         GetPlayerPos(playerid, px, py, pz);
         for (new i = 0; i < MAX_PLAYERS; i++)
         {
@@ -5428,27 +5428,27 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[32], token[16], targetid;
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, token, sizeof token))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /pvp [ID РёРіСЂРѕРєР°]"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /pvp [ID игрока]"), 1;
         targetid = strval(token);
         if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє СЃ С‚Р°РєРёРј ID РЅРµ РЅР°Р№РґРµРЅ."), 1;
-        if (targetid == playerid) return SendClientMessage(playerid, COLOR_RED, "РќРµР»СЊР·СЏ РІС‹Р·РІР°С‚СЊ РЅР° РґСѓСЌР»СЊ СЃР°РјРѕРіРѕ СЃРµР±СЏ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок с таким ID не найден."), 1;
+        if (targetid == playerid) return SendClientMessage(playerid, COLOR_RED, "Нельзя вызвать на дуэль самого себя."), 1;
         if (gPvpActive[playerid] || gPvpActive[targetid] || gPvpRequestTarget[playerid] != INVALID_PLAYER_ID || gPvpPendingFrom[playerid] != INVALID_PLAYER_ID || gPvpRequestTarget[targetid] != INVALID_PLAYER_ID || gPvpPendingFrom[targetid] != INVALID_PLAYER_ID)
-            return SendClientMessage(playerid, COLOR_RED, "РћРґРёРЅ РёР· РёРіСЂРѕРєРѕРІ СѓР¶Рµ СѓС‡Р°СЃС‚РІСѓРµС‚ РІ РґСѓСЌР»Рё РёР»Рё РїРѕР»СѓС‡РёР» РїСЂРёРіР»Р°С€РµРЅРёРµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Один из игроков уже участвует в дуэли или получил приглашение."), 1;
         if (GetPlayerInterior(playerid) != GetPlayerInterior(targetid) || GetPlayerVirtualWorld(playerid) != GetPlayerVirtualWorld(targetid))
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РґРѕР»Р¶РЅС‹ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј РІ РѕРґРЅРѕРј РёР·РјРµСЂРµРЅРёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы должны находиться рядом в одном измерении."), 1;
         new Float:tx, Float:ty, Float:tz;
         GetPlayerPos(targetid, tx, ty, tz);
         if (!IsPlayerInRangeOfPoint(playerid, 5.0, tx, ty, tz))
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє РёРіСЂРѕРєСѓ Р±Р»РёР¶Рµ С‡РµРј РЅР° 5 РјРµС‚СЂРѕРІ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Подойдите к игроку ближе чем на 5 метров."), 1;
         if (IsPlayerInAnyVehicle(playerid) || IsPlayerInAnyVehicle(targetid))
-            return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ РІС‹Р·РѕРІР° РЅР° РґСѓСЌР»СЊ РѕР±Р° РёРіСЂРѕРєР° РґРѕР»Р¶РЅС‹ РІС‹Р№С‚Рё РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р°."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Для вызова на дуэль оба игрока должны выйти из транспорта."), 1;
         gPvpRequestTarget[playerid] = targetid;
         gPvpPendingFrom[targetid] = playerid;
         new pvpMsg[144];
-        format(pvpMsg, sizeof pvpMsg, "[PvP] %s РІС‹Р·С‹РІР°РµС‚ РІР°СЃ РЅР° РґСѓСЌР»СЊ! РќР°Р¶РјРёС‚Рµ Y, С‡С‚РѕР±С‹ РїСЂРёРЅСЏС‚СЊ. РџРѕР±РµРґР° РґРѕ 5 СЂР°СѓРЅРґРѕРІ, РѕСЂСѓР¶РёРµ вЂ” С‚РѕР»СЊРєРѕ Desert Eagle.", gName[playerid]);
+        format(pvpMsg, sizeof pvpMsg, "[PvP] %s вызывает вас на дуэль! Нажмите Y, чтобы принять. Победа до 5 раундов, оружие — только Desert Eagle.", gName[playerid]);
         SendClientMessage(targetid, COLOR_ORANGE, pvpMsg);
-        format(pvpMsg, sizeof pvpMsg, "[PvP] РџСЂРёРіР»Р°С€РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ РёРіСЂРѕРєСѓ %s. РћРЅ РґРѕР»Р¶РµРЅ РЅР°Р¶Р°С‚СЊ Y.", gName[targetid]);
+        format(pvpMsg, sizeof pvpMsg, "[PvP] Приглашение отправлено игроку %s. Он должен нажать Y.", gName[targetid]);
         SendClientMessage(playerid, COLOR_GREEN, pvpMsg);
         return 1;
     }
@@ -5503,33 +5503,33 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (CommandMatch(cmdtext, "/paydayall") || CommandMatch(cmdtext, "/payday"))
     {
         if (gAdmin[playerid] < 5)
-            return SendClientMessage(playerid, COLOR_RED, "Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ."), 1;
-        SendClientMessageToAll(COLOR_BLUE, "[VEXORIUM] Р’РЅРµРїР»Р°РЅРѕРІС‹Р№ PayDay! Р’С‹РїР»Р°С‚Р° РЅР°С‡РёСЃР»РµРЅР° РІСЃРµРј РёРіСЂРѕРєР°Рј РѕРЅР»Р°Р№РЅ.");
+            return SendClientMessage(playerid, COLOR_RED, "Доступ запрещён."), 1;
+        SendClientMessageToAll(COLOR_BLUE, "[VEXORIUM] Внеплановый PayDay! Выплата начислена всем игрокам онлайн.");
         PayDay();
-        SendClientMessage(playerid, COLOR_GREEN, "PayDay РІС‹РґР°РЅ РІСЃРµРј РёРіСЂРѕРєР°Рј, РЅР°С…РѕРґСЏС‰РёРјСЃСЏ РѕРЅР»Р°Р№РЅ.");
+        SendClientMessage(playerid, COLOR_GREEN, "PayDay выдан всем игрокам, находящимся онлайн.");
         return 1;
     }
     if (gIsJailed[playerid] && strcmp(cmdtext, "/stats", true) != 0 && strcmp(cmdtext, "/help", true) != 0)
     {
-        SendClientMessage(playerid, COLOR_RED, "Р’С‹ РІ РљРџР— Рё РЅРµ РјРѕР¶РµС‚Рµ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЌС‚Сѓ РєРѕРјР°РЅРґСѓ.");
+        SendClientMessage(playerid, COLOR_RED, "Вы в КПЗ и не можете использовать эту команду.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/orgmembers"))
     {
-        if (gFaction[playerid] == FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+        if (gFaction[playerid] == FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в организации."), 1;
         new factionName[32], line[128], count = 0;
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
-        format(line, sizeof line, "[%s] РЎРѕС‚СЂСѓРґРЅРёРєРё РѕРЅР»Р°Р№РЅ:", factionName);
+        format(line, sizeof line, "[%s] Сотрудники онлайн:", factionName);
         SendClientMessage(playerid, COLOR_YELLOW, line);
         for (new member = 0; member < MAX_PLAYERS; member++)
         {
             if (!IsPlayerConnected(member) || !gLogged[member] || gFaction[member] != gFaction[playerid]) continue;
-            format(line, sizeof line, "%s | ID %d | СЂР°РЅРі %d", gName[member], member, gFactionRank[member]);
+            format(line, sizeof line, "%s | ID %d | ранг %d", gName[member], member, gFactionRank[member]);
             SendClientMessage(playerid, COLOR_WHITE, line);
             count++;
         }
-        if (!count) SendClientMessage(playerid, COLOR_YELLOW, "РќРµС‚ СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ РѕРЅР»Р°Р№РЅ.");
-        SendClientMessage(playerid, COLOR_YELLOW, "РЈРїСЂР°РІР»РµРЅРёРµ: /orginvite ID, /orgrank ID Р РђРќР“, /orgkick ID, /orgfund.");
+        if (!count) SendClientMessage(playerid, COLOR_YELLOW, "Нет сотрудников онлайн.");
+        SendClientMessage(playerid, COLOR_YELLOW, "Управление: /orginvite ID, /orgrank ID РАНГ, /orgkick ID, /orgfund.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/orginvite"))
@@ -5537,21 +5537,21 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[40], token[16], targetid;
         GetParams(cmdtext, params, sizeof params);
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 8 || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "РџСЂРёРЅРёРјР°С‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ РјРѕР¶РµС‚ СЂСѓРєРѕРІРѕРґСЃС‚РІРѕ СЂР°РЅРіР° 8+ РІ С€С‚Р°Р±Рµ."), 1;
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /orginvite ID"), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Принимать сотрудников может руководство ранга 8+ в штабе."), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /orginvite ID"), 1;
         targetid = strval(token);
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
-        if (gFaction[targetid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє СѓР¶Рµ СЃРѕСЃС‚РѕРёС‚ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
-        if (!VX_Near(playerid, targetid, 8.0)) return SendClientMessage(playerid, COLOR_RED, "РџСЂРёРіР»Р°С€Р°РµРјС‹Р№ РёРіСЂРѕРє РґРѕР»Р¶РµРЅ СЃС‚РѕСЏС‚СЊ СЂСЏРґРѕРј."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
+        if (gFaction[targetid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Игрок уже состоит в организации."), 1;
+        if (!VX_Near(playerid, targetid, 8.0)) return SendClientMessage(playerid, COLOR_RED, "Приглашаемый игрок должен стоять рядом."), 1;
         gOrgInviteFrom[targetid] = playerid;
         new title[96], body[256], factionName[32];
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
-        format(title, sizeof title, "VEXORIUM | РџСЂРёРіР»Р°С€РµРЅРёРµ РІ %s", factionName);
-        format(body, sizeof body, "РЎРѕС‚СЂСѓРґРЅРёРє %s РїСЂРёРіР»Р°С€Р°РµС‚ РІР°СЃ РІ РѕСЂРіР°РЅРёР·Р°С†РёСЋ %s.\nРџСЂРёРЅСЏС‚СЊ РїСЂРёРіР»Р°С€РµРЅРёРµ?", gName[playerid], factionName);
-        ShowPlayerDialog(targetid, DIALOG_ORG_INVITE, DIALOG_STYLE_MSGBOX, title, body, "РџСЂРёРЅСЏС‚СЊ", "РћС‚РєР°Р·Р°С‚СЊСЃСЏ");
-        SendClientMessage(playerid, COLOR_GREEN, "РџСЂРёРіР»Р°С€РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ. Р–РґРёС‚Рµ СЂРµС€РµРЅРёСЏ РёРіСЂРѕРєР°.");
-        SendClientMessage(targetid, COLOR_YELLOW, "РЈРїСЂР°РІР»РµРЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРµР№: /orgmembers Рё /orgfund.");
+        format(title, sizeof title, "VEXORIUM | Приглашение в %s", factionName);
+        format(body, sizeof body, "Сотрудник %s приглашает вас в организацию %s.\nПринять приглашение?", gName[playerid], factionName);
+        ShowPlayerDialog(targetid, DIALOG_ORG_INVITE, DIALOG_STYLE_MSGBOX, title, body, "Принять", "Отказаться");
+        SendClientMessage(playerid, COLOR_GREEN, "Приглашение отправлено. Ждите решения игрока.");
+        SendClientMessage(targetid, COLOR_YELLOW, "Управление организацией: /orgmembers и /orgfund.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/orgrank"))
@@ -5559,19 +5559,19 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[48], idText[16], rankText[16], targetid, newRank;
         GetParams(cmdtext, params, sizeof params);
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 9 || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕРІС‹С€Р°С‚СЊ Рё РїРѕРЅРёР¶Р°С‚СЊ СЂР°РЅРіРё РјРѕР¶РµС‚ СЂСѓРєРѕРІРѕРґСЃС‚РІРѕ СЂР°РЅРіР° 9+ РІ С€С‚Р°Р±Рµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Повышать и понижать ранги может руководство ранга 9+ в штабе."), 1;
         if (!GetToken(params, 0, idText, sizeof idText) || !GetToken(params, 1, rankText, sizeof rankText))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /orgrank ID Р РђРќР“"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /orgrank ID РАНГ"), 1;
         targetid = strval(idText); newRank = strval(rankText);
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
         if (gFaction[targetid] != gFaction[playerid] || gFactionRank[targetid] >= gFactionRank[playerid] || newRank < 1 || newRank >= gFactionRank[playerid] || newRank > 10)
-            return SendClientMessage(playerid, COLOR_RED, "РќРµР»СЊР·СЏ РјРµРЅСЏС‚СЊ СЂР°РЅРі РІРЅРµ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё РёР»Рё РЅР°Р·РЅР°С‡Р°С‚СЊ СЂР°РЅРі РІС‹С€Рµ/СЂР°РІРЅС‹Р№ СЃРІРѕРµРјСѓ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Нельзя менять ранг вне своей организации или назначать ранг выше/равный своему."), 1;
         gFactionRank[targetid] = newRank;
         SetPlayerSkin(targetid, VX_RespawnSkin(targetid));
         SavePlayer(targetid);
-        new m[128]; format(m, sizeof m, "Р Р°РЅРі СЃРѕС‚СЂСѓРґРЅРёРєР° %s РёР·РјРµРЅС‘РЅ РЅР° %d.", gName[targetid], newRank); SendClientMessage(playerid, COLOR_GREEN, m);
-        format(m, sizeof m, "Р’Р°С€ СЂР°РЅРі РІ РѕСЂРіР°РЅРёР·Р°С†РёРё РёР·РјРµРЅС‘РЅ РЅР° %d.", newRank); SendClientMessage(targetid, COLOR_YELLOW, m);
+        new m[128]; format(m, sizeof m, "Ранг сотрудника %s изменён на %d.", gName[targetid], newRank); SendClientMessage(playerid, COLOR_GREEN, m);
+        format(m, sizeof m, "Ваш ранг в организации изменён на %d.", newRank); SendClientMessage(targetid, COLOR_YELLOW, m);
         return 1;
     }
     if (CommandMatch(cmdtext, "/orgkick"))
@@ -5579,18 +5579,18 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[32], token[16], targetid;
         GetParams(cmdtext, params, sizeof params);
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 9 || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "РЈРІРѕР»СЊРЅСЏС‚СЊ РјРѕР¶РµС‚ СЂСѓРєРѕРІРѕРґСЃС‚РІРѕ СЂР°РЅРіР° 9+ РІ С€С‚Р°Р±Рµ."), 1;
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /orgkick ID"), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Увольнять может руководство ранга 9+ в штабе."), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /orgkick ID"), 1;
         targetid = strval(token);
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
         if (gFaction[targetid] != gFaction[playerid] || gFactionRank[targetid] >= gFactionRank[playerid])
-            return SendClientMessage(playerid, COLOR_RED, "РњРѕР¶РЅРѕ СѓРІРѕР»РёС‚СЊ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР° СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё СЃ СЂР°РЅРіРѕРј РЅРёР¶Рµ РІР°С€РµРіРѕ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Можно уволить только сотрудника своей организации с рангом ниже вашего."), 1;
         gFaction[targetid] = FACTION_NONE; gFactionRank[targetid] = 0; gPoliceCivilianSkin[targetid] = false;
         SetPlayerSkin(targetid, (gVXAccountSkin[targetid] > 0) ? gVXAccountSkin[targetid] : 23);
         SavePlayer(targetid); UpdatePlayerRoleColor(targetid);
-        SendClientMessage(playerid, COLOR_GREEN, "РЎРѕС‚СЂСѓРґРЅРёРє СѓРІРѕР»РµРЅ РёР· РѕСЂРіР°РЅРёР·Р°С†РёРё.");
-        SendClientMessage(targetid, COLOR_RED, "Р’С‹ СѓРІРѕР»РµРЅС‹ РёР· РѕСЂРіР°РЅРёР·Р°С†РёРё РµС‘ СЂСѓРєРѕРІРѕРґСЃС‚РІРѕРј.");
+        SendClientMessage(playerid, COLOR_GREEN, "Сотрудник уволен из организации.");
+        SendClientMessage(targetid, COLOR_RED, "Вы уволены из организации её руководством.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/orgfund"))
@@ -5598,15 +5598,15 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[96], action[20], amountText[20], targetText[16], amount = 0, targetid = INVALID_PLAYER_ID;
         GetParams(cmdtext, params, sizeof params);
         if (gFaction[playerid] == FACTION_NONE || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "Р¤РёРЅР°РЅСЃС‹ РґРѕСЃС‚СѓРїРЅС‹ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј РІ С€С‚Р°Р±Рµ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Финансы доступны сотрудникам в штабе своей организации."), 1;
         if (!GetToken(params, 0, action, sizeof action) || !strcmp(action, "info", true))
         {
             new query[160], DBResult:fr, balance = 0, msg[192], factionName[32];
             format(query, sizeof query, "SELECT money FROM org_stashes WHERE faction_id=%d", gFaction[playerid]);
             fr = db_query(gDatabase, query); if (fr && db_num_rows(fr)) balance = db_get_field_int(fr, 0); if (fr) db_free_result(fr);
             GetFactionName(gFaction[playerid], factionName, sizeof factionName);
-            format(msg, sizeof msg, "[%s] РљР°Р·РЅР° РѕСЂРіР°РЅРёР·Р°С†РёРё: %d СЂСѓР±.", factionName, balance); SendClientMessage(playerid, COLOR_YELLOW, msg);
-            SendClientMessage(playerid, COLOR_WHITE, "/orgfund deposit РЎРЈРњРњРђ | /orgfund withdraw РЎРЈРњРњРђ (СЂР°РЅРі 8+) | /orgfund pay ID РЎРЈРњРњРђ (СЂР°РЅРі 9+) | /orgfund history");
+            format(msg, sizeof msg, "[%s] Казна организации: %d руб.", factionName, balance); SendClientMessage(playerid, COLOR_YELLOW, msg);
+            SendClientMessage(playerid, COLOR_WHITE, "/orgfund deposit СУММА | /orgfund withdraw СУММА (ранг 8+) | /orgfund pay ID СУММА (ранг 9+) | /orgfund history");
             return 1;
         }
         if (!strcmp(action, "history", true))
@@ -5614,11 +5614,11 @@ public OnPlayerCommandText(playerid, cmdtext[])
             new query[192], actor[MAX_PLAYER_NAME + 1], target[MAX_PLAYER_NAME + 1], kind[20], line[160], DBResult:fr;
             format(query, sizeof query, "SELECT actor,target,action,amount FROM org_finance_log WHERE faction_id=%d ORDER BY id DESC LIMIT 10", gFaction[playerid]);
             fr = db_query(gDatabase, query);
-            if (!fr || !db_num_rows(fr)) { if (fr) db_free_result(fr); return SendClientMessage(playerid, COLOR_YELLOW, "РСЃС‚РѕСЂРёСЏ С„РёРЅР°РЅСЃРѕРІ РїРѕРєР° РїСѓСЃС‚Р°."), 1; }
+            if (!fr || !db_num_rows(fr)) { if (fr) db_free_result(fr); return SendClientMessage(playerid, COLOR_YELLOW, "История финансов пока пуста."), 1; }
             for (new i = 0; i < db_num_rows(fr); i++)
             {
                 db_get_field(fr, 0, actor, sizeof actor); db_get_field(fr, 1, target, sizeof target); db_get_field(fr, 2, kind, sizeof kind);
-                format(line, sizeof line, "%s: %d СЂСѓР±. | %s -> %s", kind, db_get_field_int(fr, 3), actor, target);
+                format(line, sizeof line, "%s: %d руб. | %s -> %s", kind, db_get_field_int(fr, 3), actor, target);
                 SendClientMessage(playerid, COLOR_WHITE, line); db_next_row(fr);
             }
             db_free_result(fr); return 1;
@@ -5626,72 +5626,72 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (!strcmp(action, "deposit", true))
         {
             if (!GetToken(params, 1, amountText, sizeof amountText) || !VX_Number(amountText, amount, MAX_MONEY) || amount < 1 || amount > gMoney[playerid])
-                return SendClientMessage(playerid, COLOR_RED, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /orgfund deposit РЎРЈРњРњРђ. РџСЂРѕРІРµСЂСЊС‚Рµ СЃСѓРјРјСѓ Рё РЅР°Р»РёС‡РЅС‹Рµ."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "Использование: /orgfund deposit СУММА. Проверьте сумму и наличные."), 1;
             if (VX_OrgBalance(gFaction[playerid]) > MAX_MONEY - amount)
-                return SendClientMessage(playerid, COLOR_RED, "Р’ РєР°Р·РЅРµ РґРѕСЃС‚РёРіРЅСѓС‚ РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ Р±Р°Р»Р°РЅСЃ. РќРµР»СЊР·СЏ РІРЅРµСЃС‚Рё С‚Р°РєСѓСЋ СЃСѓРјРјСѓ."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "В казне достигнут максимальный баланс. Нельзя внести такую сумму."), 1;
             new query[256], cash = gMoney[playerid] - amount;
             if (!VX_Begin()) return VX_Error(playerid);
             format(query, sizeof query, "UPDATE accounts SET money=%d WHERE name='%q'", cash, gName[playerid]); VX_SQL(query);
             format(query, sizeof query, "UPDATE org_stashes SET money=money+%d WHERE faction_id=%d", amount, gFaction[playerid]); VX_SQL(query);
             format(query, sizeof query, "INSERT INTO org_finance_log(faction_id,actor,target,action,amount,created) VALUES(%d,'%q','', 'deposit',%d,%d)", gFaction[playerid], gName[playerid], amount, gettime()); VX_SQL(query);
             if (!VX_Commit()) return VX_Error(playerid);
-            VX_MoneySync(playerid, cash, gBankMoney[playerid]); SendClientMessage(playerid, COLOR_GREEN, "Р’Р·РЅРѕСЃ РІРЅРµСЃС‘РЅ РІ РєР°Р·РЅСѓ РѕСЂРіР°РЅРёР·Р°С†РёРё."); return 1;
+            VX_MoneySync(playerid, cash, gBankMoney[playerid]); SendClientMessage(playerid, COLOR_GREEN, "Взнос внесён в казну организации."); return 1;
         }
         if (!strcmp(action, "withdraw", true))
         {
-            if (gFactionRank[playerid] < 8) return SendClientMessage(playerid, COLOR_RED, "РЎРЅРёРјР°С‚СЊ РґРµРЅСЊРіРё РёР· РєР°Р·РЅС‹ РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ СЂСѓРєРѕРІРѕРґСЃС‚РІРѕ СЂР°РЅРіР° 8+."), 1;
+            if (gFactionRank[playerid] < 8) return SendClientMessage(playerid, COLOR_RED, "Снимать деньги из казны может только руководство ранга 8+."), 1;
             if (!GetToken(params, 1, amountText, sizeof amountText) || !VX_Number(amountText, amount, MAX_MONEY) || amount < 1 || gMoney[playerid] > MAX_MONEY - amount)
-                return SendClientMessage(playerid, COLOR_RED, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /orgfund withdraw РЎРЈРњРњРђ. РџСЂРѕРІРµСЂСЊС‚Рµ СЃСѓРјРјСѓ."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "Использование: /orgfund withdraw СУММА. Проверьте сумму."), 1;
             new query[256], DBResult:fr, balance = 0, cash = gMoney[playerid] + amount;
             format(query, sizeof query, "SELECT money FROM org_stashes WHERE faction_id=%d", gFaction[playerid]); fr = db_query(gDatabase, query);
             if (fr && db_num_rows(fr)) balance = db_get_field_int(fr, 0); if (fr) db_free_result(fr);
-            if (balance < amount) return SendClientMessage(playerid, COLOR_RED, "Р’ РєР°Р·РЅРµ РѕСЂРіР°РЅРёР·Р°С†РёРё РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ СЃСЂРµРґСЃС‚РІ."), 1;
+            if (balance < amount) return SendClientMessage(playerid, COLOR_RED, "В казне организации недостаточно средств."), 1;
             if (!VX_Begin()) return VX_Error(playerid);
             format(query, sizeof query, "UPDATE org_stashes SET money=money-%d WHERE faction_id=%d AND money >= %d", amount, gFaction[playerid], amount); VX_SQL(query);
             format(query, sizeof query, "UPDATE accounts SET money=%d WHERE name='%q'", cash, gName[playerid]); VX_SQL(query);
             format(query, sizeof query, "INSERT INTO org_finance_log(faction_id,actor,target,action,amount,created) VALUES(%d,'%q','', 'withdraw',%d,%d)", gFaction[playerid], gName[playerid], amount, gettime()); VX_SQL(query);
             if (!VX_Commit()) return VX_Error(playerid);
-            VX_MoneySync(playerid, cash, gBankMoney[playerid]); SendClientMessage(playerid, COLOR_GREEN, "Р”РµРЅСЊРіРё РІС‹РґР°РЅС‹ РёР· РєР°Р·РЅС‹ РѕСЂРіР°РЅРёР·Р°С†РёРё."); return 1;
+            VX_MoneySync(playerid, cash, gBankMoney[playerid]); SendClientMessage(playerid, COLOR_GREEN, "Деньги выданы из казны организации."); return 1;
         }
         if (!strcmp(action, "pay", true))
         {
-            if (gFactionRank[playerid] < 9) return SendClientMessage(playerid, COLOR_RED, "Р’С‹РїР»Р°С‡РёРІР°С‚СЊ РїСЂРµРјРёРё РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ СЂСѓРєРѕРІРѕРґСЃС‚РІРѕ СЂР°РЅРіР° 9+."), 1;
+            if (gFactionRank[playerid] < 9) return SendClientMessage(playerid, COLOR_RED, "Выплачивать премии может только руководство ранга 9+."), 1;
             if (!GetToken(params, 1, targetText, sizeof targetText) || !GetToken(params, 2, amountText, sizeof amountText) || !VX_Number(amountText, amount, MAX_MONEY) || amount < 1)
-                return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /orgfund pay ID РЎРЈРњРњРђ"), 1;
+                return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /orgfund pay ID СУММА"), 1;
             targetid = strval(targetText);
             if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid] || gFaction[targetid] != gFaction[playerid])
-                return SendClientMessage(playerid, COLOR_RED, "РџРѕР»СѓС‡Р°С‚РµР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕРЅР»Р°Р№РЅ Рё СЃРѕСЃС‚РѕСЏС‚СЊ РІ РІР°С€РµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "Получатель должен быть онлайн и состоять в вашей организации."), 1;
             if (gFactionRank[targetid] >= gFactionRank[playerid] || gMoney[targetid] > MAX_MONEY - amount)
-                return SendClientMessage(playerid, COLOR_RED, "РќРµР»СЊР·СЏ РїР»Р°С‚РёС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєСѓ СЃ СЂР°РІРЅС‹Рј/РІС‹СЃС€РёРј СЂР°РЅРіРѕРј РёР»Рё РїСЂРµРІС‹С€Р°С‚СЊ Р»РёРјРёС‚ РЅР°Р»РёС‡РЅС‹С…."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "Нельзя платить сотруднику с равным/высшим рангом или превышать лимит наличных."), 1;
             new query[256], DBResult:fr, balance = 0, targetCash = gMoney[targetid] + amount;
             format(query, sizeof query, "SELECT money FROM org_stashes WHERE faction_id=%d", gFaction[playerid]); fr = db_query(gDatabase, query);
             if (fr && db_num_rows(fr)) balance = db_get_field_int(fr, 0); if (fr) db_free_result(fr);
-            if (balance < amount) return SendClientMessage(playerid, COLOR_RED, "Р’ РєР°Р·РЅРµ РѕСЂРіР°РЅРёР·Р°С†РёРё РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ СЃСЂРµРґСЃС‚РІ."), 1;
+            if (balance < amount) return SendClientMessage(playerid, COLOR_RED, "В казне организации недостаточно средств."), 1;
             if (!VX_Begin()) return VX_Error(playerid);
             format(query, sizeof query, "UPDATE org_stashes SET money=money-%d WHERE faction_id=%d AND money >= %d", amount, gFaction[playerid], amount); VX_SQL(query);
             format(query, sizeof query, "UPDATE accounts SET money=%d WHERE name='%q'", targetCash, gName[targetid]); VX_SQL(query);
             format(query, sizeof query, "INSERT INTO org_finance_log(faction_id,actor,target,action,amount,created) VALUES(%d,'%q','%q','pay',%d,%d)", gFaction[playerid], gName[playerid], gName[targetid], amount, gettime()); VX_SQL(query);
             if (!VX_Commit()) return VX_Error(playerid);
             VX_MoneySync(targetid, targetCash, gBankMoney[targetid]);
-            new payMsg[128]; format(payMsg, sizeof payMsg, "Р СѓРєРѕРІРѕРґСЃС‚РІРѕ РІС‹РїР»Р°С‚РёР»Рѕ РІР°Рј РїСЂРµРјРёСЋ: %d СЂСѓР±.", amount); SendClientMessage(targetid, COLOR_GREEN, payMsg);
-            SendClientMessage(playerid, COLOR_GREEN, "РџСЂРµРјРёСЏ РІС‹РїР»Р°С‡РµРЅР° РёР· РєР°Р·РЅС‹ РѕСЂРіР°РЅРёР·Р°С†РёРё."); return 1;
+            new payMsg[128]; format(payMsg, sizeof payMsg, "Руководство выплатило вам премию: %d руб.", amount); SendClientMessage(targetid, COLOR_GREEN, payMsg);
+            SendClientMessage(playerid, COLOR_GREEN, "Премия выплачена из казны организации."); return 1;
         }
-        return SendClientMessage(playerid, COLOR_YELLOW, "РљРѕРјР°РЅРґС‹: /orgfund, /orgfund deposit, withdraw, pay, history."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Команды: /orgfund, /orgfund deposit, withdraw, pay, history."), 1;
     }
     if (CommandMatch(cmdtext, "/contract"))
     {
         new params[160], idText[16], amountText[20], rawPurpose[96], purpose[80], targetid, amount = 0;
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, idText, sizeof idText) || !GetToken(params, 1, amountText, sizeof amountText))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /contract ID РЎРЈРњРњРђ РћРџРРЎРђРќРР•"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /contract ID СУММА ОПИСАНИЕ"), 1;
         targetid = strval(idText);
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
-        if (!VX_Near(playerid, targetid, 4.0)) return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ Р·Р°РєР»СЋС‡РµРЅРёСЏ РґРѕРіРѕРІРѕСЂР° РїРѕРґРѕР№РґРёС‚Рµ Рє РёРіСЂРѕРєСѓ Р±Р»РёР¶Рµ (РґРѕ 4 РјРµС‚СЂРѕРІ)."), 1;
-        if (!VX_Number(amountText, amount, 10000000) || amount < 1) return SendClientMessage(playerid, COLOR_RED, "РЎСѓРјРјР° РґРѕРіРѕРІРѕСЂР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РѕС‚ 1 РґРѕ 10000000 СЂСѓР±."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
+        if (!VX_Near(playerid, targetid, 4.0)) return SendClientMessage(playerid, COLOR_RED, "Для заключения договора подойдите к игроку ближе (до 4 метров)."), 1;
+        if (!VX_Number(amountText, amount, 10000000) || amount < 1) return SendClientMessage(playerid, COLOR_RED, "Сумма договора должна быть от 1 до 10000000 руб."), 1;
         VX_GetTailAfterTokens(params, 2, rawPurpose, sizeof rawPurpose);
         VX_CleanText(rawPurpose, purpose, sizeof purpose);
-        if (!strlen(purpose)) return SendClientMessage(playerid, COLOR_YELLOW, "Р”РѕР±Р°РІСЊС‚Рµ РЅР°Р·РЅР°С‡РµРЅРёРµ РґРѕРіРѕРІРѕСЂР°, РЅР°РїСЂРёРјРµСЂ: РѕРїР»Р°С‚Р° СЂРµРјРѕРЅС‚Р°."), 1;
+        if (!strlen(purpose)) return SendClientMessage(playerid, COLOR_YELLOW, "Добавьте назначение договора, например: оплата ремонта."), 1;
         return VX_ContractCreate(playerid, targetid, amount, purpose);
     }
     if (CommandMatch(cmdtext, "/contracts")) return VX_ContractList(playerid);
@@ -5700,7 +5700,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[32], token[16], contractId;
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, token, sizeof token) || !VX_Number(token, contractId, 2000000000) || contractId < 1)
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /contractaccept ID, /contractreject ID РёР»Рё /contractcancel ID"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /contractaccept ID, /contractreject ID или /contractcancel ID"), 1;
         if (CommandMatch(cmdtext, "/contractaccept")) return VX_ContractResolve(playerid, contractId, 1);
         if (CommandMatch(cmdtext, "/contractreject")) return VX_ContractResolve(playerid, contractId, 2);
         return VX_ContractResolve(playerid, contractId, 3);
@@ -5708,109 +5708,109 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (CommandMatch(cmdtext, "/needs"))
     {
         new msg[192];
-        format(msg, sizeof msg, "[РЎРћРЎРўРћРЇРќРР•] РЎС‹С‚РѕСЃС‚СЊ: %d/100 | Р’РѕРґР°: %d/100 | Р­РЅРµСЂРіРёСЏ: %d/100", gHunger[playerid], gThirst[playerid], gEnergy[playerid]);
+        format(msg, sizeof msg, "[СОСТОЯНИЕ] Сытость: %d/100 | Вода: %d/100 | Энергия: %d/100", gHunger[playerid], gThirst[playerid], gEnergy[playerid]);
         SendClientMessage(playerid, COLOR_YELLOW, msg);
-        SendClientMessage(playerid, COLOR_WHITE, "Р•РґР° Рё РІРѕРґР° РІ РёРЅРІРµРЅС‚Р°СЂРµ РІРѕСЃСЃС‚Р°РЅР°РІР»РёРІР°СЋС‚ РїРѕРєР°Р·Р°С‚РµР»Рё. Р’ СЃРІРѕС‘Рј РґРѕРјРµ РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /rest.");
+        SendClientMessage(playerid, COLOR_WHITE, "Еда и вода в инвентаре восстанавливают показатели. В своём доме используйте /rest.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/rest"))
     {
         if (gCurrentHouse[playerid] < 1 || GetPlayerInterior(playerid) != 1 || GetPlayerVirtualWorld(playerid) != gCurrentHouse[playerid])
-            return SendClientMessage(playerid, COLOR_RED, "РћС‚РґРѕС…РЅСѓС‚СЊ РјРѕР¶РЅРѕ С‚РѕР»СЊРєРѕ РІ СЃРѕР±СЃС‚РІРµРЅРЅРѕРј РґРѕРјРµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Отдохнуть можно только в собственном доме."), 1;
         if (gLastRestTick[playerid] && gettime() - gLastRestTick[playerid] < 60)
-            return SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РЅРµРґР°РІРЅРѕ РѕС‚РґС‹С…Р°Р»Рё. РџРѕРїСЂРѕР±СѓР№С‚Рµ С‡РµСЂРµР· РјРёРЅСѓС‚Сѓ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Вы недавно отдыхали. Попробуйте через минуту."), 1;
         gLastRestTick[playerid] = gettime();
         gEnergy[playerid] = VexHudClamp(gEnergy[playerid] + 35, 0, 100);
         ApplyAnimation(playerid, "BEACH", "ParkSit_M_loop", 4.1, 0, 0, 0, 0, 5000, 1);
         VX_NeedsSave(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РЅРµРјРЅРѕРіРѕ РѕС‚РґРѕС…РЅСѓР»Рё. Р­РЅРµСЂРіРёСЏ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅР° РЅР° 35 РїСѓРЅРєС‚РѕРІ.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы немного отдохнули. Энергия восстановлена на 35 пунктов.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/pass") || CommandMatch(cmdtext, "/passport") || CommandMatch(cmdtext, "/pasport") || CommandMatch(cmdtext, "/docs") || CommandMatch(cmdtext, "/mydocs"))
     {
         new factionName[32], doc[192], passportStatus[8], driverStatus[8], weaponStatus[8], boatStatus[8], airStatus[8];
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
-        format(doc, sizeof doc, "[%s] ID: %d | РЈСЂРѕРІРµРЅСЊ: %d | РћСЂРіР°РЅРёР·Р°С†РёСЏ: %s", gName[playerid], playerid, gLevel[playerid], factionName);
+        format(doc, sizeof doc, "[%s] ID: %d | Уровень: %d | Организация: %s", gName[playerid], playerid, gLevel[playerid], factionName);
         SendClientMessage(playerid, COLOR_YELLOW, doc);
-        if (gHasPassport[playerid]) format(passportStatus, sizeof passportStatus, "РµСЃС‚СЊ"); else format(passportStatus, sizeof passportStatus, "РЅРµС‚");
-        if (gLicenseDriver[playerid]) format(driverStatus, sizeof driverStatus, "РµСЃС‚СЊ"); else format(driverStatus, sizeof driverStatus, "РЅРµС‚");
-        format(doc, sizeof doc, "РџР°СЃРїРѕСЂС‚: %s | Р’РѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР°: %s", passportStatus, driverStatus);
+        if (gHasPassport[playerid]) format(passportStatus, sizeof passportStatus, "есть"); else format(passportStatus, sizeof passportStatus, "нет");
+        if (gLicenseDriver[playerid]) format(driverStatus, sizeof driverStatus, "есть"); else format(driverStatus, sizeof driverStatus, "нет");
+        format(doc, sizeof doc, "Паспорт: %s | Водительские права: %s", passportStatus, driverStatus);
         SendClientMessage(playerid, COLOR_BLUE, doc);
-        if (gLicenseWeapon[playerid]) format(weaponStatus, sizeof weaponStatus, "РµСЃС‚СЊ"); else format(weaponStatus, sizeof weaponStatus, "РЅРµС‚");
-        if (gLicenseBoat[playerid]) format(boatStatus, sizeof boatStatus, "РµСЃС‚СЊ"); else format(boatStatus, sizeof boatStatus, "РЅРµС‚");
-        if (gLicenseAir[playerid]) format(airStatus, sizeof airStatus, "РµСЃС‚СЊ"); else format(airStatus, sizeof airStatus, "РЅРµС‚");
-        format(doc, sizeof doc, "Р›РёС†РµРЅР·РёРё: РѕСЂСѓР¶РёРµ %s | Р»РѕРґРєР° %s | СЃР°РјРѕР»С‘С‚ %s", weaponStatus, boatStatus, airStatus);
+        if (gLicenseWeapon[playerid]) format(weaponStatus, sizeof weaponStatus, "есть"); else format(weaponStatus, sizeof weaponStatus, "нет");
+        if (gLicenseBoat[playerid]) format(boatStatus, sizeof boatStatus, "есть"); else format(boatStatus, sizeof boatStatus, "нет");
+        if (gLicenseAir[playerid]) format(airStatus, sizeof airStatus, "есть"); else format(airStatus, sizeof airStatus, "нет");
+        format(doc, sizeof doc, "Лицензии: оружие %s | лодка %s | самолёт %s", weaponStatus, boatStatus, airStatus);
         SendClientMessage(playerid, COLOR_BLUE, doc);
-        SendClientMessage(playerid, COLOR_YELLOW, "РџРѕР»СѓС‡РёС‚СЊ РїР°СЃРїРѕСЂС‚: РјСЌСЂРёСЏ. РђРІС‚РѕРїСЂР°РІР°: Р°РІС‚РѕС€РєРѕР»Р° /autoschool. РљРѕРјР°РЅРґР° /showdocs ID РїРѕРєР°Р·С‹РІР°РµС‚ РґРѕРєСѓРјРµРЅС‚С‹ СЂСЏРґРѕРј СЃС‚РѕСЏС‰РµРјСѓ РёРіСЂРѕРєСѓ.");
+        SendClientMessage(playerid, COLOR_YELLOW, "Получить паспорт: мэрия. Автоправа: автошкола /autoschool. Команда /showdocs ID показывает документы рядом стоящему игроку.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/showdocs"))
     {
         new params[48], token[16], targetid, factionName[32], doc[192], passportStatus[8], driverStatus[8];
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /showdocs ID"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /showdocs ID"), 1;
         targetid = strval(token);
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
-        if (!VX_Near(playerid, targetid, 4.0)) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РґРѕР»Р¶РµРЅ СЃС‚РѕСЏС‚СЊ СЂСЏРґРѕРј (РґРѕ 4 РјРµС‚СЂРѕРІ)."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
+        if (!VX_Near(playerid, targetid, 4.0)) return SendClientMessage(playerid, COLOR_RED, "Игрок должен стоять рядом (до 4 метров)."), 1;
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
-        format(doc, sizeof doc, "[Р”РћРљРЈРњР•РќРўР«] %s | ID: %d | РЈСЂ.: %d | %s", gName[playerid], playerid, gLevel[playerid], factionName);
+        format(doc, sizeof doc, "[ДОКУМЕНТЫ] %s | ID: %d | Ур.: %d | %s", gName[playerid], playerid, gLevel[playerid], factionName);
         SendClientMessage(targetid, COLOR_YELLOW, doc);
-        if (gHasPassport[playerid]) format(passportStatus, sizeof passportStatus, "РµСЃС‚СЊ"); else format(passportStatus, sizeof passportStatus, "РЅРµС‚");
-        if (gLicenseDriver[playerid]) format(driverStatus, sizeof driverStatus, "РµСЃС‚СЊ"); else format(driverStatus, sizeof driverStatus, "РЅРµС‚");
-        format(doc, sizeof doc, "РџР°СЃРїРѕСЂС‚: %s | Р’РѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР°: %s", passportStatus, driverStatus);
+        if (gHasPassport[playerid]) format(passportStatus, sizeof passportStatus, "есть"); else format(passportStatus, sizeof passportStatus, "нет");
+        if (gLicenseDriver[playerid]) format(driverStatus, sizeof driverStatus, "есть"); else format(driverStatus, sizeof driverStatus, "нет");
+        format(doc, sizeof doc, "Паспорт: %s | Водительские права: %s", passportStatus, driverStatus);
         SendClientMessage(targetid, COLOR_BLUE, doc);
-        format(doc, sizeof doc, "%s РїРѕРєР°Р·Р°Р» РІР°Рј РґРѕРєСѓРјРµРЅС‚С‹.", gName[playerid]);
+        format(doc, sizeof doc, "%s показал вам документы.", gName[playerid]);
         SendClientMessage(targetid, COLOR_YELLOW, doc);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕРєР°Р·Р°Р»Рё РґРѕРєСѓРјРµРЅС‚С‹ РёРіСЂРѕРєСѓ.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы показали документы игроку.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/showpass") || CommandMatch(cmdtext, "/checkpass"))
     {
         new params[64], token[24], targetid, factionName[32], doc[192];
         if (gFaction[playerid] != FACTION_POLICE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "Р—Р°РїСЂР°С€РёРІР°С‚СЊ РїР°СЃРїРѕСЂС‚ РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРє РїРѕР»РёС†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Запрашивать паспорт может только сотрудник полиции."), 1;
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, token, sizeof token))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /showpass [ID]"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /showpass [ID]"), 1;
         targetid = strval(token);
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
         new Float:px, Float:py, Float:pz;
         GetPlayerPos(playerid, px, py, pz);
         if (GetPlayerInterior(playerid) != GetPlayerInterior(targetid) || GetPlayerVirtualWorld(playerid) != GetPlayerVirtualWorld(targetid) || !IsPlayerInRangeOfPoint(targetid, 4.0, px, py, pz))
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј СЃ РІР°РјРё (РґРѕ 4 РјРµС‚СЂРѕРІ)."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок должен находиться рядом с вами (до 4 метров)."), 1;
         GetFactionName(gFaction[targetid], factionName, sizeof factionName);
-        format(doc, sizeof doc, "[РџРђРЎРџРћР Рў] %s | ID: %d | РЈСЂРѕРІРµРЅСЊ: %d | РћСЂРіР°РЅРёР·Р°С†РёСЏ: %s", gName[targetid], targetid, gLevel[targetid], factionName);
+        format(doc, sizeof doc, "[ПАСПОРТ] %s | ID: %d | Уровень: %d | Организация: %s", gName[targetid], targetid, gLevel[targetid], factionName);
         SendClientMessage(playerid, COLOR_BLUE, doc);
-        format(doc, sizeof doc, "РЎРѕС‚СЂСѓРґРЅРёРє РїРѕР»РёС†РёРё %s Р·Р°РїСЂРѕСЃРёР» РІР°С€ РїР°СЃРїРѕСЂС‚.", gName[playerid]);
+        format(doc, sizeof doc, "Сотрудник полиции %s запросил ваш паспорт.", gName[playerid]);
         SendClientMessage(targetid, COLOR_YELLOW, doc);
         return 1;
     }
     if (CommandMatch(cmdtext, "/lic") || CommandMatch(cmdtext, "/licenses") || CommandMatch(cmdtext, "/licences"))
     {
-        if (gLicenseDriver[playerid]) SendClientMessage(playerid, COLOR_BLUE, "[Р›РР¦Р•РќР—РР] РђРІС‚Рѕ: РµСЃС‚СЊ");
-        else SendClientMessage(playerid, COLOR_BLUE, "[Р›РР¦Р•РќР—РР] РђРІС‚Рѕ: РЅРµС‚");
-        if (gLicenseWeapon[playerid]) SendClientMessage(playerid, COLOR_BLUE, "[Р›РР¦Р•РќР—РР] РћСЂСѓР¶РёРµ: РµСЃС‚СЊ");
-        else SendClientMessage(playerid, COLOR_BLUE, "[Р›РР¦Р•РќР—РР] РћСЂСѓР¶РёРµ: РЅРµС‚");
-        if (gLicenseBoat[playerid]) SendClientMessage(playerid, COLOR_BLUE, "Р›РѕРґРєР°: РµСЃС‚СЊ");
-        else SendClientMessage(playerid, COLOR_BLUE, "Р›РѕРґРєР°: РЅРµС‚");
-        if (gLicenseAir[playerid]) SendClientMessage(playerid, COLOR_BLUE, "РЎР°РјРѕР»С‘С‚: РµСЃС‚СЊ");
-        else SendClientMessage(playerid, COLOR_BLUE, "РЎР°РјРѕР»С‘С‚: РЅРµС‚");
-        SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРєСѓРїРєР° Р°РІС‚Рѕ-Р»РёС†РµРЅР·РёРё: Р°РІС‚РѕС€РєРѕР»Р° /autoschool. РћСЃС‚Р°Р»СЊРЅС‹Рµ Р»РёС†РµРЅР·РёРё вЂ” РІ РјСЌСЂРёРё С‡РµСЂРµР· /licbuy.");
+        if (gLicenseDriver[playerid]) SendClientMessage(playerid, COLOR_BLUE, "[ЛИЦЕНЗИИ] Авто: есть");
+        else SendClientMessage(playerid, COLOR_BLUE, "[ЛИЦЕНЗИИ] Авто: нет");
+        if (gLicenseWeapon[playerid]) SendClientMessage(playerid, COLOR_BLUE, "[ЛИЦЕНЗИИ] Оружие: есть");
+        else SendClientMessage(playerid, COLOR_BLUE, "[ЛИЦЕНЗИИ] Оружие: нет");
+        if (gLicenseBoat[playerid]) SendClientMessage(playerid, COLOR_BLUE, "Лодка: есть");
+        else SendClientMessage(playerid, COLOR_BLUE, "Лодка: нет");
+        if (gLicenseAir[playerid]) SendClientMessage(playerid, COLOR_BLUE, "Самолёт: есть");
+        else SendClientMessage(playerid, COLOR_BLUE, "Самолёт: нет");
+        SendClientMessage(playerid, COLOR_YELLOW, "Покупка авто-лицензии: автошкола /autoschool. Остальные лицензии — в мэрии через /licbuy.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/autoschool"))
     {
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || !IsPlayerInRangeOfPoint(playerid, 4.0, -2026.8, -96.5, 35.2))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґРѕР№РґРёС‚Рµ Рє РёРЅСЃС‚СЂСѓРєС‚РѕСЂСѓ Р°РІС‚РѕС€РєРѕР»С‹ РІ РЎР°РЅ-Р¤РёРµСЂСЂРѕ."), 1;
-        if (gLicenseDriver[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РІРѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР°."), 1;
-        ShowPlayerDialog(playerid, DIALOG_AUTOSCHOOL, DIALOG_STYLE_MSGBOX, "VEXORIUM | РђРІС‚РѕС€РєРѕР»Р°", "РђСЂРµРЅРґСѓР№С‚Рµ СѓС‡РµР±РЅС‹Р№ Р°РІС‚РѕРјРѕР±РёР»СЊ Рё РїСЂРѕР№РґРёС‚Рµ РјР°СЂС€СЂСѓС‚ РёР· 6 РєРѕРЅС‚СЂРѕР»СЊРЅС‹С… С‚РѕС‡РµРє.\nРЎС‚РѕРёРјРѕСЃС‚СЊ СЌРєР·Р°РјРµРЅР°: 15000 СЂСѓР±Р»РµР№ РїРѕСЃР»Рµ СѓСЃРїРёС€РЅРѕР№ СЃРґР°С‡Рё.", "РќР°С‡Р°С‚СЊ", "РћС‚РјРµРЅР°");
+            return SendClientMessage(playerid, COLOR_YELLOW, "Подойдите к инструктору автошколы в Сан-Фиерро."), 1;
+        if (gLicenseDriver[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть водительские права."), 1;
+        ShowPlayerDialog(playerid, DIALOG_AUTOSCHOOL, DIALOG_STYLE_MSGBOX, "VEXORIUM | Автошкола", "Арендуйте учебный автомобиль и пройдите маршрут из 6 контрольных точек.\nСтоимость экзамена: 15000 рублей после успишной сдачи.", "Начать", "Отмена");
         return 1;
     }
     if (CommandMatch(cmdtext, "/licadmin"))
     {
-        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "РљРѕРјР°РЅРґР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°Рј."), 1;
+        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "Команда доступна только администраторам."), 1;
         new params[32], token[16];
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, token, sizeof token))
@@ -5822,7 +5822,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (strcmp(token, "auto", true) && strcmp(token, "weapon", true) && strcmp(token, "boat", true) && strcmp(token, "air", true) && strcmp(token, "all", true))
             return SendClientMessage(playerid, COLOR_YELLOW, "Types: auto, weapon, boat, air, all."), 1;
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р›РёС†РµРЅР·РёРё РІС‹РґР°РЅС‹ РІР°С€РµРјСѓ РїРµСЂСЃРѕРЅР°Р¶Сѓ Рё СЃРѕС…СЂР°РЅРµРЅС‹." );
+        SendClientMessage(playerid, COLOR_GREEN, "Лицензии выданы вашему персонажу и сохранены." );
         return 1;
     }
     if (CommandMatch(cmdtext, "/licbuy"))
@@ -5830,39 +5830,39 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[32], token[16], price, licenseType;
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, token, sizeof token))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /licbuy auto|weapon|boat|air"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /licbuy auto|weapon|boat|air"), 1;
         if (!strcmp(token, "auto", true))
         {
             if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 362.4587, 174.0056, 1008.3828))
-                return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє СЃС‚РѕР№РєРµ Р»РёС†РµРЅР·РёР№ РІ РјСЌСЂРёРё."), 1;
-            if (gLicenseDriver[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РІРѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР°."), 1;
-            if (!gDrivingExamPassed[playerid]) return SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° СЃРґР°Р№С‚Рµ РјР°СЂС€СЂСѓС‚ РІ Р°РІС‚РѕС€РєРѕР»Рµ."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "Подойдите к стойке лицензий в мэрии."), 1;
+            if (gLicenseDriver[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть водительские права."), 1;
+            if (!gDrivingExamPassed[playerid]) return SendClientMessage(playerid, COLOR_RED, "Сначала сдайте маршрут в автошколе."), 1;
             gLicenseDriver[playerid] = 1;
             gDrivingExamPassed[playerid] = 0;
             SavePlayer(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’РѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР° РІС‹РґР°РЅС‹ Р±РµСЃРїР»Р°С‚РЅРѕ: РѕРїР»Р°С‚Р° СѓР¶Рµ РІРєР»СЋС‡РµРЅР° РІ СЌРєР·Р°РјРµРЅ.");
+            SendClientMessage(playerid, COLOR_GREEN, "Водительские права выданы бесплатно: оплата уже включена в экзамен.");
             return 1;
         }
         else if (!strcmp(token, "weapon", true))
         {
-            if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 392.0, 175.0, 1008.4)) return SendClientMessage(playerid, COLOR_RED, "Р›РёС†РµРЅР·РёРё РІС‹РґР°СЋС‚СЃСЏ РІ РјСЌСЂРёРё. РџРѕРґРѕР№РґРёС‚Рµ Рє Р·РґР°РЅРёСЋ РјСЌСЂРёРё."), 1;
+            if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 392.0, 175.0, 1008.4)) return SendClientMessage(playerid, COLOR_RED, "Лицензии выдаются в мэрии. Подойдите к зданию мэрии."), 1;
             licenseType = 2; price = 30000;
-            if (gLicenseWeapon[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° РѕСЂСѓР¶РёРµ."), 1;
+            if (gLicenseWeapon[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть лицензия на оружие."), 1;
         }
         else if (!strcmp(token, "boat", true))
         {
-            if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 392.0, 175.0, 1008.4)) return SendClientMessage(playerid, COLOR_RED, "Р›РёС†РµРЅР·РёРё РІС‹РґР°СЋС‚СЃСЏ РІ РјСЌСЂРёРё. РџРѕРґРѕР№РґРёС‚Рµ Рє Р·РґР°РЅРёСЋ РјСЌСЂРёРё."), 1;
+            if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 392.0, 175.0, 1008.4)) return SendClientMessage(playerid, COLOR_RED, "Лицензии выдаются в мэрии. Подойдите к зданию мэрии."), 1;
             licenseType = 3; price = 20000;
-            if (gLicenseBoat[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° Р»РѕРґРєСѓ."), 1;
+            if (gLicenseBoat[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть лицензия на лодку."), 1;
         }
         else if (!strcmp(token, "air", true))
         {
-            if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 392.0, 175.0, 1008.4)) return SendClientMessage(playerid, COLOR_RED, "Р›РёС†РµРЅР·РёРё РІС‹РґР°СЋС‚СЃСЏ РІ РјСЌСЂРёРё. РџРѕРґРѕР№РґРёС‚Рµ Рє Р·РґР°РЅРёСЋ РјСЌСЂРёРё."), 1;
+            if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 392.0, 175.0, 1008.4)) return SendClientMessage(playerid, COLOR_RED, "Лицензии выдаются в мэрии. Подойдите к зданию мэрии."), 1;
             licenseType = 4; price = 40000;
-            if (gLicenseAir[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° СЃР°РјРѕР»С‘С‚."), 1;
+            if (gLicenseAir[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть лицензия на самолёт."), 1;
         }
-        else return SendClientMessage(playerid, COLOR_YELLOW, "РўРёРїС‹ Р»РёС†РµРЅР·РёР№: auto, weapon, boat, air."), 1;
-        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С… РґР»СЏ РїРѕРєСѓРїРєРё Р»РёС†РµРЅР·РёРё."), 1;
+        else return SendClientMessage(playerid, COLOR_YELLOW, "Типы лицензий: auto, weapon, boat, air."), 1;
+        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "Недостаточно наличных для покупки лицензии."), 1;
         gMoney[playerid] -= price;
         if (licenseType == 1) gLicenseDriver[playerid] = 1;
         else if (licenseType == 2) gLicenseWeapon[playerid] = 1;
@@ -5870,7 +5870,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         else if (licenseType == 4) gLicenseAir[playerid] = 1;
         ResetPlayerMoney(playerid); GivePlayerMoney(playerid, gMoney[playerid]);
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "РџРѕР·РґСЂР°РІР»СЏРµРј! Р›РёС†РµРЅР·РёСЏ РІС‹РґР°РЅР° Рё СЃРѕС…СЂР°РЅРµРЅР° РІ РІР°С€РµРј Р°РєРєР°СѓРЅС‚Рµ.");
+        SendClientMessage(playerid, COLOR_GREEN, "Поздравляем! Лицензия выдана и сохранена в вашем аккаунте.");
         RefreshVexHud(playerid);
         return 1;
     }
@@ -5918,22 +5918,22 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (CommandMatch(cmdtext, "/licgive"))
     {
         if (gFaction[playerid] != FACTION_CITYHALL || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹РґР°РІР°С‚СЊ Р»РёС†РµРЅР·РёРё СЃРѕ СЃРєРёРґРєРѕР№ РјРѕРіСѓС‚ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєРё РјСЌСЂРёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Выдавать лицензии со скидкой могут только сотрудники мэрии."), 1;
         new params[64], idToken[16], typeToken[16], targetid, price, licenseType;
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, idToken, sizeof idToken) || !GetToken(params, 1, typeToken, sizeof typeToken))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /licgive [ID] auto|weapon|boat|air"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /licgive [ID] auto|weapon|boat|air"), 1;
         targetid = strval(idToken);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "Игрок не найден или не авторизован."), 1;
         new Float:tx, Float:ty, Float:tz;
         GetPlayerPos(playerid, tx, ty, tz);
-        if (GetPlayerInterior(playerid) != GetPlayerInterior(targetid) || GetPlayerVirtualWorld(playerid) != GetPlayerVirtualWorld(targetid) || !IsPlayerInRangeOfPoint(targetid, 4.0, tx, ty, tz)) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј СЃ РІР°РјРё (РґРѕ 4 РјРµС‚СЂРѕРІ)."), 1;
-        if (!strcmp(typeToken, "auto", true)) { licenseType = 1; price = 10000; if (gLicenseDriver[targetid]) return SendClientMessage(playerid, COLOR_RED, "РЈ РёРіСЂРѕРєР° СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° Р°РІС‚Рѕ."), 1; }
-        else if (!strcmp(typeToken, "weapon", true)) { licenseType = 2; price = 20000; if (gLicenseWeapon[targetid]) return SendClientMessage(playerid, COLOR_RED, "РЈ РёРіСЂРѕРєР° СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° РѕСЂСѓР¶РёРµ."), 1; }
-        else if (!strcmp(typeToken, "boat", true)) { licenseType = 3; price = 12000; if (gLicenseBoat[targetid]) return SendClientMessage(playerid, COLOR_RED, "РЈ РёРіСЂРѕРєР° СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° Р»РѕРґРєСѓ."), 1; }
-        else if (!strcmp(typeToken, "air", true)) { licenseType = 4; price = 25000; if (gLicenseAir[targetid]) return SendClientMessage(playerid, COLOR_RED, "РЈ РёРіСЂРѕРєР° СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° СЃР°РјРѕР»С‘С‚."), 1; }
-        else return SendClientMessage(playerid, COLOR_YELLOW, "РўРёРїС‹ Р»РёС†РµРЅР·РёР№: auto, weapon, boat, air."), 1;
-        if (gMoney[targetid] < price) return SendClientMessage(playerid, COLOR_RED, "РЈ РёРіСЂРѕРєР° РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С…."), 1;
+        if (GetPlayerInterior(playerid) != GetPlayerInterior(targetid) || GetPlayerVirtualWorld(playerid) != GetPlayerVirtualWorld(targetid) || !IsPlayerInRangeOfPoint(targetid, 4.0, tx, ty, tz)) return SendClientMessage(playerid, COLOR_RED, "Игрок должен находиться рядом с вами (до 4 метров)."), 1;
+        if (!strcmp(typeToken, "auto", true)) { licenseType = 1; price = 10000; if (gLicenseDriver[targetid]) return SendClientMessage(playerid, COLOR_RED, "У игрока уже есть лицензия на авто."), 1; }
+        else if (!strcmp(typeToken, "weapon", true)) { licenseType = 2; price = 20000; if (gLicenseWeapon[targetid]) return SendClientMessage(playerid, COLOR_RED, "У игрока уже есть лицензия на оружие."), 1; }
+        else if (!strcmp(typeToken, "boat", true)) { licenseType = 3; price = 12000; if (gLicenseBoat[targetid]) return SendClientMessage(playerid, COLOR_RED, "У игрока уже есть лицензия на лодку."), 1; }
+        else if (!strcmp(typeToken, "air", true)) { licenseType = 4; price = 25000; if (gLicenseAir[targetid]) return SendClientMessage(playerid, COLOR_RED, "У игрока уже есть лицензия на самолёт."), 1; }
+        else return SendClientMessage(playerid, COLOR_YELLOW, "Типы лицензий: auto, weapon, boat, air."), 1;
+        if (gMoney[targetid] < price) return SendClientMessage(playerid, COLOR_RED, "У игрока недостаточно наличных."), 1;
         gMoney[targetid] -= price;
         if (licenseType == 1) gLicenseDriver[targetid] = 1;
         else if (licenseType == 2) gLicenseWeapon[targetid] = 1;
@@ -5941,8 +5941,8 @@ public OnPlayerCommandText(playerid, cmdtext[])
         else if (licenseType == 4) gLicenseAir[targetid] = 1;
         ResetPlayerMoney(targetid); GivePlayerMoney(targetid, gMoney[targetid]);
         SavePlayer(targetid);
-        SendClientMessage(targetid, COLOR_GREEN, "РЎРѕС‚СЂСѓРґРЅРёРє РјСЌСЂРёРё РІС‹РґР°Р» РІР°Рј Р»РёС†РµРЅР·РёСЋ РїРѕ Р»СЊРіРѕС‚РЅРѕР№ С†РµРЅРµ.");
-        SendClientMessage(playerid, COLOR_GREEN, "Р›РёС†РµРЅР·РёСЏ РѕС„РѕСЂРјР»РµРЅР° РїРѕ Р»СЊРіРѕС‚РЅРѕР№ С†РµРЅРµ Рё СЃРѕС…СЂР°РЅРµРЅР°.");
+        SendClientMessage(targetid, COLOR_GREEN, "Сотрудник мэрии выдал вам лицензию по льготной цене.");
+        SendClientMessage(playerid, COLOR_GREEN, "Лицензия оформлена по льготной цене и сохранена.");
         RefreshVexHud(targetid);
         return 1;
     }
@@ -5955,101 +5955,101 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SendClientMessage(playerid, COLOR_ORANGE, "Employment history is not stored in this build; this shows current character data.");
         return 1;
     }
-    if (!strcmp(cmdtext, "/mm", true) || !strcmp(cmdtext, "/menu", true) || !strcmp(cmdtext, "/РјРµРЅСЋ", true))
+    if (!strcmp(cmdtext, "/mm", true) || !strcmp(cmdtext, "/menu", true) || !strcmp(cmdtext, "/меню", true))
     {
         ShowMainMenu(playerid);
         return 1;
     }
-    if (!strcmp(cmdtext, "/help", true) || !strcmp(cmdtext, "/РїРѕРјРѕС‰СЊ", true))
+    if (!strcmp(cmdtext, "/help", true) || !strcmp(cmdtext, "/помощь", true))
     {
         new helpText[2048];
         helpText[0] = '\0';
-        strcat(helpText, "/hud - РїРѕРєР°Р·Р°С‚СЊ/СЃРєСЂС‹С‚СЊ HUD\n/hudfont - СЂСѓСЃСЃРєРёР№ С€СЂРёС„С‚ HUD\n");
-        strcat(helpText, "/mm вЂ” РіР»Р°РІРЅРѕРµ РјРµРЅСЋ СЃРµСЂРІРµСЂР°\n/gps вЂ” GPS РїРѕ РіРѕСЂРѕРґСѓ\n");
-        strcat(helpText, "/job вЂ” РІС‹Р±СЂР°С‚СЊ СЂР°Р±РѕС‚Сѓ (С‚Р°РєСЃРё/РґР°Р»СЊРЅРѕР±РѕР№С‰РёРє/Р°РІС‚РѕР±СѓСЃ/С€Р°С…С‚Р°)\n");
-        strcat(helpText, "/work вЂ” РЅР°С‡Р°С‚СЊ СЂР°Р±РѕС‡РёР№ РјР°СЂС€СЂСѓС‚\n/stopwork вЂ” РѕС‚РјРµРЅРёС‚СЊ РјР°СЂС€СЂСѓС‚\n/inv вЂ” РёРЅРІРµРЅС‚Р°СЂСЊ\n/balance вЂ” Р±Р°Р»Р°РЅСЃ\n");
-        strcat(helpText, "/pay [ID] [СЃСѓРјРјР°] вЂ” РїРµСЂРµРґР°С‚СЊ РґРµРЅСЊРіРё\n/stats вЂ” СЃС‚Р°С‚РёСЃС‚РёРєР°\n/leaders вЂ” Р»РёРґРµСЂС‹ РѕСЂРіР°РЅРёР·Р°С†РёР№\n");
-        strcat(helpText, "/enterpd вЂ” РІРѕР№С‚Рё РІ СѓС‡Р°СЃС‚РѕРє, /org вЂ” РјРµРЅСЋ РѕСЂРіР°РЅРёР·Р°С†РёРё, /exitpd вЂ” РІС‹Р№С‚Рё\nРњР°СЂРєРµСЂ РѕРґРµР¶РґС‹ РІ СЂР°Р·РґРµРІР°Р»РєРµ вЂ” С„РѕСЂРјР° РїРѕ СЂР°РЅРіСѓ\n/arrest [ID] [СЃРµРєСѓРЅРґС‹] [РїСЂРёС‡РёРЅР°], /release [ID]\n");
-        strcat(helpText, "/me [РґРµР№СЃС‚РІРёРµ] вЂ” RP-РґРµР№СЃС‚РІРёРµ\n/do [РѕРїРёСЃР°РЅРёРµ] вЂ” RP-РѕРїРёСЃР°РЅРёРµ\n/n [С‚РµРєСЃС‚] вЂ” OOC-С‡Р°С‚ СЂСЏРґРѕРј\n");
-        strcat(helpText, "/r [С‚РµРєСЃС‚] вЂ” СЂР°С†РёСЏ С„СЂР°РєС†РёРё\n/rn [С‚РµРєСЃС‚] вЂ” OOC-С‡Р°С‚ С„СЂР°РєС†РёРё\n/rules вЂ” РїСЂР°РІРёР»Р° СЃРµСЂРІРµСЂР°\n/save вЂ” СЃРѕС…СЂР°РЅРёС‚СЊ РїСЂРѕРіСЂРµСЃСЃ\n");
-        strcat(helpText, "РџРѕР»РёС†РёСЏ: /showpass [ID] вЂ” Р·Р°РїСЂРѕСЃРёС‚СЊ РїР°СЃРїРѕСЂС‚, /search [ID] вЂ” RP-РѕР±С‹СЃРє СЂСЏРґРѕРј\n");
-        strcat(helpText, "/carshop вЂ” Р°РІС‚РѕСЃР°Р»РѕРЅ, /mycar вЂ” Р»РёС‡РЅР°СЏ РјР°С€РёРЅР°, /fuel вЂ” Р·Р°РїСЂР°РІРєР°\n");
-        strcat(helpText, "/docs вЂ” РІР°С€Рё РґРѕРєСѓРјРµРЅС‚С‹, /showdocs [ID] вЂ” РїРѕРєР°Р·Р°С‚СЊ РёС… РёРіСЂРѕРєСѓ СЂСЏРґРѕРј\n");
-        strcat(helpText, "/autoschool вЂ” РЅР°С‡Р°С‚СЊ СЌРєР·Р°РјРµРЅ СЂСЏРґРѕРј СЃ РёРЅСЃС‚СЂСѓРєС‚РѕСЂРѕРј; /licbuy auto вЂ” РїРѕР»СѓС‡РёС‚СЊ РїСЂР°РІР° РїРѕСЃР»Рµ СЃРґР°С‡Рё\n");
-        strcat(helpText, "/needs вЂ” СЃС‹С‚РѕСЃС‚СЊ, РІРѕРґР° Рё СЌРЅРµСЂРіРёСЏ; /rest вЂ” РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ СЌРЅРµСЂРіРёСЋ РІ СЃРІРѕС‘Рј РґРѕРјРµ\n");
-        strcat(helpText, "/orgmembers вЂ” СЃРѕС‚СЂСѓРґРЅРёРєРё РѕРЅР»Р°Р№РЅ, /orginvite ID вЂ” РїСЂРёРЅСЏС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРєР° (СЂР°РЅРі 8+)\n");
-        strcat(helpText, "/orgrank ID Р РђРќР“, /orgkick ID вЂ” СѓРїСЂР°РІР»РµРЅРёРµ СЃРѕС‚СЂСѓРґРЅРёРєР°РјРё (СЂР°РЅРі 9+)\n");
-        strcat(helpText, "/orgfund вЂ” РєР°Р·РЅР°, /orgfund deposit РЎРЈРњРњРђ, withdraw РЎРЈРњРњРђ, pay ID РЎРЈРњРњРђ, history\n");
-        strcat(helpText, "/contract ID РЎРЈРњРњРђ РћРџРРЎРђРќРР• вЂ” РґРѕРіРѕРІРѕСЂ СЃ РёРіСЂРѕРєРѕРј; /contracts вЂ” СЃРїРёСЃРѕРє РґРѕРіРѕРІРѕСЂРѕРІ\n");
-        strcat(helpText, "/contractaccept ID, /contractreject ID, /contractcancel ID вЂ” СѓРїСЂР°РІР»РµРЅРёРµ РґРѕРіРѕРІРѕСЂР°РјРё\n\n");
-        strcat(helpText, "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂС‹: /gps (С‚РµР»РµРїРѕСЂС‚), /tp [ID], /gethere [ID], /tpcar [ID],\n");
-        strcat(helpText, "/setadmin [ID] [СѓСЂРѕРІРµРЅСЊ], /setmoney [ID] [СЃСѓРјРјР°],\n");
-        strcat(helpText, "/setfaction [ID] [0-6] [СЂР°РЅРі 0-10], /uniform [ID] [1-3], /kick [ID] РїСЂРёС‡РёРЅР°, /ban [ID] РјРёРЅСѓС‚С‹ РїСЂРёС‡РёРЅР°, /a [С‚РµРєСЃС‚]");
-        strcat(helpText, "\n/adminhelp вЂ” РєРѕРјР°РЅРґС‹ Рё СѓСЂРѕРІРЅРё Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё, /spec ID вЂ” РЅР°Р±Р»СЋРґРµРЅРёРµ СЃ РјРµРЅСЋ РґРµР№СЃС‚РІРёР№");
-        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | РљРѕРјР°РЅРґС‹", helpText, "РџРѕРЅСЏС‚РЅРѕ", "");
+        strcat(helpText, "/hud - показать/скрыть HUD\n/hudfont - русский шрифт HUD\n");
+        strcat(helpText, "/mm — главное меню сервера\n/gps — GPS по городу\n");
+        strcat(helpText, "/job — выбрать работу (такси/дальнобойщик/автобус/шахта)\n");
+        strcat(helpText, "/work — начать рабочий маршрут\n/stopwork — отменить маршрут\n/inv — инвентарь\n/balance — баланс\n");
+        strcat(helpText, "/pay [ID] [сумма] — передать деньги\n/stats — статистика\n/leaders — лидеры организаций\n");
+        strcat(helpText, "/enterpd — войти в участок, /org — меню организации, /exitpd — выйти\nМаркер одежды в раздевалке — форма по рангу\n/arrest [ID] [секунды] [причина], /release [ID]\n");
+        strcat(helpText, "/me [действие] — RP-действие\n/do [описание] — RP-описание\n/n [текст] — OOC-чат рядом\n");
+        strcat(helpText, "/r [текст] — рация фракции\n/rn [текст] — OOC-чат фракции\n/rules — правила сервера\n/save — сохранить прогресс\n");
+        strcat(helpText, "Полиция: /showpass [ID] — запросить паспорт, /search [ID] — RP-обыск рядом\n");
+        strcat(helpText, "/carshop — автосалон, /mycar — личная машина, /fuel — заправка\n");
+        strcat(helpText, "/docs — ваши документы, /showdocs [ID] — показать их игроку рядом\n");
+        strcat(helpText, "/autoschool — начать экзамен рядом с инструктором; /licbuy auto — получить права после сдачи\n");
+        strcat(helpText, "/needs — сытость, вода и энергия; /rest — восстановить энергию в своём доме\n");
+        strcat(helpText, "/orgmembers — сотрудники онлайн, /orginvite ID — принять сотрудника (ранг 8+)\n");
+        strcat(helpText, "/orgrank ID РАНГ, /orgkick ID — управление сотрудниками (ранг 9+)\n");
+        strcat(helpText, "/orgfund — казна, /orgfund deposit СУММА, withdraw СУММА, pay ID СУММА, history\n");
+        strcat(helpText, "/contract ID СУММА ОПИСАНИЕ — договор с игроком; /contracts — список договоров\n");
+        strcat(helpText, "/contractaccept ID, /contractreject ID, /contractcancel ID — управление договорами\n\n");
+        strcat(helpText, "Администраторы: /gps (телепорт), /tp [ID], /gethere [ID], /tpcar [ID],\n");
+        strcat(helpText, "/setadmin [ID] [уровень], /setmoney [ID] [сумма],\n");
+        strcat(helpText, "/setfaction [ID] [0-6] [ранг 0-10], /uniform [ID] [1-3], /kick [ID] причина, /ban [ID] минуты причина, /a [текст]");
+        strcat(helpText, "\n/adminhelp — команды и уровни администрации, /spec ID — наблюдение с меню действий");
+        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | Команды", helpText, "Понятно", "");
         return 1;
     }
     if (CommandMatch(cmdtext, "/me"))
     {
         new params[128], msg[192]; GetParams(cmdtext, params, sizeof params);
-        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /me [РґРµР№СЃС‚РІРёРµ]"), 1;
+        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /me [действие]"), 1;
         format(msg, sizeof msg, "* %s %s", gName[playerid], params);
         SendLocalMessage(playerid, COLOR_PINK, msg, 20.0); return 1;
     }
     if (CommandMatch(cmdtext, "/do"))
     {
         new params[128], msg[192]; GetParams(cmdtext, params, sizeof params);
-        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /do [РѕРїРёСЃР°РЅРёРµ]"), 1;
+        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /do [описание]"), 1;
         format(msg, sizeof msg, "* %s (( %s ))", params, gName[playerid]);
         SendLocalMessage(playerid, COLOR_BLUE, msg, 20.0); return 1;
     }
     if (CommandMatch(cmdtext, "/try"))
     {
         new params[128], msg[192]; GetParams(cmdtext, params, sizeof params);
-        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /try [РґРµР№СЃС‚РІРёРµ]"), 1;
-        if (random(2) == 0) format(msg, sizeof msg, "* %s %s | РЈСЃРїРµС€РЅРѕ", gName[playerid], params);
-        else format(msg, sizeof msg, "* %s %s | РќРµСѓРґР°С‡РЅРѕ", gName[playerid], params);
+        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /try [действие]"), 1;
+        if (random(2) == 0) format(msg, sizeof msg, "* %s %s | Успешно", gName[playerid], params);
+        else format(msg, sizeof msg, "* %s %s | Неудачно", gName[playerid], params);
         SendLocalMessage(playerid, COLOR_ORANGE, msg, 20.0);
         return 1;
     }
     if (CommandMatch(cmdtext, "/n") || CommandMatch(cmdtext, "/b"))
     {
         new params[128], msg[192]; GetParams(cmdtext, params, sizeof params);
-        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /n [С‚РµРєСЃС‚]"), 1;
+        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /n [текст]"), 1;
         format(msg, sizeof msg, "(( %s: %s ))", gName[playerid], params);
         SendLocalMessage(playerid, COLOR_WHITE, msg, 20.0); return 1;
     }
     if (CommandMatch(cmdtext, "/r") || CommandMatch(cmdtext, "/f"))
     {
         new params[128], msg[192]; GetParams(cmdtext, params, sizeof params);
-        if (gFaction[playerid] == FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
-        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /r [СЃРѕРѕР±С‰РµРЅРёРµ С„СЂР°РєС†РёРё]"), 1;
-        format(msg, sizeof msg, "[Р РђР¦РРЇ] %s: %s", gName[playerid], params);
+        if (gFaction[playerid] == FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в организации."), 1;
+        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /r [сообщение фракции]"), 1;
+        format(msg, sizeof msg, "[РАЦИЯ] %s: %s", gName[playerid], params);
         for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && gFaction[i] == gFaction[playerid]) SendClientMessage(i, COLOR_BLUE, msg);
         return 1;
     }
     if (CommandMatch(cmdtext, "/rn"))
     {
         new params[128], msg[192]; GetParams(cmdtext, params, sizeof params);
-        if (gFaction[playerid] == FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
-        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /rn [OOC СЃРѕРѕР±С‰РµРЅРёРµ С„СЂР°РєС†РёРё]"), 1;
-        format(msg, sizeof msg, "(( [Р¤Р РђРљР¦РРЇ OOC] %s: %s ))", gName[playerid], params);
+        if (gFaction[playerid] == FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в организации."), 1;
+        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /rn [OOC сообщение фракции]"), 1;
+        format(msg, sizeof msg, "(( [ФРАКЦИЯ OOC] %s: %s ))", gName[playerid], params);
         for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && gFaction[i] == gFaction[playerid]) SendClientMessage(i, COLOR_WHITE, msg);
         return 1;
     }
     if (CommandMatch(cmdtext, "/rent") || CommandMatch(cmdtext, "/rentscooter"))
     {
-        if (!gLogged[playerid]) return SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚."), 1;
-        if (gLevel[playerid] > 3) return SendClientMessage(playerid, COLOR_RED, "РђСЂРµРЅРґР° СЃРєСѓС‚РµСЂР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РёРіСЂРѕРєР°Рј 1вЂ“3 СѓСЂРѕРІРЅСЏ."), 1;
-        if (gFaction[playerid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_YELLOW, "РЎРєСѓС‚РµСЂ РЅР° СЃС‚Р°СЂС‚РѕРІРѕР№ Р±Р°Р·Рµ РґРѕСЃС‚СѓРїРµРЅ РЅРѕРІРёС‡РєР°Рј Р±РµР· РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+        if (!gLogged[playerid]) return SendClientMessage(playerid, COLOR_RED, "Сначала войдите в аккаунт."), 1;
+        if (gLevel[playerid] > 3) return SendClientMessage(playerid, COLOR_RED, "Аренда скутера доступна только игрокам 1–3 уровня."), 1;
+        if (gFaction[playerid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_YELLOW, "Скутер на стартовой базе доступен новичкам без организации."), 1;
         if (!IsPlayerInRangeOfPoint(playerid, 20.0, 1764.0, -1898.0, 13.2))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґРѕР№РґРёС‚Рµ Рє СЃРєСѓС‚РµСЂСѓ РЅР° Р±Р°Р·Рµ РЅРѕРІРёС‡РєРѕРІ Сѓ РІРѕРєР·Р°Р»Р°."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Подойдите к скутеру на базе новичков у вокзала."), 1;
         if (gRentalVehicle[playerid] != INVALID_VEHICLE_ID)
-            return SendClientMessage(playerid, COLOR_YELLOW, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р°СЂРµРЅРґРѕРІР°РЅРЅС‹Р№ СЃРєСѓС‚РµСЂ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "У вас уже есть арендованный скутер."), 1;
         if (gBaseScooter != INVALID_VEHICLE_ID)
-            return SendClientMessage(playerid, COLOR_YELLOW, "РЎСЏРґСЊС‚Рµ РЅР° СЃРєСѓС‚РµСЂ Сѓ РІРѕРєР·Р°Р»Р° вЂ” РїРѕСЏРІРёС‚СЃСЏ РїСЂРµРґР»РѕР¶РµРЅРёРµ Р°СЂРµРЅРґС‹."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Сядьте на скутер у вокзала — появится предложение аренды."), 1;
         SpawnBaseScooter();
-        return SendClientMessage(playerid, COLOR_GREEN, "РЎРєСѓС‚РµСЂ СЃРЅРѕРІР° РїРѕСЏРІРёР»СЃСЏ РЅР° Р±Р°Р·Рµ. РЎСЏРґСЊС‚Рµ РЅР° РЅРµРіРѕ, С‡С‚РѕР±С‹ Р°СЂРµРЅРґРѕРІР°С‚СЊ."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "Скутер снова появился на базе. Сядьте на него, чтобы арендовать."), 1;
     }
     if (CommandMatch(cmdtext, "/enterorg") || CommandMatch(cmdtext, "/orgenter") || CommandMatch(cmdtext, "/enterlog"))
     {
@@ -6067,9 +6067,9 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (CommandMatch(cmdtext, "/org") || CommandMatch(cmdtext, "/orgmenu"))
     {
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в организации."), 1;
         if (!IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ С‡РµСЂРµР· РјР°СЂРєРµСЂ Сѓ РґРІРµСЂРё СЃРІРѕРµРіРѕ С€С‚Р°Р±Р°, Р·Р°С‚РµРј РІРІРµРґРёС‚Рµ /org."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Сначала войдите через маркер у двери своего штаба, затем введите /org."), 1;
         if (gFaction[playerid] == FACTION_POLICE) ShowPoliceMenu(playerid);
         else ShowOrgMenu(playerid);
         return 1;
@@ -6077,7 +6077,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (CommandMatch(cmdtext, "/exitorg"))
     {
         if (gFaction[playerid] == FACTION_NONE || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ РЅР°С…РѕРґРёС‚РµСЃСЊ РІ С€С‚Р°Р±Рµ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы не находитесь в штабе своей организации."), 1;
         new Float:x, Float:y, Float:z;
         GetOrgExterior(gFaction[playerid], x, y, z);
         SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0);
@@ -6092,29 +6092,29 @@ public OnPlayerCommandText(playerid, cmdtext[])
             SetPlayerFacingAngle(playerid, 90.0);
         }
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё РёР· Р·РґР°РЅРёСЏ РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вышли из здания организации.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/orggarage"))
     {
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в организации."), 1;
         if (!IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РљРѕРјР°РЅРґР° РґРѕСЃС‚СѓРїРЅР° РёР·РЅСѓС‚СЂРё С€С‚Р°Р±Р° РІР°С€РµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Команда доступна изнутри штаба вашей организации."), 1;
         new Float:x, Float:y, Float:z;
         GetOrgGarage(gFaction[playerid], x, y, z);
         SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0);
         SetPlayerPos(playerid, x - 1.5, y - 2.5, z); SetPlayerFacingAngle(playerid, 90.0);
         SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё Рє Р°РІС‚РѕРїР°СЂРєСѓ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /garage РґР»СЏ СЃР»СѓР¶РµР±РЅРѕРіРѕ С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы вышли к автопарку своей организации. Используйте /garage для служебного транспорта.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/formation") || CommandMatch(cmdtext, "/formup"))
     {
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 6)
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕСЃС‚СЂРѕРµРЅРёРµ РјРѕР¶РµС‚ РѕР±СЉСЏРІРёС‚СЊ СЃРѕС‚СЂСѓРґРЅРёРє РѕСЂРіР°РЅРёР·Р°С†РёРё СЃ 6-РіРѕ СЂР°РЅРіР°."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Построение может объявить сотрудник организации с 6-го ранга."), 1;
         if (!IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РћР±СЉСЏРІР»СЏС‚СЊ РїРѕСЃС‚СЂРѕРµРЅРёРµ РјРѕР¶РЅРѕ РёР· С€С‚Р°Р±Р° СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Объявлять построение можно из штаба своей организации."), 1;
         new Float:x, Float:y, Float:z, count = 0, factionName[32], msg[144];
         GetPlayerPos(playerid, x, y, z);
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
@@ -6126,16 +6126,16 @@ public OnPlayerCommandText(playerid, cmdtext[])
             count++;
             SetPlayerPos(i, x + (float(count) * 1.2), y + 2.0, z);
             SetPlayerFacingAngle(i, 180.0);
-            SendClientMessage(i, COLOR_YELLOW, "Р’Р°СЃ РїРѕСЃС‚СЂРѕРёР»Рё. РћР¶РёРґР°Р№С‚Рµ СЂР°СЃРїРѕСЂСЏР¶РµРЅРёР№ СЂСѓРєРѕРІРѕРґСЃС‚РІР°.");
+            SendClientMessage(i, COLOR_YELLOW, "Вас построили. Ожидайте распоряжений руководства.");
         }
-        format(msg, sizeof msg, "[РџРѕСЃС‚СЂРѕРµРЅРёРµ] %s: РїРѕСЃС‚СЂРѕРµРЅРёРµ РѕР±СЉСЏРІР»РµРЅРѕ. РЎРѕС‚СЂСѓРґРЅРёРєРѕРІ СЃРѕР±СЂР°РЅРѕ: %d.", factionName, count + 1);
+        format(msg, sizeof msg, "[Построение] %s: построение объявлено. Сотрудников собрано: %d.", factionName, count + 1);
         SendClientMessage(playerid, COLOR_GREEN, msg);
         return 1;
     }
     if (CommandMatch(cmdtext, "/garage"))
     {
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в организации."), 1;
         new Float:gx, Float:gy, Float:gz, menu[512], line[80], factionName[32], dialogTitle[64];
         GetOrgGarage(gFaction[playerid], gx, gy, gz);
         if (gFaction[playerid] == FACTION_POLICE)
@@ -6148,10 +6148,10 @@ public OnPlayerCommandText(playerid, cmdtext[])
             || !IsPlayerInRangeOfPoint(playerid, 10.0, gx, gy, gz))
             return VX_GarageRoute(playerid);
         VX_GarageRouteClear(playerid);
-        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° РІС‹Р№РґРёС‚Рµ РёР· С‚РµРєСѓС‰РµРіРѕ С‚СЂР°РЅСЃРїРѕСЂС‚Р°."), 1;
+        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Сначала выйдите из текущего транспорта."), 1;
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
         menu[0] = '\0';
-        format(dialogTitle, sizeof dialogTitle, "%s | СЂР°РЅРі %d", factionName, gFactionRank[playerid]);
+        format(dialogTitle, sizeof dialogTitle, "%s | ранг %d", factionName, gFactionRank[playerid]);
         new count = 0, modelName[48];
         for (new tier = 0; tier < 5; tier++)
         {
@@ -6165,8 +6165,8 @@ public OnPlayerCommandText(playerid, cmdtext[])
             strcat(menu, line, sizeof menu);
             count++;
         }
-        if (count == 0) return SendClientMessage(playerid, COLOR_RED, "РЈ РІР°СЃ РЅРµС„С…Р°С‚Р°РµС‚ СЂР°РЅРіР° РґР»СЏ Р°РІС‚РѕРїР°СЂРєР°."), 1;
-        ShowPlayerDialog(playerid, DIALOG_FACTION_GARAGE, DIALOG_STYLE_LIST, dialogTitle, menu, "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        if (count == 0) return SendClientMessage(playerid, COLOR_RED, "У вас нефхатает ранга для автопарка."), 1;
+        ShowPlayerDialog(playerid, DIALOG_FACTION_GARAGE, DIALOG_STYLE_LIST, dialogTitle, menu, "Выбрать", "Закрыть");
         return 1;
     }
     if (CommandMatch(cmdtext, "/shopacc"))
@@ -6175,49 +6175,49 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USECELLPHONE);
         new shopText[512];
         shopText[0] = '\0';
-        strcat(shopText, "РљР›РђРЎРЎРРљРђ | Р§РµСЂРЅС‹Рµ РѕС‡РєРё - 1 500 СЂСѓР±.\n");
-        strcat(shopText, "РљР›РђРЎРЎРРљРђ | РЈР»РёС‡РЅР°СЏ РєРµРїРєР° - 2 500 СЂСѓР±.\n");
-        strcat(shopText, "РљР›РђРЎРЎРРљРђ | РЁР°РїРєР°-Р±РёРЅРё - 3 500 СЂСѓР±.\n");
-        strcat(shopText, "РЎРўРР›Р¬ | РљРѕРІР±РѕР№СЃРєР°СЏ С€Р»СЏРїР° - 7 500 СЂСѓР±.\n");
-        strcat(shopText, "РЎРўРР›Р¬ | РҐРѕРєРєРµР№РЅР°СЏ РјР°СЃРєР° - 9 000 СЂСѓР±.\n");
-        strcat(shopText, "РџР Р•РњРРЈРњ | Р—РѕР»РѕС‚С‹Рµ РѕС‡РєРё - 15 000 СЂСѓР±.\n");
-        strcat(shopText, "РџР Р•РњРРЈРњ | Р”РёР·Р°Р№РЅРµСЂСЃРєР°СЏ РєРµРїРєР° - 22 000 СЂСѓР±.\n");
-        strcat(shopText, "Р­Р›РРўРђ | Р РѕСЃРєРѕС€РЅР°СЏ РјР°СЃРєР° - 35 000 СЂСѓР±.\n");
-        strcat(shopText, "Р­Р›РРўРђ | Р‘СЂРёР»Р»РёР°РЅС‚РѕРІС‹Р№ СЃС‚РёР»СЊ - 55 000 СЂСѓР±.\n");
-        strcat(shopText, "VIP | РљРѕСЂРѕР»РµРІСЃРєРёР№ Р°РєСЃРµСЃСЃСѓР°СЂ - 85 000 СЂСѓР±.\n");
-        strcat(shopText, "РћС‚РєСЂРѕР№С‚Рµ /inv, С‡С‚РѕР±С‹ РЅР°РґРµС‚СЊ РёР»Рё СЃРЅСЏС‚СЊ");
-        ShowPlayerDialog(playerid, DIALOG_SHOP_ACC, DIALOG_STYLE_LIST, "VEXORIUM | РњР°РіР°Р·РёРЅ Р°РєСЃРµСЃСЃСѓР°СЂРѕРІ", shopText, "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        strcat(shopText, "КЛАССИКА | Черные очки - 1 500 руб.\n");
+        strcat(shopText, "КЛАССИКА | Уличная кепка - 2 500 руб.\n");
+        strcat(shopText, "КЛАССИКА | Шапка-бини - 3 500 руб.\n");
+        strcat(shopText, "СТИЛЬ | Ковбойская шляпа - 7 500 руб.\n");
+        strcat(shopText, "СТИЛЬ | Хоккейная маска - 9 000 руб.\n");
+        strcat(shopText, "ПРЕМИУМ | Золотые очки - 15 000 руб.\n");
+        strcat(shopText, "ПРЕМИУМ | Дизайнерская кепка - 22 000 руб.\n");
+        strcat(shopText, "ЭЛИТА | Роскошная маска - 35 000 руб.\n");
+        strcat(shopText, "ЭЛИТА | Бриллиантовый стиль - 55 000 руб.\n");
+        strcat(shopText, "VIP | Королевский аксессуар - 85 000 руб.\n");
+        strcat(shopText, "Откройте /inv, чтобы надеть или снять");
+        ShowPlayerDialog(playerid, DIALOG_SHOP_ACC, DIALOG_STYLE_LIST, "VEXORIUM | Магазин аксессуаров", shopText, "Выбрать", "Закрыть");
         return 1;
     }
     if (CommandMatch(cmdtext, "/carshop"))
     {
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || !IsPlayerInRangeOfPoint(playerid, 18.0, 2131.0, -1150.0, 24.1))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґРѕР№РґРёС‚Рµ Рє Р°РІС‚РѕСЃР°Р»РѕРЅСѓ VEXORIUM РІ СЂР°Р№РѕРЅРµ Market, Р›РѕСЃ-РЎР°РЅС‚РѕСЃ."), 1;
-        ShowPlayerDialog(playerid, DIALOG_CAR_DEALER, DIALOG_STYLE_LIST, "VEXORIUM RP | РђРІС‚РѕСЃР°Р»РѕРЅ",
-            "Bravura вЂ” 75 000 СЂСѓР±. | 90 РєРј/С‡\nPerennial вЂ” 125 000 СЂСѓР±. | 95 РєРј/С‡\nPrevion вЂ” 175 000 СЂСѓР±. | 100 РєРј/С‡\nAdmiral вЂ” 225 000 СЂСѓР±. | 105 РєРј/С‡\nTurismo вЂ” 275 000 СЂСѓР±. | 110 РєРј/С‡\nSultan вЂ” 1 000 000 СЂСѓР±. | 200 РєРј/С‡", "РљСѓРїРёС‚СЊ", "РћС‚РјРµРЅР°");
+            return SendClientMessage(playerid, COLOR_YELLOW, "Подойдите к автосалону VEXORIUM в районе Market, Лос-Сантос."), 1;
+        ShowPlayerDialog(playerid, DIALOG_CAR_DEALER, DIALOG_STYLE_LIST, "VEXORIUM RP | Автосалон",
+            "Bravura — 75 000 руб. | 90 км/ч\nPerennial — 125 000 руб. | 95 км/ч\nPrevion — 175 000 руб. | 100 км/ч\nAdmiral — 225 000 руб. | 105 км/ч\nTurismo — 275 000 руб. | 110 км/ч\nSultan — 1 000 000 руб. | 200 км/ч", "Купить", "Отмена");
         return 1;
     }
     if (CommandMatch(cmdtext, "/fuel"))
     {
         if (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
-            return SendClientMessage(playerid, COLOR_YELLOW, "РЎСЏРґСЊС‚Рµ Р·Р° СЂСѓР»СЊ Рё РѕСЃС‚Р°РЅРѕРІРёС‚РµСЃСЊ СЂСЏРґРѕРј СЃ РєРѕР»РѕРЅРєРѕР№ РђР—РЎ."), 1;
-        if (!IsNearGasStation(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґСЉРµРґСЊС‚Рµ Рє РѕРґРЅРѕР№ РёР· РђР—РЎ VEXORIUM Рё РѕСЃС‚Р°РЅРѕРІРёС‚РµСЃСЊ Сѓ РєРѕР»РѕРЅРєРё."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Сядьте за руль и остановитесь рядом с колонкой АЗС."), 1;
+        if (!IsNearGasStation(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Подъедьте к одной из АЗС VEXORIUM и остановитесь у колонки."), 1;
         new vehicleid = GetPlayerVehicleID(playerid);
-        if (gVehicleFuel[vehicleid] >= 100) return SendClientMessage(playerid, COLOR_YELLOW, "Р‘Р°Рє СѓР¶Рµ РїРѕР»РЅС‹Р№."), 1;
-        if (!TakeCash(playerid, 300)) return SendClientMessage(playerid, COLOR_RED, "Р—Р°РїСЂР°РІРєР° РґРѕ РїРѕР»РЅРѕРіРѕ Р±Р°РєР° СЃС‚РѕРёС‚ 300 СЂСѓР±Р»РµР№. РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі."), 1;
+        if (gVehicleFuel[vehicleid] >= 100) return SendClientMessage(playerid, COLOR_YELLOW, "Бак уже полный."), 1;
+        if (!TakeCash(playerid, 300)) return SendClientMessage(playerid, COLOR_RED, "Заправка до полного бака стоит 300 рублей. Недостаточно денег."), 1;
         gVehicleFuel[vehicleid] = 100;
         gFuelLastX[vehicleid] = 0.0; gFuelLastY[vehicleid] = 0.0; gFuelLastZ[vehicleid] = 0.0;
         new engine, lights, alarm, doors, bonnet, boot, objective;
         GetVehicleParamsEx(vehicleid, engine, lights, alarm, doors, bonnet, boot, objective);
         SetVehicleParamsEx(vehicleid, 1, lights, alarm, doors, bonnet, boot, objective);
         UpdateVexHud(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ Р·Р°РїСЂР°РІРёР»Рё Р±Р°Рє РґРѕ 100% Р·Р° 300 СЂСѓР±Р»РµР№.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы заправили бак до 100% за 300 рублей.");
         return 1;
     }
     if (!strcmp(cmdtext, "/leaders", true))
     {
         new query[256], rowName[MAX_PLAYER_NAME + 1], factionName[32], line[128], found = 0;
-        SendClientMessage(playerid, COLOR_YELLOW, "===== Р›РёРґРµСЂС‹ РѕСЂРіР°РЅРёР·Р°С†РёР№ VEXORIUM RP =====");
+        SendClientMessage(playerid, COLOR_YELLOW, "===== Лидеры организаций VEXORIUM RP =====");
         format(query, sizeof query, "SELECT name,faction FROM accounts WHERE faction BETWEEN 1 AND 7 AND faction_rank >= 10 ORDER BY faction");
         new DBResult:leaders = db_query(gDatabase, query);
         if (leaders)
@@ -6233,74 +6233,74 @@ public OnPlayerCommandText(playerid, cmdtext[])
             }
             db_free_result(leaders);
         }
-        if (!found) SendClientMessage(playerid, COLOR_WHITE, "РЎРµР№С‡Р°СЃ Р»РёРґРµСЂС‹ РѕСЂРіР°РЅРёР·Р°С†РёР№ РЅРµ РЅР°Р·РЅР°С‡РµРЅС‹.");
+        if (!found) SendClientMessage(playerid, COLOR_WHITE, "Сейчас лидеры организаций не назначены.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/fullsklads") || CommandMatch(cmdtext, "/fullstocks"))
     {
-        if (!IsOwner(playerid) && gAdmin[playerid] < 4) return SendClientMessage(playerid, COLOR_RED, "РљРѕРјР°РЅРґР° РґРѕСЃС‚СѓРїРЅР° Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°Рј 4-РіРѕ СѓСЂРѕРІРЅСЏ Рё РІС‹С€Рµ."), 1;
+        if (!IsOwner(playerid) && gAdmin[playerid] < 4) return SendClientMessage(playerid, COLOR_RED, "Команда доступна администраторам 4-го уровня и выше."), 1;
         new DBResult:fillResult;
         for (new stockGang = 1; stockGang <= 4; stockGang++) { new initGang[128]; format(initGang, sizeof initGang, "INSERT OR IGNORE INTO gang_stashes (gang_id,money) VALUES (%d,0)", stockGang); fillResult = db_query(gDatabase, initGang); if (fillResult) db_free_result(fillResult); }
         for (new stockFaction = 1; stockFaction <= 7; stockFaction++) { new initFaction[160]; format(initFaction, sizeof initFaction, "INSERT OR IGNORE INTO org_stashes (faction_id,money,materials,ammo,armour) VALUES (%d,0,0,0,0)", stockFaction); fillResult = db_query(gDatabase, initFaction); if (fillResult) db_free_result(fillResult); }
         fillResult = db_query(gDatabase, "UPDATE gang_stashes SET money=1000000"); if (fillResult) db_free_result(fillResult);
         fillResult = db_query(gDatabase, "UPDATE gang_weapon_stash SET ammo=5000"); if (fillResult) db_free_result(fillResult);
         fillResult = db_query(gDatabase, "UPDATE org_stashes SET money=1000000, materials=10000, ammo=10000, armour=500"); if (fillResult) db_free_result(fillResult);
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] РЎРєР»Р°РґС‹ РїРѕРїРѕР»РЅРµРЅС‹: 4 Р±Р°РЅРґС‹ Рё 6 РѕСЂРіР°РЅРёР·Р°С†РёР№. РћСЂСѓР¶РёРµ/РїР°С‚СЂРѕРЅС‹ Рё Р·Р°РїР°СЃС‹ РѕР±РЅРѕРІР»РµРЅС‹.");
-        for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && gAdmin[i] >= 1 && i != playerid) SendClientMessage(i, COLOR_ORANGE, "[РђР”РњРРќ] РЎРєР»Р°РґС‹ РІСЃРµС… Р±Р°РЅРґ Рё РѕСЂРіР°РЅРёР·Р°С†РёР№ Р±С‹Р»Рё РїРѕРїРѕР»РЅРµРЅС‹.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Склады пополнены: 4 банды и 6 организаций. Оружие/патроны и запасы обновлены.");
+        for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && gAdmin[i] >= 1 && i != playerid) SendClientMessage(i, COLOR_ORANGE, "[АДМИН] Склады всех банд и организаций были пополнены.");
         return 1;
     }
     if (!strcmp(cmdtext, "/rules", true))
     {
         new rulesText[512];
         rulesText[0] = '\0';
-        strcat(rulesText, "1. РЎРѕР±Р»СЋРґР°Р№С‚Рµ РїСЂР°РІРёР»Р° RolePlay.\n", sizeof rulesText);
-        strcat(rulesText, "2. РќРµ РёСЃРїРѕР»СЊР·СѓР№С‚Рµ С‡РёС‚С‹ Рё СЃС‚РѕСЂРѕРЅРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹.\n", sizeof rulesText);
-        strcat(rulesText, "3. РќРµ РѕСЃРєРѕСЂР±Р»СЏР№С‚Рµ РёРіСЂРѕРєРѕРІ Рё Р°РґРјРёРЅРёСЃС‚СЂР°С†РёСЋ.\n", sizeof rulesText);
-        strcat(rulesText, "4. РќРµ Р·Р»РѕСѓРїРѕС‚СЂРµР±Р»СЏР№С‚Рµ РєРѕРјР°РЅРґР°РјРё Рё Р±Р°РіР°РјРё.\n", sizeof rulesText);
-        strcat(rulesText, "5. РЎР»СѓС€Р°Р№С‚Рµ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёСЋ Рё СѓРІР°Р¶Р°Р№С‚Рµ РґСЂСѓРіРёС… РёРіСЂРѕРєРѕРІ.", sizeof rulesText);
-        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | РџСЂР°РІРёР»Р°", rulesText, "РџРѕРЅСЏС‚РЅРѕ", "");
+        strcat(rulesText, "1. Соблюдайте правила RolePlay.\n", sizeof rulesText);
+        strcat(rulesText, "2. Не используйте читы и сторонние программы.\n", sizeof rulesText);
+        strcat(rulesText, "3. Не оскорбляйте игроков и администрацию.\n", sizeof rulesText);
+        strcat(rulesText, "4. Не злоупотребляйте командами и багами.\n", sizeof rulesText);
+        strcat(rulesText, "5. Слушайте администрацию и уважайте других игроков.", sizeof rulesText);
+        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | Правила", rulesText, "Понятно", "");
         return 1;
     }
     if (!strcmp(cmdtext, "/gang", true))
     {
-        ShowPlayerDialog(playerid, DIALOG_GANG, DIALOG_STYLE_LIST, "VEXORIUM | РЈР»РёС‡РЅС‹Рµ Р±Р°РЅРґС‹", "Grove Street Families\nBallas\nLos Santos Vagos\nVarrios Los Aztecas\nРџРѕРєРёРЅСѓС‚СЊ Р±Р°РЅРґСѓ", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        ShowPlayerDialog(playerid, DIALOG_GANG, DIALOG_STYLE_LIST, "VEXORIUM | Уличные банды", "Grove Street Families\nBallas\nLos Santos Vagos\nVarrios Los Aztecas\nПокинуть банду", "Выбрать", "Закрыть");
         return 1;
     }
     if (!strcmp(cmdtext, "/gangskin", true) || !strcmp(cmdtext, "/gangclothes", true))
     {
-        if (gGang[playerid] < 1 || gGang[playerid] > 4) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ Р±Р°РЅРґРµ."), 1;
+        if (gGang[playerid] < 1 || gGang[playerid] > 4) return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в банде."), 1;
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gGang[playerid], bx, by, bz);
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || GetPlayerDistanceFromPoint(playerid, bx, by, bz) > 18.0)
-            return SendClientMessage(playerid, COLOR_RED, "РџРµСЂРµРѕРґРµРІР°С‚СЊСЃСЏ РјРѕР¶РЅРѕ С‚РѕР»СЊРєРѕ РІ РјР°РіР°Р·РёРЅРµ РѕРґРµР¶РґС‹ РЅР° Р±Р°Р·Рµ Р±Р°РЅРґС‹."), 1;
-        ShowPlayerDialog(playerid, DIALOG_GANG_SKIN, DIALOG_STYLE_LIST, "РњР°РіР°Р·РёРЅ РѕРґРµР¶РґС‹ Р±Р°РЅРґС‹", "РћРґРµР¶РґР° РЅРѕРІРёС‡РєР°\nРћРґРµР¶РґР° СѓС‡Р°СЃС‚РЅРёРєР°\nРћРґРµР¶РґР° РѕРїС‹С‚РЅРѕРіРѕ\nРћРґРµР¶РґР° СЃС‚Р°СЂС€РµРіРѕ\nРћРґРµР¶РґР° РІРµС‚РµСЂР°РЅР°\nРћРґРµР¶РґР° Р»РёРґРµСЂР°", "РќР°РґРµС‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            return SendClientMessage(playerid, COLOR_RED, "Переодеваться можно только в магазине одежды на базе банды."), 1;
+        ShowPlayerDialog(playerid, DIALOG_GANG_SKIN, DIALOG_STYLE_LIST, "Магазин одежды банды", "Одежда новичка\nОдежда участника\nОдежда опытного\nОдежда старшего\nОдежда ветерана\nОдежда лидера", "Надеть", "Закрыть");
         return 1;
     }
     if (CommandMatch(cmdtext, "/orgstash"))
     {
         if (gFaction[playerid] < 1 || gFaction[playerid] > 6 || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "РЎРєР»Р°Рґ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Склад доступен только сотрудникам организации."), 1;
         if (gFaction[playerid] == FACTION_POLICE)
         {
             if (!IsInPoliceStation(playerid) || GetPlayerDistanceFromPoint(playerid, 258.52, 76.8268, 1003.6406) > 5.0)
-                return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє РѕСЂСѓР¶РµР№РЅРѕРјСѓ СЃРєР»Р°РґСѓ РІРЅСѓС‚СЂРё СѓС‡Р°СЃС‚РєР° LSPD."), 1;
-            ShowPlayerDialog(playerid, DIALOG_POLICE_STASH, DIALOG_STYLE_LIST, "LSPD | РћСЂСѓР¶РµР№РЅС‹Р№ СЃРєР»Р°Рґ", "Р”СѓР±РёРЅРєР°\nM4 Рё РїР°С‚СЂРѕРЅС‹ (РґРѕ 100)\nРџРёСЃС‚РѕР»РµС‚ Рё РїР°С‚СЂРѕРЅС‹ (РґРѕ 100)\nР‘СЂРѕРЅРµР¶РёР»РµС‚", "Р’Р·СЏС‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+                return SendClientMessage(playerid, COLOR_RED, "Подойдите к оружейному складу внутри участка LSPD."), 1;
+            ShowPlayerDialog(playerid, DIALOG_POLICE_STASH, DIALOG_STYLE_LIST, "LSPD | Оружейный склад", "Дубинка\nM4 и патроны (до 100)\nПистолет и патроны (до 100)\nБронежилет", "Взять", "Закрыть");
             return 1;
         }
         if (GetPlayerInterior(playerid) == 0 || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "РћС‚РєСЂРѕР№С‚Рµ СЃРєР»Р°Рґ РІРЅСѓС‚СЂРё С€С‚Р°Р±Р° СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
-        ShowPlayerDialog(playerid, DIALOG_ORG_STASH, DIALOG_STYLE_LIST, "РЎРєР»Р°Рґ РѕСЂРіР°РЅРёР·Р°С†РёРё", "Р’Р·СЏС‚СЊ M4 (РґРѕ 100 РїР°С‚СЂРѕРЅРѕРІ)\nР’Р·СЏС‚СЊ РїРёСЃС‚РѕР»РµС‚ (РґРѕ 100 РїР°С‚СЂРѕРЅРѕРІ)\nРџРѕР»СѓС‡РёС‚СЊ Р±СЂРѕРЅРµР¶РёР»РµС‚\nРџРѕСЃРјРѕС‚СЂРµС‚СЊ Р·Р°РїР°СЃС‹", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            return SendClientMessage(playerid, COLOR_RED, "Откройте склад внутри штаба своей организации."), 1;
+        ShowPlayerDialog(playerid, DIALOG_ORG_STASH, DIALOG_STYLE_LIST, "Склад организации", "Взять M4 (до 100 патронов)\nВзять пистолет (до 100 патронов)\nПолучить бронежилет\nПосмотреть запасы", "Выбрать", "Закрыть");
         return 1;
     }
     if (!strcmp(cmdtext, "/gangstash", true))
     {
         if (gGang[playerid] < 1 || gGang[playerid] > 4)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ Р±Р°РЅРґРµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в банде."), 1;
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gGang[playerid], bx, by, bz);
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || GetPlayerDistanceFromPoint(playerid, bx, by, bz) > 12.0)
-            return SendClientMessage(playerid, COLOR_RED, "РЎРєР»Р°Рґ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РЅР° Р±Р°Р·Рµ РІР°С€РµР№ Р±Р°РЅРґС‹."), 1;
-        ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "РЎРєР»Р°Рґ Р±Р°РЅРґС‹", "РџРѕР»РѕР¶РёС‚СЊ РґРµРЅСЊРіРё\nРЎРЅСЏС‚СЊ РґРµРЅСЊРіРё\nР‘Р°Р»Р°РЅСЃ СЃРєР»Р°РґР°\nРћСЂСѓР¶РёРµ Рё РїР°С‚СЂРѕРЅС‹", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            return SendClientMessage(playerid, COLOR_RED, "Склад доступен только на базе вашей банды."), 1;
+        ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "Склад банды", "Положить деньги\nСнять деньги\nБаланс склада\nОружие и патроны", "Выбрать", "Закрыть");
         return 1;
     }
     if (!strcmp(cmdtext, "/gps", true))
@@ -6308,45 +6308,45 @@ public OnPlayerCommandText(playerid, cmdtext[])
         ShowGPS(playerid);
         return 1;
     }
-    if (!strcmp(cmdtext, "/job", true) || !strcmp(cmdtext, "/СЂР°Р±РѕС‚Р°", true))
+    if (!strcmp(cmdtext, "/job", true) || !strcmp(cmdtext, "/работа", true))
     {
-        if (!gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅР° СЂР°Р±РѕС‚Сѓ СЃРЅР°С‡Р°Р»Р° РїРѕР»СѓС‡РёС‚Рµ РїР°СЃРїРѕСЂС‚ РІ РјСЌСЂРёРё."), 1;
+        if (!gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_RED, "Для устройства на работу сначала получите паспорт в мэрии."), 1;
         new jobText[640];
-        strcat(jobText,"РўР°РєСЃРёСЃС‚ вЂ” РґРѕ 3500 СЂСѓР±. Р·Р° РјР°СЂС€СЂСѓС‚\nР”Р°Р»СЊРЅРѕР±РѕР№С‰РёРє вЂ” РґРѕ 5000 СЂСѓР±. Р·Р° РјР°СЂС€СЂСѓС‚\n",sizeof jobText);
-        strcat(jobText,"Р’РѕРґРёС‚РµР»СЊ Р°РІС‚РѕР±СѓСЃР° вЂ” РґРѕ 4200 СЂСѓР±. Р·Р° РјР°СЂС€СЂСѓС‚\nРЁР°С…С‚С‘СЂ вЂ” РґРѕ 6000 СЂСѓР±. Р·Р° СЃРјРµРЅСѓ\n",sizeof jobText);
-        strcat(jobText,"РђРІС‚РѕСѓРіРѕРЅС‰РёРє вЂ” РѕС‚ 100000 СЂСѓР±. Р·Р° РјР°С€РёРЅСѓ (СЃ 3 СѓСЂРѕРІРЅСЏ)\n",sizeof jobText);
-        strcat(jobText,"РђРґРІРѕРєР°С‚ вЂ” 1000 СЂСѓР±. Р·Р° РґРµР»Рѕ (СЃ 3 СѓСЂРѕРІРЅСЏ, Р±РµР· С„СЂР°РєС†РёРё)\n",sizeof jobText);
-        strcat(jobText,"РџРѕР¶Р°СЂРЅС‹Р№ вЂ” РґРѕ 6500 СЂСѓР±. Р·Р° РІС‹РµР·Рґ",sizeof jobText);
-        ShowPlayerDialog(playerid,DIALOG_JOB,DIALOG_STYLE_LIST,"VEXORIUM RP | Р Р°Р±РѕС‚Р°",jobText,"Р’С‹Р±СЂР°С‚СЊ","Р—Р°РєСЂС‹С‚СЊ");
+        strcat(jobText,"Таксист — до 3500 руб. за маршрут\nДальнобойщик — до 5000 руб. за маршрут\n",sizeof jobText);
+        strcat(jobText,"Водитель автобуса — до 4200 руб. за маршрут\nШахтёр — до 6000 руб. за смену\n",sizeof jobText);
+        strcat(jobText,"Автоугонщик — от 100000 руб. за машину (с 3 уровня)\n",sizeof jobText);
+        strcat(jobText,"Адвокат — 1000 руб. за дело (с 3 уровня, без фракции)\n",sizeof jobText);
+        strcat(jobText,"Пожарный — до 6500 руб. за выезд",sizeof jobText);
+        ShowPlayerDialog(playerid,DIALOG_JOB,DIALOG_STYLE_LIST,"VEXORIUM RP | Работа",jobText,"Выбрать","Закрыть");
         return 1;
     }
-    if (!strcmp(cmdtext, "/work", true) || !strcmp(cmdtext, "/СЂР°Р±РѕС‚Р°С‚СЊ", true))
+    if (!strcmp(cmdtext, "/work", true) || !strcmp(cmdtext, "/работать", true))
     {
-        if (!gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ СЂР°Р±РѕС‚С‹ РЅСѓР¶РµРЅ РїР°СЃРїРѕСЂС‚. РџРѕР»СѓС‡РёС‚Рµ РµРіРѕ РІ РјСЌСЂРёРё."), 1;
+        if (!gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_RED, "Для работы нужен паспорт. Получите его в мэрии."), 1;
         if (gJob[playerid] == 5) return StartCarjack(playerid);
         return StartWorkRoute(playerid);
     }
     if (CommandMatch(cmdtext, "/hack"))
     {
         if (!gCarjackActive[playerid] || gWorkStage[playerid] != 10 || gCarjackUnlocked[playerid])
-            return SendClientMessage(playerid, COLOR_YELLOW, "РЎРµР№С‡Р°СЃ РІР°Рј РЅРµС‡РµРіРѕ РІР·Р»Р°РјС‹РІР°С‚СЊ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Сейчас вам нечего взламывать."), 1;
         if (gCarjackVehicle[playerid] == INVALID_VEHICLE_ID || GetVehicleModel(gCarjackVehicle[playerid]) == 0)
-            return SendClientMessage(playerid, COLOR_RED, "РњР°С€РёРЅР°-С†РµР»СЊ РїСЂРѕРїР°Р»Р°. РћС‚РјРµРЅРёС‚Рµ СЂР°Р±РѕС‚Сѓ С‡РµСЂРµР· /stopwork."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Машина-цель пропала. Отмените работу через /stopwork."), 1;
         new Float:x, Float:y, Float:z;
         GetVehiclePos(gCarjackVehicle[playerid], x, y, z);
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || GetPlayerDistanceFromPoint(playerid, x, y, z) > 5.0)
-            return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°С€РёРЅРµ РЅРµ РґР°Р»СЊС€Рµ 5 РјРµС‚СЂРѕРІ."), 1;
-        ShowPlayerDialog(playerid, DIALOG_CARJACK_HACK, DIALOG_STYLE_LIST, "VEXORIUM | Р’Р·Р»РѕРј Р·Р°РјРєР°", "РљСЂР°СЃРЅС‹Р№ РїСЂРѕРІРѕРґ\nРЎРёРЅРёР№ РїСЂРѕРІРѕРґ\nР—РµР»С‘РЅС‹Р№ РїСЂРѕРІРѕРґ\nР–С‘Р»С‚С‹Р№ РїСЂРѕРІРѕРґ", "РџРѕРґРєР»СЋС‡РёС‚СЊ", "РћС‚РјРµРЅР°");
-        SendClientMessage(playerid, COLOR_YELLOW, "РњРёРЅРё-РёРіСЂР°: РІС‹Р±РµСЂРёС‚Рµ РїСЂР°РІРёР»СЊРЅС‹Р№ РїСЂРѕРІРѕРґ. РћС€РёР±РєР° СЃР±СЂРѕСЃРёС‚ РїРѕРїС‹С‚РєСѓ вЂ” РјРѕР¶РЅРѕ РїРѕРїСЂРѕР±РѕРІР°С‚СЊ СЃРЅРѕРІР°.");
+            return SendClientMessage(playerid, COLOR_YELLOW, "Подойдите к машине не дальше 5 метров."), 1;
+        ShowPlayerDialog(playerid, DIALOG_CARJACK_HACK, DIALOG_STYLE_LIST, "VEXORIUM | Взлом замка", "Красный провод\nСиний провод\nЗелёный провод\nЖёлтый провод", "Подключить", "Отмена");
+        SendClientMessage(playerid, COLOR_YELLOW, "Мини-игра: выберите правильный провод. Ошибка сбросит попытку — можно попробовать снова.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/accept"))
     {
         if (gFaction[playerid] != FACTION_POLICE && gFaction[playerid] != FACTION_FBI)
-            return SendClientMessage(playerid, COLOR_RED, "РџСЂРёРЅСЏС‚СЊ РїСЂРµСЃР»РµРґРѕРІР°РЅРёРµ РјРѕРіСѓС‚ С‚РѕР»СЊРєРѕ РїРѕР»РёС†РёСЏ Рё FBI."), 1;
-        if (gCarjackPending[playerid] <= 0) return SendClientMessage(playerid, COLOR_YELLOW, "РќРµС‚ Р°РєС‚РёРІРЅРѕРіРѕ РІС‹Р·РѕРІР° РЅР° Р°РІС‚РѕСѓРіРѕРЅ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Принять преследование могут только полиция и FBI."), 1;
+        if (gCarjackPending[playerid] <= 0) return SendClientMessage(playerid, COLOR_YELLOW, "Нет активного вызова на автоугон."), 1;
         new target = gCarjackPending[playerid] - 1;
-        if (!IsPlayerConnected(target) || !gCarjackActive[target]) { gCarjackPending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Р’С‹Р·РѕРІ СѓР¶Рµ Р·Р°РІРµСЂС€С‘РЅ."), 1; }
+        if (!IsPlayerConnected(target) || !gCarjackActive[target]) { gCarjackPending[playerid] = 0; return SendClientMessage(playerid, COLOR_RED, "Вызов уже завершён."), 1; }
         gCarjackPending[playerid] = 0;
         gPursuitTarget[playerid] = target;
         new Float:x, Float:y, Float:z;
@@ -6355,26 +6355,26 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SetPlayerMapIcon(playerid, 49, x, y, z, 0, 0, MAPICON_GLOBAL);
         SetPlayerCheckpoint(playerid, x, y, z, 8.0);
         RefreshCarjackPursuits();
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїСЂРёРЅСЏР»Рё РІС‹Р·РѕРІ. РќР° СЂР°РґР°СЂРµ РѕС‚РјРµС‡РµРЅРѕ РїРѕСЃР»РµРґРЅРµРµ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ Р°РІС‚РѕСѓРіРѕРЅС‰РёРєР°.");
-        SendClientMessage(target, COLOR_RED, "РџРѕР»РёС†РёСЏ/FBI РїСЂРёРЅСЏР»Рё РІС‹Р·РѕРІ Рё РЅР°С‡Р°Р»Рё РїСЂРµСЃР»РµРґРѕРІР°РЅРёРµ!");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы приняли вызов. На радаре отмечено последнее местоположение автоугонщика.");
+        SendClientMessage(target, COLOR_RED, "Полиция/FBI приняли вызов и начали преследование!");
         return 1;
     }
     if (CommandMatch(cmdtext, "/cancel"))
     {
         if (gFaction[playerid] != FACTION_POLICE && gFaction[playerid] != FACTION_FBI)
-            return SendClientMessage(playerid, COLOR_RED, "РћС‚РјРµРЅРёС‚СЊ РІС‹Р·РѕРІ РјРѕРіСѓС‚ С‚РѕР»СЊРєРѕ РїРѕР»РёС†РёСЏ Рё FBI."), 1;
-        if (gCarjackPending[playerid] <= 0) return SendClientMessage(playerid, COLOR_YELLOW, "РќРµС‚ Р°РєС‚РёРІРЅРѕРіРѕ РІС‹Р·РѕРІР°."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Отменить вызов могут только полиция и FBI."), 1;
+        if (gCarjackPending[playerid] <= 0) return SendClientMessage(playerid, COLOR_YELLOW, "Нет активного вызова."), 1;
         gCarjackPending[playerid] = 0;
-        SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РѕС‚РєР°Р·Р°Р»РёСЃСЊ РѕС‚ РїСЂРµСЃР»РµРґРѕРІР°РЅРёСЏ Р°РІС‚РѕСѓРіРѕРЅС‰РёРєР°.");
+        SendClientMessage(playerid, COLOR_YELLOW, "Вы отказались от преследования автоугонщика.");
         return 1;
     }
     if (!strcmp(cmdtext, "/stopwork", true))
     {
         if (gTaxiOrderTarget[playerid] != INVALID_PLAYER_ID)
-            VX_TaxiClearDriver(playerid, "[РўРђРљРЎР] Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ: РІРѕРґРёС‚РµР»СЊ Р·Р°РІРµСЂС€РёР» СЃРјРµРЅСѓ.", false);
+            VX_TaxiClearDriver(playerid, "[ТАКСИ] Заказ отменён: водитель завершил смену.", false);
         if (gTaxiOrderDriver[playerid] != INVALID_PLAYER_ID)
-            VX_TaxiCancelForPlayer(playerid, "[РўРђРљРЎР] Р—Р°РєР°Р· РѕС‚РјРµРЅС‘РЅ: РїР°СЃСЃР°Р¶РёСЂ Р·Р°РІРµСЂС€РёР» РІР·Р°РёРјРѕРґРµР№СЃС‚РІРёРµ.", false);
-        if (gWorkStage[playerid] == 0) SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Р’С‹ СЃРµР№С‡Р°СЃ РЅРµ РІС‹РїРѕР»РЅСЏРµС‚Рµ СЂР°Р±РѕС‚Сѓ.");
+            VX_TaxiCancelForPlayer(playerid, "[ТАКСИ] Заказ отменён: пассажир завершил взаимодействие.", false);
+        if (gWorkStage[playerid] == 0) SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Вы сейчас не выполняете работу.");
         else
         {
             gWorkStage[playerid] = 0;
@@ -6394,37 +6394,37 @@ public OnPlayerCommandText(playerid, cmdtext[])
                 DestroyVehicle(gWorkVehicle[playerid]);
             }
             gWorkVehicle[playerid] = INVALID_VEHICLE_ID;
-            SendClientMessage(playerid, COLOR_ORANGE, "[VEXORIUM] Р Р°Р±РѕС‡РёР№ РјР°СЂС€СЂСѓС‚ РѕС‚РјРµРЅС‘РЅ, СЂР°Р±РѕС‡РёР№ С‚СЂР°РЅСЃРїРѕСЂС‚ РІРѕР·РІСЂР°С‰С‘РЅ.");
+            SendClientMessage(playerid, COLOR_ORANGE, "[VEXORIUM] Рабочий маршрут отменён, рабочий транспорт возвращён.");
         }
         return 1;
     }
-    if (CommandMatch(cmdtext, "/inv") || CommandMatch(cmdtext, "/inventory") || CommandMatch(cmdtext, "/РёРЅРІРµРЅС‚Р°СЂСЊ"))
+    if (CommandMatch(cmdtext, "/inv") || CommandMatch(cmdtext, "/inventory") || CommandMatch(cmdtext, "/инвентарь"))
     {
         new text[320];
-        format(text, sizeof text, "VEXORIUM RP | РРќР’Р•РќРўРђР Р¬\nРђРїС‚РµС‡РєРё: %d\nР•РґР°: %d\nР’РѕРґР°: %d\n",
+        format(text, sizeof text, "VEXORIUM RP | ИНВЕНТАРЬ\nАптечки: %d\nЕда: %d\nВода: %d\n",
             gMedkits[playerid], gFood[playerid], gWater[playerid]);
         new invMore[180];
-        format(invMore, sizeof invMore, "Р РµРјРєРѕРјРїР»РµРєС‚С‹: %d\nSIM-РєР°СЂС‚С‹: %d\nРћС‚РјС‹С‡РєРё: %d\n",
+        format(invMore, sizeof invMore, "Ремкомплекты: %d\nSIM-карты: %d\nОтмычки: %d\n",
             gRepairKits[playerid], gSimCards[playerid], gLockpicks[playerid]);
         strcat(text, invMore, sizeof text);
-        format(invMore, sizeof invMore, "/repairkit - СЂРµРјРѕРЅС‚ РјР°С€РёРЅС‹, /usesim - SIM-РєР°СЂС‚Р°, /work - СЂР°Р±РѕС‚Р°.");
+        format(invMore, sizeof invMore, "/repairkit - ремонт машины, /usesim - SIM-карта, /work - работа.");
         strcat(text, invMore, sizeof text);
-        ShowPlayerDialog(playerid, DIALOG_ITEM_INVENTORY, DIALOG_STYLE_LIST, "VEXORIUM | РРЅРІРµРЅС‚Р°СЂСЊ", "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р°РїС‚РµС‡РєСѓ\nРЎСЉРµСЃС‚СЊ РµРґСѓ\nР’С‹РїРёС‚СЊ РІРѕРґСѓ\nРњР°РіР°Р·РёРЅ Р°РєСЃРµСЃСЃСѓР°СЂРѕРІ\nРќР°РґРµС‚СЊ Р°РєСЃРµСЃСЃСѓР°СЂ\nРЎРЅСЏС‚СЊ Р°РєСЃРµСЃСЃСѓР°СЂ", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        ShowPlayerDialog(playerid, DIALOG_ITEM_INVENTORY, DIALOG_STYLE_LIST, "VEXORIUM | Инвентарь", "Использовать аптечку\nСъесть еду\nВыпить воду\nМагазин аксессуаров\nНадеть аксессуар\nСнять аксессуар", "Выбрать", "Закрыть");
         SendClientMessage(playerid, COLOR_YELLOW, text);
         return 1;
     }
     if (CommandMatch(cmdtext, "/phone") || CommandMatch(cmdtext, "/telefon"))
     {
-        ShowPlayerDialog(playerid, DIALOG_PHONE, DIALOG_STYLE_LIST, "VEXORIUM | РўРµР»РµС„РѕРЅ", "РћС‚РїСЂР°РІРёС‚СЊ SMS\nРЎРјРѕС‚СЂРµС‚СЊ РјРµСЃС‚Рѕ РЅР° РєР°СЂС‚Рµ (GPS)\nР’С‹Р·РІР°С‚СЊ РїРѕР»РёС†РёСЋ\nР’С‹Р·РІР°С‚СЊ СЃРєРѕСЂСѓСЋ РїРѕРјРѕС‰СЊ\nРњРѕР№ ID Рё РЅРѕРјРµСЂ\nР’С‹Р·РІР°С‚СЊ С‚Р°РєСЃРё", "РћС‚РєСЂС‹С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        ShowPlayerDialog(playerid, DIALOG_PHONE, DIALOG_STYLE_LIST, "VEXORIUM | Телефон", "Отправить SMS\nСмотреть место на карте (GPS)\nВызвать полицию\nВызвать скорую помощь\nМой ID и номер\nВызвать такси", "Открыть", "Закрыть");
         return 1;
     }
     if (CommandMatch(cmdtext, "/repairkit"))
     {
-        if (gRepairKits[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[Р Р•РњРљРћРњРџР›Р•РљРў] РЈ РІР°СЃ РЅРµС‚ СЂРµРјРєРѕРјРїР»РµРєС‚Р°. РљСѓРїРёС‚Рµ РµРіРѕ РІ /shop."), 1;
-        if (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return SendClientMessage(playerid, COLOR_YELLOW, "[Р Р•РњРљРћРњРџР›Р•РљРў] РЎСЏРґСЊС‚Рµ Р·Р° СЂСѓР»С‘Рј РјР°С€РёРЅС‹."), 1;
+        if (gRepairKits[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[РЕМКОМПЛЕКТ] У вас нет ремкомплекта. Купите его в /shop."), 1;
+        if (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return SendClientMessage(playerid, COLOR_YELLOW, "[РЕМКОМПЛЕКТ] Сядьте за рулём машины."), 1;
         new repairVehicle = GetPlayerVehicleID(playerid); RepairVehicle(repairVehicle); SetVehicleHealth(repairVehicle, 1000.0);
         gRepairKits[playerid]--; SavePlayer(playerid);
-        return SendClientMessage(playerid, COLOR_GREEN, "[Р Р•РњРљРћРњРџР›Р•РљРў] РњР°С€РёРЅР° РѕС‚СЂРµРјРѕРЅС‚РёСЂРѕРІР°РЅР°. Р РµРјРєРѕРјРїР»РµРєС‚ РёСЃРїРѕР»СЊР·РѕРІР°РЅ."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "[РЕМКОМПЛЕКТ] Машина отремонтирована. Ремкомплект использован."), 1;
     }
     if (CommandMatch(cmdtext, "/usesim"))
     {
@@ -6443,7 +6443,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
             if(dist<nearest){nearest=dist;closest=cs;}
         }
         SetPlayerCheckpoint(playerid,gVXClothesPos[closest][0],gVXClothesPos[closest][1],gVXClothesPos[closest][2],3.0);
-        SendClientMessage(playerid,COLOR_GREEN,"[РћР”Р•Р–Р”Рђ] РњР°СЂС€СЂСѓС‚ Рє Р±Р»РёР¶Р°Р№С€РµРјСѓ РјР°РіР°Р·РёРЅСѓ СѓСЃС‚Р°РЅРѕРІР»РµРЅ. /clothes - РїРѕРєСѓРїРєРё.");
+        SendClientMessage(playerid,COLOR_GREEN,"[ОДЕЖДА] Маршрут к ближайшему магазину установлен. /clothes - покупки.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/shop") || CommandMatch(cmdtext, "/store"))
@@ -6451,49 +6451,49 @@ public OnPlayerCommandText(playerid, cmdtext[])
         if (!gMarketInside[playerid] || GetPlayerVirtualWorld(playerid) != VX_MARKET_WORLD ||
             GetPlayerInterior(playerid) != VX_MARKET_INTERIOR ||
             !IsPlayerInRangeOfPoint(playerid, 3.5, VX_MARKET_COUNTER_X, VX_MARKET_COUNTER_Y, VX_MARKET_COUNTER_Z))
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РњРђР РљР•Рў] Р’РѕР№РґРёС‚Рµ С‡РµСЂРµР· РјР°СЂРєРµСЂ РјР°РіР°Р·РёРЅР° Рё РїРѕРґРѕР№РґРёС‚Рµ Рє РєР°СЃСЃРµ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МАРКЕТ] Войдите через маркер магазина и подойдите к кассе."), 1;
         new shopItems[512];
-        format(shopItems, sizeof shopItems, "РђРїС‚РµС‡РєР° Р·РґРѕСЂРѕРІСЊСЏ - 1 200 СЂСѓР±.\nР•РґР° - 250 СЂСѓР±.\nР’РѕРґР° - 180 СЂСѓР±.");
-        strcat(shopItems, "\nР‘СѓРєРµС‚: РµРґР° + РІРѕРґР° - 350 СЂСѓР±.");
-        strcat(shopItems, "\nР РµРјРѕРЅС‚РЅС‹Р№ РєРѕРјРїР»РµРєС‚ - 3 000 СЂСѓР±.");
-        strcat(shopItems, "\nSIM-РєР°СЂС‚Р° - 1 500 СЂСѓР±.");
-        strcat(shopItems, "\nРћС‚РјС‹С‡РєР° РґР»СЏ Р°РІС‚РѕСѓРіРѕРЅР° - 8 000 СЂСѓР±.");
-        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, "VEXORIUM | РњРђР РљР•Рў 24/7", shopItems, "РљСѓРїРёС‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+        format(shopItems, sizeof shopItems, "Аптечка здоровья - 1 200 руб.\nЕда - 250 руб.\nВода - 180 руб.");
+        strcat(shopItems, "\nБукет: еда + вода - 350 руб.");
+        strcat(shopItems, "\nРемонтный комплект - 3 000 руб.");
+        strcat(shopItems, "\nSIM-карта - 1 500 руб.");
+        strcat(shopItems, "\nОтмычка для автоугона - 8 000 руб.");
+        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, "VEXORIUM | МАРКЕТ 24/7", shopItems, "Купить", "Закрыть");
         return 1;
     }
-    if (!strcmp(cmdtext, "/balance", true) || !strcmp(cmdtext, "/Р±Р°Р»Р°РЅСЃ", true))
+    if (!strcmp(cmdtext, "/balance", true) || !strcmp(cmdtext, "/баланс", true))
     {
         new msg[96];
-        format(msg, sizeof msg, "[VEXORIUM] РќР° РІР°С€РµРј СЃС‡РµС‚Сѓ: %d СЂСѓР±Р»РµР№.", gMoney[playerid]);
+        format(msg, sizeof msg, "[VEXORIUM] На вашем счету: %d рублей.", gMoney[playerid]);
         SendClientMessage(playerid, COLOR_GREEN, msg);
         return 1;
     }
-    if (!strcmp(cmdtext, "/stats", true) || !strcmp(cmdtext, "/СЃС‚Р°С‚РёСЃС‚РёРєР°", true))
+    if (!strcmp(cmdtext, "/stats", true) || !strcmp(cmdtext, "/статистика", true))
     {
         new text[640], needsLine[192], passportStatus[8], driverStatus[8];
         new jobName[32], factionName[32], factionRankName[48];
-        if (gJob[playerid] == 1) format(jobName, sizeof jobName, "РўР°РєСЃРёСЃС‚");
-        else if (gJob[playerid] == 2) format(jobName, sizeof jobName, "Р”Р°Р»СЊРЅРѕР±РѕР№С‰РёРє");
-        else if (gJob[playerid] == 3) format(jobName, sizeof jobName, "РђРІС‚РѕР±СѓСЃРЅРёРє");
-        else if (gJob[playerid] == 4) format(jobName, sizeof jobName, "РЁР°С…С‚С‘СЂ");
-        else if (gJob[playerid] == 5) format(jobName, sizeof jobName, "РђРІС‚РѕСѓРіРѕРЅС‰РёРє");
-        else if (gJob[playerid] == 6) format(jobName, sizeof jobName, "РђРґРІРѕРєР°С‚");
-        else if (gJob[playerid] == 7) format(jobName, sizeof jobName, "РџРѕР¶Р°СЂРЅС‹Р№");
-        else format(jobName, sizeof jobName, "РќРµС‚");
+        if (gJob[playerid] == 1) format(jobName, sizeof jobName, "Таксист");
+        else if (gJob[playerid] == 2) format(jobName, sizeof jobName, "Дальнобойщик");
+        else if (gJob[playerid] == 3) format(jobName, sizeof jobName, "Автобусник");
+        else if (gJob[playerid] == 4) format(jobName, sizeof jobName, "Шахтёр");
+        else if (gJob[playerid] == 5) format(jobName, sizeof jobName, "Автоугонщик");
+        else if (gJob[playerid] == 6) format(jobName, sizeof jobName, "Адвокат");
+        else if (gJob[playerid] == 7) format(jobName, sizeof jobName, "Пожарный");
+        else format(jobName, sizeof jobName, "Нет");
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
         GetFactionRankName(gFaction[playerid], gFactionRank[playerid], factionRankName, sizeof factionRankName);
-        format(text, sizeof text, "РРјСЏ: %s\nРЈСЂРѕРІРµРЅСЊ: %d\nР”РµРЅСЊРіРё: %d СЂСѓР±.\nРЈР±РёР№СЃС‚РІ: %d\nРЎРјРµСЂС‚РµР№: %d\nР Р°Р±РѕС‚Р°: %s\nР¤СЂР°РєС†РёСЏ: %s\nР Р°РЅРі: %s (%d)\nР‘Р°РЅРґР°: %d\nРђРґРјРёРЅ-СѓСЂРѕРІРµРЅСЊ: %d", gName[playerid], gLevel[playerid], gMoney[playerid], gKills[playerid], gDeaths[playerid], jobName, factionName, factionRankName, gFactionRank[playerid], gGang[playerid], gAdmin[playerid]);
-        if (gHasPassport[playerid]) format(passportStatus, sizeof passportStatus, "РµСЃС‚СЊ"); else format(passportStatus, sizeof passportStatus, "РЅРµС‚");
-        if (gLicenseDriver[playerid]) format(driverStatus, sizeof driverStatus, "РµСЃС‚СЊ"); else format(driverStatus, sizeof driverStatus, "РЅРµС‚");
-        format(needsLine, sizeof needsLine, "\nРЎС‹С‚РѕСЃС‚СЊ: %d/100 | Р’РѕРґР°: %d/100 | Р­РЅРµСЂРіРёСЏ: %d/100\nРџР°СЃРїРѕСЂС‚: %s | Р’РѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР°: %s", gHunger[playerid], gThirst[playerid], gEnergy[playerid], passportStatus, driverStatus);
+        format(text, sizeof text, "Имя: %s\nУровень: %d\nДеньги: %d руб.\nУбийств: %d\nСмертей: %d\nРабота: %s\nФракция: %s\nРанг: %s (%d)\nБанда: %d\nАдмин-уровень: %d", gName[playerid], gLevel[playerid], gMoney[playerid], gKills[playerid], gDeaths[playerid], jobName, factionName, factionRankName, gFactionRank[playerid], gGang[playerid], gAdmin[playerid]);
+        if (gHasPassport[playerid]) format(passportStatus, sizeof passportStatus, "есть"); else format(passportStatus, sizeof passportStatus, "нет");
+        if (gLicenseDriver[playerid]) format(driverStatus, sizeof driverStatus, "есть"); else format(driverStatus, sizeof driverStatus, "нет");
+        format(needsLine, sizeof needsLine, "\nСытость: %d/100 | Вода: %d/100 | Энергия: %d/100\nПаспорт: %s | Водительские права: %s", gHunger[playerid], gThirst[playerid], gEnergy[playerid], passportStatus, driverStatus);
         strcat(text, needsLine);
-        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | РЎС‚Р°С‚РёСЃС‚РёРєР°", text, "Р—Р°РєСЂС‹С‚СЊ", "");
+        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | Статистика", text, "Закрыть", "");
         return 1;
     }
     if (!strcmp(cmdtext, "/save", true))
     {
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] РџСЂРѕРіСЂРµСЃСЃ СЃРѕС…СЂР°РЅС‘РЅ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Прогресс сохранён.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/pay"))
@@ -6501,108 +6501,108 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new params[96], token[32], token2[32], targetid, amount, msg[128];
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, token, sizeof token) || !GetToken(params, 1, token2, sizeof token2))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /pay [ID] [СЃСѓРјРјР°]"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /pay [ID] [сумма]"), 1;
         targetid = strval(token); amount = strval(token2);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµ РІРѕС€С‘Р» РІ Р°РєРєР°СѓРЅС‚."), 1;
-        if (targetid == playerid || amount <= 0 || amount > 10000000) return SendClientMessage(playerid, COLOR_RED, "РЈРєР°Р¶РёС‚Рµ РґСЂСѓРіРѕРіРѕ РёРіСЂРѕРєР° Рё СЃСѓРјРјСѓ РѕС‚ 1 РґРѕ 10000000."), 1;
-        if (!TakeCash(playerid, amount)) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі."), 1;
-        if (!GiveCash(targetid, amount)) { GiveCash(playerid, amount); return SendClientMessage(playerid, COLOR_RED, "РЈ РїРѕР»СѓС‡Р°С‚РµР»СЏ РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РґРµРЅРµРі."), 1; }
-        format(msg, sizeof msg, "Р’С‹ РїРµСЂРµРґР°Р»Рё %s %d СЂСѓР±Р»РµР№.", gName[targetid], amount); SendClientMessage(playerid, COLOR_GREEN, msg);
-        format(msg, sizeof msg, "%s РїРµСЂРµРґР°Р» РІР°Рј %d СЂСѓР±Р»РµР№.", gName[playerid], amount); SendClientMessage(targetid, COLOR_GREEN, msg);
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "Игрок не найден или не вошёл в аккаунт."), 1;
+        if (targetid == playerid || amount <= 0 || amount > 10000000) return SendClientMessage(playerid, COLOR_RED, "Укажите другого игрока и сумму от 1 до 10000000."), 1;
+        if (!TakeCash(playerid, amount)) return SendClientMessage(playerid, COLOR_RED, "Недостаточно денег."), 1;
+        if (!GiveCash(targetid, amount)) { GiveCash(playerid, amount); return SendClientMessage(playerid, COLOR_RED, "У получателя достигнут лимит денег."), 1; }
+        format(msg, sizeof msg, "Вы передали %s %d рублей.", gName[targetid], amount); SendClientMessage(playerid, COLOR_GREEN, msg);
+        format(msg, sizeof msg, "%s передал вам %d рублей.", gName[playerid], amount); SendClientMessage(targetid, COLOR_GREEN, msg);
         SavePlayer(playerid); SavePlayer(targetid);
         return 1;
     }
     if (CommandMatch(cmdtext, "/tp") || CommandMatch(cmdtext, "/goto"))
     {
         new params[64], token[32], targetid;
-        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."), 1;
+        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "Недостаточно прав."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /tp [ID РёРіСЂРѕРєР°]"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /tp [ID игрока]"), 1;
         targetid = strval(token);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµ РІРѕС€С‘Р» РІ Р°РєРєР°СѓРЅС‚."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "Игрок не найден или не вошёл в аккаунт."), 1;
         new Float:x, Float:y, Float:z;
         GetPlayerPos(targetid, x, y, z);
         if (IsPlayerInAnyVehicle(playerid)) SetVehiclePos(GetPlayerVehicleID(playerid), x + 2.0, y, z);
         else SetPlayerPos(playerid, x + 1.0, y, z);
         SetPlayerInterior(playerid, GetPlayerInterior(targetid));
         SetPlayerVirtualWorld(playerid, GetPlayerVirtualWorld(targetid));
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Р’С‹ С‚РµР»РµРїРѕСЂС‚РёСЂРѕРІР°РЅС‹ Рє РёРіСЂРѕРєСѓ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Вы телепортированы к игроку.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/gethere"))
     {
         new params[64], token[32], targetid;
-        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."), 1;
+        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "Недостаточно прав."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /gethere [ID РёРіСЂРѕРєР°]"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /gethere [ID игрока]"), 1;
         targetid = strval(token);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµ РІРѕС€С‘Р» РІ Р°РєРєР°СѓРЅС‚."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "Игрок не найден или не вошёл в аккаунт."), 1;
         new Float:x, Float:y, Float:z;
         GetPlayerPos(playerid, x, y, z);
         SetPlayerInterior(targetid, GetPlayerInterior(playerid));
         SetPlayerVirtualWorld(targetid, GetPlayerVirtualWorld(playerid));
         if (IsPlayerInAnyVehicle(targetid)) SetVehiclePos(GetPlayerVehicleID(targetid), x + 2.0, y, z);
         else SetPlayerPos(targetid, x + 1.0, y, z);
-        SendClientMessage(targetid, COLOR_ORANGE, "[VEXORIUM] РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ С‚РµР»РµРїРѕСЂС‚РёСЂРѕРІР°Р» РІР°СЃ Рє СЃРµР±Рµ.");
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] РРіСЂРѕРє С‚РµР»РµРїРѕСЂС‚РёСЂРѕРІР°РЅ Рє РІР°Рј.");
+        SendClientMessage(targetid, COLOR_ORANGE, "[VEXORIUM] Администратор телепортировал вас к себе.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Игрок телепортирован к вам.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/tpcar"))
     {
         new params[64], token[32], targetid;
-        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."), 1;
-        if (!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° СЃСЏРґСЊС‚Рµ РІ С‚СЂР°РЅСЃРїРѕСЂС‚."), 1;
+        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "Недостаточно прав."), 1;
+        if (!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Сначала сядьте в транспорт."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /tpcar [ID РёРіСЂРѕРєР°]"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /tpcar [ID игрока]"), 1;
         targetid = strval(token);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµ РІРѕС€С‘Р» РІ Р°РєРєР°СѓРЅС‚."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "Игрок не найден или не вошёл в аккаунт."), 1;
         new Float:x, Float:y, Float:z;
         GetPlayerPos(targetid, x, y, z);
         SetVehiclePos(GetPlayerVehicleID(playerid), x + 3.0, y, z);
         SetPlayerInterior(playerid, GetPlayerInterior(targetid));
         SetPlayerVirtualWorld(playerid, GetPlayerVirtualWorld(targetid));
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Р’Р°С€ С‚СЂР°РЅСЃРїРѕСЂС‚ С‚РµР»РµРїРѕСЂС‚РёСЂРѕРІР°РЅ Рє РёРіСЂРѕРєСѓ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Ваш транспорт телепортирован к игроку.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/setadmin"))
     {
         new params[96], token[32], token2[32], targetid, level;
-        if (!IsOwner(playerid)) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."), 1;
+        if (!IsOwner(playerid)) return SendClientMessage(playerid, COLOR_RED, "Недостаточно прав."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token) || !GetToken(params, 1, token2, sizeof token2)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /setadmin [ID] [0-4]"), 1;
+        if (!GetToken(params, 0, token, sizeof token) || !GetToken(params, 1, token2, sizeof token2)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /setadmin [ID] [0-4]"), 1;
         targetid = strval(token); level = strval(token2);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || level < 0 || level > 4) return SendClientMessage(playerid, COLOR_RED, "РќРµРІРµСЂРЅС‹Р№ ID РёР»Рё СѓСЂРѕРІРµРЅСЊ 0-4."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || level < 0 || level > 4) return SendClientMessage(playerid, COLOR_RED, "Неверный ID или уровень 0-4."), 1;
         gAdmin[targetid] = level;
         new query[160];
         format(query, sizeof query, "UPDATE accounts SET admin=%d WHERE name='%q'", level, gName[targetid]);
         gResult = db_query(gDatabase, query); if (gResult) db_free_result(gResult);
-        SendClientMessage(targetid, COLOR_GREEN, "[VEXORIUM] Р’Р°С€ СѓСЂРѕРІРµРЅСЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° РёР·РјРµРЅС‘РЅ.");
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] РЈСЂРѕРІРµРЅСЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° РёР·РјРµРЅС‘РЅ.");
+        SendClientMessage(targetid, COLOR_GREEN, "[VEXORIUM] Ваш уровень администратора изменён.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Уровень администратора изменён.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/setmoney"))
     {
         new params[96], token[32], token2[32], targetid, amount, query[160];
-        if (gAdmin[playerid] < 5) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."), 1;
+        if (gAdmin[playerid] < 5) return SendClientMessage(playerid, COLOR_RED, "Недостаточно прав."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token) || !GetToken(params, 1, token2, sizeof token2)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /setmoney [ID] [СЃСѓРјРјР°]"), 1;
+        if (!GetToken(params, 0, token, sizeof token) || !GetToken(params, 1, token2, sizeof token2)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /setmoney [ID] [сумма]"), 1;
         targetid = strval(token); amount = strval(token2);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || amount < 0 || amount > MAX_MONEY) return SendClientMessage(playerid, COLOR_RED, "РќРµРІРµСЂРЅС‹Р№ ID РёР»Рё СЃСѓРјРјР°."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || amount < 0 || amount > MAX_MONEY) return SendClientMessage(playerid, COLOR_RED, "Неверный ID или сумма."), 1;
         gMoney[targetid] = amount; ResetPlayerMoney(targetid); GivePlayerMoney(targetid, amount);
         format(query, sizeof query, "UPDATE accounts SET money=%d WHERE name='%q'", amount, gName[targetid]);
         gResult = db_query(gDatabase, query); if (gResult) db_free_result(gResult);
-        SendClientMessage(targetid, COLOR_GREEN, "[VEXORIUM] РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РёР·РјРµРЅРёР» РІР°С€ Р±Р°Р»Р°РЅСЃ.");
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Р‘Р°Р»Р°РЅСЃ РёРіСЂРѕРєР° РёР·РјРµРЅС‘РЅ.");
+        SendClientMessage(targetid, COLOR_GREEN, "[VEXORIUM] Администратор изменил ваш баланс.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM] Баланс игрока изменён.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/setfaction"))
     {
         new params[96], tok1[24], tok2[24], tok3[24], targetid, faction, rank, query[192], msg[160], factionName[32], rankName[48];
-        if (gAdmin[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "РљРѕРјР°РЅРґР° РґРѕСЃС‚СѓРїРЅР° СЃ 3-РіРѕ СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°."), 1;
+        if (gAdmin[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "Команда доступна с 3-го уровня администратора."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, tok1, sizeof tok1) || !GetToken(params, 1, tok2, sizeof tok2) || !GetToken(params, 2, tok3, sizeof tok3)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /setfaction [ID] [0-6] [СЂР°РЅРі 0-10]"), 1;
+        if (!GetToken(params, 0, tok1, sizeof tok1) || !GetToken(params, 1, tok2, sizeof tok2) || !GetToken(params, 2, tok3, sizeof tok3)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /setfaction [ID] [0-6] [ранг 0-10]"), 1;
         targetid = strval(tok1); faction = strval(tok2); rank = strval(tok3);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || faction < 0 || faction > 7 || rank < 0 || rank > 10 || (faction == 0 && rank != 0) || (faction > 0 && rank < 1)) return SendClientMessage(playerid, COLOR_RED, "РќРµРІРµСЂРЅС‹Р№ ID, С„СЂР°РєС†РёСЏ РёР»Рё СЂР°РЅРі."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || faction < 0 || faction > 7 || rank < 0 || rank > 10 || (faction == 0 && rank != 0) || (faction > 0 && rank < 1)) return SendClientMessage(playerid, COLOR_RED, "Неверный ID, фракция или ранг."), 1;
         gFaction[targetid] = faction; gFactionRank[targetid] = rank;
         UpdatePlayerRoleColor(targetid);
         UpdateVexHud(targetid);
@@ -6612,18 +6612,18 @@ public OnPlayerCommandText(playerid, cmdtext[])
         format(query, sizeof query, "UPDATE accounts SET faction=%d,faction_rank=%d,skin=%d WHERE name='%q'", faction, rank, rankSkin, gName[targetid]);
         gResult = db_query(gDatabase, query); if (gResult) db_free_result(gResult);
         GetFactionName(faction, factionName, sizeof factionName); GetFactionRankName(faction, rank, rankName, sizeof rankName);
-        format(msg, sizeof msg, "Р’Р°С€Р° С„СЂР°РєС†РёСЏ: %s. Р Р°РЅРі: %s (%d).", factionName, rankName, rank); SendClientMessage(targetid, COLOR_GREEN, msg);
-        SendClientMessage(playerid, COLOR_GREEN, "Р¤СЂР°РєС†РёСЏ Рё СЂР°РЅРі РёРіСЂРѕРєР° РѕР±РЅРѕРІР»РµРЅС‹.");
+        format(msg, sizeof msg, "Ваша фракция: %s. Ранг: %s (%d).", factionName, rankName, rank); SendClientMessage(targetid, COLOR_GREEN, msg);
+        SendClientMessage(playerid, COLOR_GREEN, "Фракция и ранг игрока обновлены.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/uniform"))
     {
         new params[64], tok1[24], tok2[24], targetid, faction, skin, query[192], msg[128];
-        if (gAdmin[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "РљРѕРјР°РЅРґР° РґРѕСЃС‚СѓРїРЅР° СЃ 3-РіРѕ СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°."), 1;
+        if (gAdmin[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "Команда доступна с 3-го уровня администратора."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, tok1, sizeof tok1) || !GetToken(params, 1, tok2, sizeof tok2)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /uniform [ID] [1=РјСЌСЂРёСЏ, 2=РїРѕР»РёС†РёСЏ, 3=Р±РѕР»СЊРЅРёС†Р°, 4=Р°СЂРјРёСЏ, 5=Р’РњР¤, 6=Р’Р’РЎ]"), 1;
+        if (!GetToken(params, 0, tok1, sizeof tok1) || !GetToken(params, 1, tok2, sizeof tok2)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /uniform [ID] [1=мэрия, 2=полиция, 3=больница, 4=армия, 5=ВМФ, 6=ВВС]"), 1;
         targetid = strval(tok1); faction = strval(tok2);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || faction < 1 || faction > 7) return SendClientMessage(playerid, COLOR_RED, "РќРµРІРµСЂРЅС‹Р№ ID РёР»Рё С‚РёРї С„РѕСЂРјС‹."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || faction < 1 || faction > 7) return SendClientMessage(playerid, COLOR_RED, "Неверный ID или тип формы."), 1;
         if (gFaction[targetid] != faction) { gFaction[targetid] = faction; gFactionRank[targetid] = 1; }
         else if (gFactionRank[targetid] < 1) gFactionRank[targetid] = 1;
         UpdatePlayerRoleColor(targetid);
@@ -6633,18 +6633,18 @@ public OnPlayerCommandText(playerid, cmdtext[])
         gResult = db_query(gDatabase, query); if (gResult) db_free_result(gResult);
         new factionName[32];
         GetFactionName(faction, factionName, sizeof factionName);
-        format(msg, sizeof msg, "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РІС‹РґР°Р» РІР°Рј С„РѕСЂРјСѓ: %s (СЃРєРёРЅ %d).", factionName, skin);
-        SendClientMessage(targetid, COLOR_GREEN, msg); SendClientMessage(playerid, COLOR_GREEN, "Р¤РѕСЂРјР° РїРѕ РІР°С€РµРјСѓ СЂР°РЅРіСѓ РІС‹РґР°РЅР° Рё СЃРѕС…СЂР°РЅРµРЅР°.");
+        format(msg, sizeof msg, "Администратор выдал вам форму: %s (скин %d).", factionName, skin);
+        SendClientMessage(targetid, COLOR_GREEN, msg); SendClientMessage(playerid, COLOR_GREEN, "Форма по вашему рангу выдана и сохранена.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/enterpd") || CommandMatch(cmdtext, "/policeenter"))
     {
-        SendClientMessage(playerid, COLOR_YELLOW, "Р’С…РѕРґ РІ СѓС‡Р°СЃС‚РѕРє С‚РѕР»СЊРєРѕ С‡РµСЂРµР· РјР°СЂРєРµСЂ Сѓ РґРІРµСЂРё. РљРѕРјР°РЅРґР° РЅРµ С‚РµР»РµРїРѕСЂС‚РёСЂСѓРµС‚.");
+        SendClientMessage(playerid, COLOR_YELLOW, "Вход в участок только через маркер у двери. Команда не телепортирует.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/exitpd") || (!strcmp(cmdtext, "/exit", true) && IsInPoliceStation(playerid)))
     {
-        if (!IsInPoliceStation(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РЅРµ РІ РїРѕР»РёС†РµР№СЃРєРѕРј СѓС‡Р°СЃС‚РєРµ."), 1;
+        if (!IsInPoliceStation(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Вы не в полицейском участке."), 1;
         SetPlayerInterior(playerid, 0);
         SetPlayerVirtualWorld(playerid, 0);
         SetPlayerPos(playerid, 1547.0, -1678.8352, 14.9453);
@@ -6654,24 +6654,24 @@ public OnPlayerCommandText(playerid, cmdtext[])
     }
     if (CommandMatch(cmdtext, "/duty"))
     {
-        return SendClientMessage(playerid, COLOR_YELLOW, "РџРµСЂРµРѕРґРµРІР°РЅРёРµ С‚РµРїРµСЂСЊ РґРѕСЃС‚СѓРїРЅРѕ С‡РµСЂРµР· РјР°СЂРєРµСЂ СЂР°Р·РґРµРІР°Р»РєРё РІРЅСѓС‚СЂРё С€С‚Р°Р±Р°. Р’СЃС‚Р°РЅСЊС‚Рµ РЅР° Р·РЅР°С‡РѕРє РѕРґРµР¶РґС‹."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Переодевание теперь доступно через маркер раздевалки внутри штаба. Встаньте на значок одежды."), 1;
     }
     if (CommandMatch(cmdtext, "/policetablet") || CommandMatch(cmdtext, "/kpp"))
     {
         if (gFaction[playerid] != FACTION_POLICE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕР»РёС†РµР№СЃРєРёР№ РїР»Р°РЅС€РµС‚ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј РџРѕР»РёС†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Полицейский планшет доступен только сотрудникам Полиции."), 1;
         ShowPlayerDialog(playerid, DIALOG_POLICE_TABLET, DIALOG_STYLE_LIST,
-            "VEXORIUM | РџРѕР»РёС†РµР№СЃРєРёР№ РїР»Р°РЅС€РµС‚",
-            "РЎРїРёСЃРѕРє СЂРѕР·С‹СЃРєР° Рё РїРµСЂРµСЃР»РµРґРѕРІР°РЅРёРµ\nРћР±СЉСЏРІРёС‚СЊ РІ СЂРѕР·С‹СЃРє: /wanted [ID] [0-6] [РїСЂРёС‡РёРЅР°]\nРќР°СЂСѓС‡РЅРёРєРё: /cuff [ID] /uncuff [ID]\nРћС‚СЃР»РµРґРёС‚СЊ РёРіСЂРѕРєР°: /pursuit [ID]",
-            "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            "VEXORIUM | Полицейский планшет",
+            "Список розыска и переследование\nОбъявить в розыск: /wanted [ID] [0-6] [причина]\nНаручники: /cuff [ID] /uncuff [ID]\nОтследить игрока: /pursuit [ID]",
+            "Выбрать", "Закрыть");
         return 1;
     }
     if (CommandMatch(cmdtext, "/sobescr"))
     {
         if (gFaction[playerid] < FACTION_CITYHALL || gFaction[playerid] > FACTION_FBI || gFactionRank[playerid] < 9)
-            return SendClientMessage(playerid, COLOR_RED, "РќР°С‡РёРЅР°СЏ СЃ 9 СЂР°РЅРіР° РІ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё РёР»Рё РІС‹С€Рµ, С‡С‚РѕР±С‹ РїСЂРѕРІРѕРґРёС‚СЊ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Начиная с 9 ранга в своей организации или выше, чтобы проводить собеседование."), 1;
         if (gInterviewActive || gInterviewTimer != 0)
-            return SendClientMessage(playerid, COLOR_RED, "РЎРѕР±РµСЃРµРґРѕРІР°РЅРёРµ СѓР¶Рµ РёРґС‘С‚. Р”РѕР¶РґРёС‚РµСЃСЊ РµРіРѕ РѕРєРѕРЅС‡Р°РЅРёСЏ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Собеседование уже идёт. Дождитесь его окончания."), 1;
         gInterviewActive = true;
         gInterviewFaction = gFaction[playerid];
         InterviewAnnouncement();
@@ -6681,38 +6681,38 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (CommandMatch(cmdtext, "/sobesstop"))
     {
         if (gFaction[playerid] < FACTION_CITYHALL || gFaction[playerid] > FACTION_FBI || gFactionRank[playerid] < 9)
-            return SendClientMessage(playerid, COLOR_RED, "РќСѓР¶РµРЅ 9-Р№ СЂР°РЅРі РІ СЃРІРѕРµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё РёР»Рё РІС‹С€Рµ, С‡С‚РѕР±С‹ РѕСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёРµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Нужен 9-й ранг в своей организации или выше, чтобы остановить собеседование."), 1;
         if (!gInterviewActive || gInterviewFaction != gFaction[playerid])
-            return SendClientMessage(playerid, COLOR_RED, "Р’ РІР°С€РµР№ РѕСЂРіР°РЅРёР·Р°С†РёРё СЃРµР№С‡Р°СЃ РЅРµС‚ РґРµР№СЃС‚РІСѓСЋС‰РµРіРѕ СЃРѕР±РµСЃРµРґРѕРІР°РЅРёСЏ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "В вашей организации сейчас нет действующего собеседования."), 1;
         if (gInterviewTimer != 0) KillTimer(gInterviewTimer);
         gInterviewTimer = 0;
         gInterviewActive = false;
-        SendClientMessageToAll(COLOR_BLUE, "РЎРѕР±РµСЃРµРґРѕРІР°РЅРёРµ РѕС‚РјРµРЅРµРЅРѕ." );
+        SendClientMessageToAll(COLOR_BLUE, "Собеседование отменено." );
         return 1;
     }
     if (CommandMatch(cmdtext, "/pdocs") || CommandMatch(cmdtext, "/policedocs") || CommandMatch(cmdtext, "/udost"))
     {
         if (gFaction[playerid] != FACTION_POLICE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "РќР° РґР°РЅРЅСѓСЋ РєРѕРјР°РЅРґСѓ РјРѕРіСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєРё РїРѕР»РёС†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "На данную команду могут использовать только сотрудники полиции."), 1;
         new params[32], token[16], targetid;
         GetParams(cmdtext, params, sizeof params);
         if (!GetToken(params, 0, token, sizeof token))
-            return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /pdocs [ID]"), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /pdocs [ID]"), 1;
         targetid = strval(token);
         if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid])
-            return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
         if (GetPlayerInterior(playerid) != GetPlayerInterior(targetid) || GetPlayerVirtualWorld(playerid) != GetPlayerVirtualWorld(targetid))
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РґРѕР»Р¶РЅС‹ РЅР°С…РѕРґРёС‚СЊСЃСЏ РІ РѕРґРЅРѕРј РјРµСЃС‚Рµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы должны находиться в одном месте."), 1;
         new Float:tx, Float:ty, Float:tz;
         GetPlayerPos(targetid, tx, ty, tz);
         if (!IsPlayerInRangeOfPoint(playerid, 4.0, tx, ty, tz))
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє РіСЂР°Р¶РґР°РЅРёРЅСѓ РЅР° СЂР°СЃСЃС‚РѕСЏРЅРёРµ РЅРµ Р±РѕР»РµРµ 4 РјРµС‚СЂРѕРІ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Подойдите к гражданину на расстояние не более 4 метров."), 1;
         new rankName[32], doc[192], action[144];
         GetFactionRankName(FACTION_POLICE, gFactionRank[playerid], rankName, sizeof rankName);
-        format(doc, sizeof doc, "[РџРѕР»РёС†Р№СЃРєРёРµ РґРѕРєСѓРјРµРЅС‚С‹] Р—РІР°РЅРёРµ: %s | РЎРѕС‚СЂСѓРґРЅРёРє: %s | ID: %d | РћСЂРіР°РЅ: LSPD", rankName, gName[playerid], playerid);
+        format(doc, sizeof doc, "[Полицйские документы] Звание: %s | Сотрудник: %s | ID: %d | Орган: LSPD", rankName, gName[playerid], playerid);
         SendClientMessage(targetid, COLOR_BLUE, doc);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїСЂРµРґСЉСЏРІРёР»Рё РїРѕР»РёС†Р№СЃРєРёРµ РґРѕРєСѓРјРµРЅС‚С‹.");
-        format(action, sizeof action, "* %s РїСЂРµРґСЉСЏРІР»СЏРµС‚ СЃРІРѕРё РїРѕР»РёС†Р№СЃРєРёРµ РґРѕРєСѓРјРµРЅС‚С‹.", gName[playerid]);
+        SendClientMessage(playerid, COLOR_GREEN, "Вы предъявили полицйские документы.");
+        format(action, sizeof action, "* %s предъявляет свои полицйские документы.", gName[playerid]);
         new Float:px, Float:py, Float:pz; GetPlayerPos(playerid, px, py, pz);
         for (new i = 0; i < MAX_PLAYERS; i++)
             if (IsPlayerConnected(i) && GetPlayerVirtualWorld(i) == GetPlayerVirtualWorld(playerid) && GetPlayerInterior(i) == GetPlayerInterior(playerid) && IsPlayerInRangeOfPoint(i, 10.0, px, py, pz)) SendClientMessage(i, COLOR_YELLOW, action);
@@ -6720,19 +6720,19 @@ public OnPlayerCommandText(playerid, cmdtext[])
     }
     if (CommandMatch(cmdtext, "/pursuit"))
     {
-        if ((gFaction[playerid] != FACTION_POLICE && gFaction[playerid] != FACTION_FBI) || gFactionRank[playerid] < 2) return SendClientMessage(playerid, COLOR_RED, "РќР°СЂСѓС‡РЅРёРєРё РґРѕСЃС‚СѓРїРЅС‹ LSPD/FBI СЃРѕ 2-РіРѕ СЂР°РЅРіР°."), 1;
+        if ((gFaction[playerid] != FACTION_POLICE && gFaction[playerid] != FACTION_FBI) || gFactionRank[playerid] < 2) return SendClientMessage(playerid, COLOR_RED, "Наручники доступны LSPD/FBI со 2-го ранга."), 1;
         new params[32], token[24], targetid; GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /pursuit [ID]"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /pursuit [ID]"), 1;
         targetid = strval(token);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || targetid == playerid) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
-        if (gWantedLevel[targetid] < 1) return SendClientMessage(playerid, COLOR_YELLOW, "РЈ РёРіСЂРѕРєР° РЅРµС‚ Р°РєС‚РёРІРЅРѕРіРѕ СЂРѕР·С‹СЃРєР°."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid] || targetid == playerid) return SendClientMessage(playerid, COLOR_RED, "Игрок не найден."), 1;
+        if (gWantedLevel[targetid] < 1) return SendClientMessage(playerid, COLOR_YELLOW, "У игрока нет активного розыска."), 1;
         new Float:x, Float:y, Float:z;
         if (IsPlayerInAnyVehicle(targetid)) GetVehiclePos(GetPlayerVehicleID(targetid), x, y, z);
         else GetPlayerPos(targetid, x, y, z);
         gPursuitTarget[playerid] = targetid;
         SetPlayerMapIcon(playerid, 49, x, y, z, 0, 0, MAPICON_GLOBAL);
         SetPlayerCheckpoint(playerid, x, y, z, 8.0);
-        new msg[128]; format(msg, sizeof msg, "РќР°С‡Р°С‚Рѕ РїСЂРµСЃР»РµРґРѕРІР°РЅРёРµ %s. РњРµС‚РєР° РїРѕРєР°Р·С‹РІР°РµС‚ РµРіРѕ РїРѕСЃР»РµРґРЅРµРµ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ; РїРѕРІС‚РѕСЂРёС‚Рµ /pursuit [ID] РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ.", gName[targetid]); SendClientMessage(playerid, COLOR_GREEN, msg);
+        new msg[128]; format(msg, sizeof msg, "Начато преследование %s. Метка показывает его последнее местоположение; повторите /pursuit [ID] для обновления.", gName[targetid]); SendClientMessage(playerid, COLOR_GREEN, msg);
         return 1;
     }
     if (CommandMatch(cmdtext, "/time"))
@@ -6747,7 +6747,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (CommandMatch(cmdtext, "/bank"))
     {
         new bankMsg[144];
-        format(bankMsg, sizeof bankMsg, "[Р‘РђРќРљ] РќР°Р»РёС‡РЅС‹Рµ: %d СЂСѓР±. | РќР° СЃС‡С‘С‚Рµ: %d СЂСѓР±. | /deposit [СЃСѓРјРјР°] /withdraw [СЃСѓРјРјР°] /transfer [ID] [СЃСѓРјРјР°]", gMoney[playerid], gBankMoney[playerid]);
+        format(bankMsg, sizeof bankMsg, "[БАНК] Наличные: %d руб. | На счёте: %d руб. | /deposit [сумма] /withdraw [сумма] /transfer [ID] [сумма]", gMoney[playerid], gBankMoney[playerid]);
         SendClientMessage(playerid, COLOR_GREEN, bankMsg);
         return 1;
     }
@@ -6755,45 +6755,45 @@ public OnPlayerCommandText(playerid, cmdtext[])
     {
         new params[64], token[24], amount;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /deposit [СЃСѓРјРјР°] РёР»Рё /withdraw [СЃСѓРјРјР°]"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /deposit [сумма] или /withdraw [сумма]"), 1;
         amount = strval(token);
-        if (amount <= 0 || amount > MAX_MONEY) return SendClientMessage(playerid, COLOR_RED, "РЎСѓРјРјР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїРѕР»РѕР¶РёС‚РµР»СЊРЅРѕР№."), 1;
+        if (amount <= 0 || amount > MAX_MONEY) return SendClientMessage(playerid, COLOR_RED, "Сумма должна быть положительной."), 1;
         if (CommandMatch(cmdtext, "/deposit"))
         {
-            if (gMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С…."), 1;
-            if (gBankMoney[playerid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "РџСЂРµРІС‹С€РµРЅ Р»РёРјРёС‚ Р±Р°РЅРєРѕРІСЃРєРѕРіРѕ СЃС‡С‘С‚Р°."), 1;
+            if (gMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "Недостаточно наличных."), 1;
+            if (gBankMoney[playerid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "Превышен лимит банковского счёта."), 1;
             gMoney[playerid] -= amount; gBankMoney[playerid] += amount;
         }
         else
         {
-            if (gBankMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі РЅР° Р±Р°РЅРєРѕРІСЃРєРѕРј СЃС‡С‘С‚Рµ."), 1;
-            if (gMoney[playerid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "РџСЂРµРІС‹С€РµРЅ Р»РёРјРёС‚ РЅР°Р»РёС‡РЅС‹С…."), 1;
+            if (gBankMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "Недостаточно денег на банковском счёте."), 1;
+            if (gMoney[playerid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "Превышен лимит наличных."), 1;
             gBankMoney[playerid] -= amount; gMoney[playerid] += amount;
         }
         new bankSave[192];
         format(bankSave, sizeof bankSave, "INSERT OR REPLACE INTO bank_accounts (name,balance) VALUES ('%q',%d)", gName[playerid], gBankMoney[playerid]);
         new DBResult:bs = db_query(gDatabase, bankSave); if (bs) db_free_result(bs);
         SavePlayer(playerid);
-        return SendClientMessage(playerid, COLOR_GREEN, "РћРїРµСЂР°С†РёСЏ РІС‹РїРѕР»РЅРµРЅР°. Р‘Р°Р»Р°РЅСЃ Р±Р°РЅРєР° СЃРѕС…СЂР°РЅС‘РЅ."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "Операция выполнена. Баланс банка сохранён."), 1;
     }
     if (CommandMatch(cmdtext, "/transfer"))
     {
         new params[64], tok1[24], tok2[24], targetid, amount;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, tok1, sizeof tok1) || !GetToken(params, 1, tok2, sizeof tok2)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /transfer [ID] [СЃСѓРјРјР°]"), 1;
+        if (!GetToken(params, 0, tok1, sizeof tok1) || !GetToken(params, 1, tok2, sizeof tok2)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /transfer [ID] [сумма]"), 1;
         targetid = strval(tok1); amount = strval(tok2);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "РџРѕР»СѓС‡Р°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ."), 1;
-        if (amount <= 0 || amount > MAX_MONEY) return SendClientMessage(playerid, COLOR_RED, "РќРµРєРѕСЂСЂРµРєС‚РЅР°СЏ СЃСѓРјРјР°."), 1;
-        if (gBankMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі РЅР° Р±Р°РЅРєРѕРІСЃРєРѕРј СЃС‡С‘С‚Рµ."), 1;
-        if (gBankMoney[targetid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "РЈ РїРѕР»СѓС‡Р°С‚РµР»СЏ РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ СЃС‡С‘С‚Р°."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "Получатель не найден."), 1;
+        if (amount <= 0 || amount > MAX_MONEY) return SendClientMessage(playerid, COLOR_RED, "Некорректная сумма."), 1;
+        if (gBankMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "Недостаточно денег на банковском счёте."), 1;
+        if (gBankMoney[targetid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "У получателя достигнут лимит счёта."), 1;
         gBankMoney[playerid] -= amount; gBankMoney[targetid] += amount;
         new bankSave[192];
         format(bankSave, sizeof bankSave, "INSERT OR REPLACE INTO bank_accounts (name,balance) VALUES ('%q',%d)", gName[playerid], gBankMoney[playerid]);
         new DBResult:bs = db_query(gDatabase, bankSave); if (bs) db_free_result(bs);
         format(bankSave, sizeof bankSave, "INSERT OR REPLACE INTO bank_accounts (name,balance) VALUES ('%q',%d)", gName[targetid], gBankMoney[targetid]);
         bs = db_query(gDatabase, bankSave); if (bs) db_free_result(bs);
-        new transferMsg[128]; format(transferMsg, sizeof transferMsg, "Р’Р°Рј РїРµСЂРµРІРµР»Рё %d СЂСѓР±. РѕС‚ %s.", amount, gName[playerid]); SendClientMessage(targetid, COLOR_GREEN, transferMsg);
-        format(transferMsg, sizeof transferMsg, "РџРµСЂРµРІРѕРґ %d СЂСѓР±. РёРіСЂРѕРєСѓ %s РІС‹РїРѕР»РЅРµРЅ.", amount, gName[targetid]); SendClientMessage(playerid, COLOR_GREEN, transferMsg);
+        new transferMsg[128]; format(transferMsg, sizeof transferMsg, "Вам перевели %d руб. от %s.", amount, gName[playerid]); SendClientMessage(targetid, COLOR_GREEN, transferMsg);
+        format(transferMsg, sizeof transferMsg, "Перевод %d руб. игроку %s выполнен.", amount, gName[targetid]); SendClientMessage(playerid, COLOR_GREEN, transferMsg);
         return 1;
     }
     if (CommandMatch(cmdtext, "/house"))
@@ -6810,15 +6810,15 @@ public OnPlayerCommandText(playerid, cmdtext[])
                 if (GetPlayerInterior(playerid) == 0 && GetPlayerVirtualWorld(playerid) == 0 && IsPlayerInRangeOfPoint(playerid, 5.0, hx, hy, hz))
                 {
                     new price = db_get_field_int(hr, 2);
-                    if (!owner[0]) format(msg, sizeof msg, "Р”РѕРј #%d | Р’Р»Р°РґРµР»РµС†: РЅРµС‚Сѓ | Р¦РµРЅР°: %d СЂСѓР±. | /housebuy", hid, price);
-                    else format(msg, sizeof msg, "Р”РѕРј #%d РїСЂРёРЅР°РґР»РµР¶РёС‚ %s.", hid, owner);
+                    if (!owner[0]) format(msg, sizeof msg, "Дом #%d | Владелец: нету | Цена: %d руб. | /housebuy", hid, price);
+                    else format(msg, sizeof msg, "Дом #%d принадлежит %s.", hid, owner);
                     SendClientMessage(playerid, COLOR_YELLOW, msg); found = 1; break;
                 }
                 db_next_row(hr);
             }
             db_free_result(hr);
         }
-        if (!found) SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРґРѕР№РґРё Рє РѕРґРЅРѕРјСѓ РёР· РґРѕРјРѕРІ Рё РІРІРµРґРё /house. Р”РѕРјР° РѕС‚РјРµС‡РµРЅС‹ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РІ Р›РѕСЃ-РЎР°РЅС‚РѕСЃРµ.");
+        if (!found) SendClientMessage(playerid, COLOR_YELLOW, "Подойди к одному из домов и введи /house. Дома отмечены координатами в Лос-Сантосе.");
         return 1;
     }
     if (CommandMatch(cmdtext, "/housebuy"))
@@ -6837,30 +6837,30 @@ public OnPlayerCommandText(playerid, cmdtext[])
             }
             db_free_result(hr);
         }
-        if (!hid) return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРё Рє РґРѕРјСѓ, РєРѕС‚РѕСЂС‹Р№ С…РѕС‡РµС€СЊ РєСѓРїРёС‚СЊ."), 1;
-        if (owner[0]) return SendClientMessage(playerid, COLOR_RED, "Р­С‚РѕС‚ РґРѕРј СѓР¶Рµ РїСЂРёРЅР°РґР»РµР¶РёС‚ РёРіСЂРѕРєСѓ."), 1;
+        if (!hid) return SendClientMessage(playerid, COLOR_RED, "Подойди к дому, который хочешь купить."), 1;
+        if (owner[0]) return SendClientMessage(playerid, COLOR_RED, "Этот дом уже принадлежит игроку."), 1;
         new ownedQuery[160];
         format(ownedQuery,sizeof ownedQuery,"SELECT id FROM houses WHERE owner='%q' LIMIT 1",gName[playerid]);
         new DBResult:ownedHouse=db_query(gDatabase,ownedQuery);
-        if (!ownedHouse) return SendClientMessage(playerid,COLOR_RED,"РћС€РёР±РєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С…."),1;
+        if (!ownedHouse) return SendClientMessage(playerid,COLOR_RED,"Ошибка базы данных."),1;
         new alreadyOwns=(db_num_rows(ownedHouse)>0);
         db_free_result(ownedHouse);
-        if (alreadyOwns) return SendClientMessage(playerid,COLOR_RED,"РњРѕР¶РЅРѕ РІР»Р°РґРµС‚СЊ С‚РѕР»СЊРєРѕ РѕРґРЅРёРј РґРѕРјРѕРј."),1;
-        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С… РґР»СЏ РїРѕРєСѓРїРєРё РґРѕРјР°."), 1;
+        if (alreadyOwns) return SendClientMessage(playerid,COLOR_RED,"Можно владеть только одним домом."),1;
+        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "Недостаточно наличных для покупки дома."), 1;
         gHousePending[playerid] = hid;
         gHouseCaptchaA[playerid] = random(8) + 2;
         gHouseCaptchaB[playerid] = random(8) + 2;
         new captchaText[192];
         format(captchaText, sizeof captchaText,
-            "Р”РѕРј #%d СЃС‚РѕРёС‚ %d СЂСѓР±.\nР”Р»СЏ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РїРѕРєСѓРїРєРё СЂРµС€РёС‚Рµ РїСЂРёРјРµСЂ:\n%d + %d = ?",
+            "Дом #%d стоит %d руб.\nДля подтверждения покупки решите пример:\n%d + %d = ?",
             hid, price, gHouseCaptchaA[playerid], gHouseCaptchaB[playerid]);
-        ShowPlayerDialog(playerid, DIALOG_HOUSE_CAPTCHA, DIALOG_STYLE_INPUT, "VEXORIUM | РџРѕРєСѓРїРєР° РґРѕРјР°", captchaText, "РџРѕРґС‚РІРµСЂРёС‚СЊ", "РћС‚РјРµРЅР°");
+        ShowPlayerDialog(playerid, DIALOG_HOUSE_CAPTCHA, DIALOG_STYLE_INPUT, "VEXORIUM | Покупка дома", captchaText, "Подтверить", "Отмена");
         return 1;
     }
     if (CommandMatch(cmdtext, "/houseenter"))
     {
         new DBResult:hr, hid, owner[MAX_PLAYER_NAME + 1], Float:hx, Float:hy, Float:hz, found = 0;
-        if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ СѓР¶Рµ РЅР°С…РѕРґРёС‚РµСЃСЊ РІРЅСѓС‚СЂРё Р·РґР°РЅРёСЏ."), 1;
+        if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0) return SendClientMessage(playerid, COLOR_RED, "Вы уже находитесь внутри здания."), 1;
         GetPlayerPos(playerid, hx, hy, hz); hr = db_query(gDatabase, "SELECT id,owner,x,y,z FROM houses");
         if (hr)
         {
@@ -6877,148 +6877,148 @@ public OnPlayerCommandText(playerid, cmdtext[])
             }
             db_free_result(hr);
         }
-        if (!found) return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРё Рє СЃРІРѕРµРјСѓ РґРѕРјСѓ."), 1;
+        if (!found) return SendClientMessage(playerid, COLOR_RED, "Подойди к своему дому."), 1;
         return VX_HouseEnterID(playerid, hid);
     }
     if (CommandMatch(cmdtext, "/houseexit"))
     {
-        if (!gCurrentHouse[playerid] || GetPlayerInterior(playerid) == 0) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ РЅР°С…РѕРґРёС‚РµСЃСЊ РІ РґРѕРјРµ."), 1;
+        if (!gCurrentHouse[playerid] || GetPlayerInterior(playerid) == 0) return SendClientMessage(playerid, COLOR_RED, "Вы не находитесь в доме."), 1;
         new query[128], DBResult:hr; format(query, sizeof query, "SELECT x,y,z FROM houses WHERE id=%d", gCurrentHouse[playerid]); hr = db_query(gDatabase, query);
         if (hr && db_num_rows(hr)) { SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0); SetPlayerPos(playerid, db_get_field_float(hr, 0), db_get_field_float(hr, 1), db_get_field_float(hr, 2) + 1.0); SetPlayerFacingAngle(playerid, 180.0); SetCameraBehindPlayer(playerid); }
         if (hr) db_free_result(hr); gCurrentHouse[playerid] = 0;
-        return SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё РёР· РґРѕРјР°."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "Вы вышли из дома."), 1;
     }
     if (CommandMatch(cmdtext, "/kick"))
     {
         new params[192], token[24], reason[128], targetid;
-        if (gAdmin[playerid] < 2) return SendClientMessage(playerid, COLOR_RED, "РљРёРє РґРѕСЃС‚СѓРїРµРЅ СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."), 1;
+        if (gAdmin[playerid] < 2) return SendClientMessage(playerid, COLOR_RED, "Кик доступен со 2 уровня администрации."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /kick ID РїСЂРёС‡РёРЅР°"), 1;
+        if (!GetToken(params, 0, token, sizeof token)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /kick ID причина"), 1;
         targetid = strval(token);GetParams(params,reason,sizeof reason);
-        if (!VX_Valid(targetid)) return SendClientMessage(playerid, COLOR_RED, "РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµ РІРѕС€С‘Р» РІ Р°РєРєР°СѓРЅС‚."), 1;
-        if (!strlen(reason)) format(reason,sizeof reason,"РќР°СЂСѓС€РµРЅРёРµ РїСЂР°РІРёР» СЃРµСЂРІРµСЂР°");
+        if (!VX_Valid(targetid)) return SendClientMessage(playerid, COLOR_RED, "Игрок не найден или не вошёл в аккаунт."), 1;
+        if (!strlen(reason)) format(reason,sizeof reason,"Нарушение правил сервера");
         VX_AdminKickTarget(playerid,targetid,reason);
         return 1;
     }
     if (CommandMatch(cmdtext, "/ban"))
     {
         new params[192], token[24], minutesToken[24], reason[128], targetid, minutes;
-        if (gAdmin[playerid] < 3) return SendClientMessage(playerid,COLOR_RED,"Р‘Р°РЅ РґРѕСЃС‚СѓРїРµРЅ СЃ 3 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+        if (gAdmin[playerid] < 3) return SendClientMessage(playerid,COLOR_RED,"Бан доступен с 3 уровня администрации."),1;
         GetParams(cmdtext,params,sizeof params);
         if(!GetToken(params,0,token,sizeof token) || !GetToken(params,1,minutesToken,sizeof minutesToken))
-            return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /ban ID РјРёРЅСѓС‚С‹ РїСЂРёС‡РёРЅР° (0 = РЅР°РІСЃРµРіРґР°)."),1;
+            return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /ban ID минуты причина (0 = навсегда)."),1;
         targetid=strval(token);minutes=strval(minutesToken);
         GetParams(params,reason,sizeof reason);GetParams(reason,reason,sizeof reason);
         if(!VX_Valid(targetid) || minutes<0 || minutes>525600 || strlen(reason)<3)
-            return SendClientMessage(playerid,COLOR_YELLOW,"Р¤РѕСЂРјР°С‚: /ban ID РјРёРЅСѓС‚С‹ РїСЂРёС‡РёРЅР°. РЎСЂРѕРє 0 РёР»Рё 1-525600 РјРёРЅСѓС‚."),1;
+            return SendClientMessage(playerid,COLOR_YELLOW,"Формат: /ban ID минуты причина. Срок 0 или 1-525600 минут."),1;
         VX_AdminBanTarget(playerid,targetid,minutes,reason);return 1;
     }
     if (CommandMatch(cmdtext, "/unban"))
     {
         new params[96], token[32], query[192];
-        if(gAdmin[playerid]<3) return SendClientMessage(playerid,COLOR_RED,"Р Р°Р·Р±Р°РЅ РґРѕСЃС‚СѓРїРµРЅ СЃ 3 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+        if(gAdmin[playerid]<3) return SendClientMessage(playerid,COLOR_RED,"Разбан доступен с 3 уровня администрации."),1;
         GetParams(cmdtext,params,sizeof params);
-        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /unban РќРёРє_РРіСЂРѕРєР°"),1;
+        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /unban Ник_Игрока"),1;
         format(query,sizeof query,"DELETE FROM vx_admin_bans WHERE name='%q' COLLATE NOCASE",token);
-        if(!VX_SQL(query)) return SendClientMessage(playerid,COLOR_RED,"РћС€РёР±РєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С… РїСЂРё СЂР°Р·Р±Р°РЅРµ."),1;
-        SendClientMessage(playerid,COLOR_GREEN,"Р—Р°РїРёСЃСЊ Р±Р°РЅР° СѓРґР°Р»РµРЅР°, РёРіСЂРѕРє СЃРјРѕР¶РµС‚ РІРѕР№С‚Рё РїСЂРё СЃР»РµРґСѓСЋС‰РµРј РїРѕРґРєР»СЋС‡РµРЅРёРё.");return 1;
+        if(!VX_SQL(query)) return SendClientMessage(playerid,COLOR_RED,"Ошибка базы данных при разбане."),1;
+        SendClientMessage(playerid,COLOR_GREEN,"Запись бана удалена, игрок сможет войти при следующем подключении.");return 1;
     }
     if (CommandMatch(cmdtext, "/warn"))
     {
         new params[192],token[24],reason[128],targetid;
-        if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РґРѕСЃС‚СѓРїРЅРѕ СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+        if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"Предупреждение доступно со 2 уровня администрации."),1;
         GetParams(cmdtext,params,sizeof params);
-        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /warn ID РїСЂРёС‡РёРЅР°"),1;
+        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /warn ID причина"),1;
         targetid=strval(token);GetParams(params,reason,sizeof reason);GetParams(reason,reason,sizeof reason);
-        if(!VX_Valid(targetid) || strlen(reason)<3) return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /warn ID РїСЂРёС‡РёРЅР°"),1;
+        if(!VX_Valid(targetid) || strlen(reason)<3) return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /warn ID причина"),1;
         VX_AdminWarnTarget(playerid,targetid,reason);return 1;
     }
     if (CommandMatch(cmdtext, "/mute"))
     {
         new params[192],token[24],minutesToken[24],reason[128],targetid,minutes;
-        if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РњСѓС‚ РґРѕСЃС‚СѓРїРµРЅ СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+        if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"Мут доступен со 2 уровня администрации."),1;
         GetParams(cmdtext,params,sizeof params);
         if(!GetToken(params,0,token,sizeof token) || !GetToken(params,1,minutesToken,sizeof minutesToken))
-            return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /mute ID РјРёРЅСѓС‚С‹ РїСЂРёС‡РёРЅР°"),1;
+            return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /mute ID минуты причина"),1;
         targetid=strval(token);minutes=strval(minutesToken);GetParams(params,reason,sizeof reason);GetParams(reason,reason,sizeof reason);
         if(!VX_Valid(targetid) || minutes<1 || minutes>1440 || strlen(reason)<3 || !VX_AdminCanAct(playerid,targetid,2))
-            return SendClientMessage(playerid,COLOR_YELLOW,"Р¤РѕСЂРјР°С‚: /mute ID 1-1440 РїСЂРёС‡РёРЅР°; РЅРµР»СЊР·СЏ РјСѓС‚РёС‚СЊ СЂР°РІРЅРѕРіРѕ/СЃС‚Р°СЂС€РµРіРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°."),1;
+            return SendClientMessage(playerid,COLOR_YELLOW,"Формат: /mute ID 1-1440 причина; нельзя мутить равного/старшего администратора."),1;
         gAdminMuteUntil[targetid]=gettime()+minutes*60;format(gAdminMuteReason[targetid],96,"%s",reason);
-        new muteMsg[180];format(muteMsg,sizeof muteMsg,"[MUTE] %s РїРѕР»СѓС‡РёР» РјСѓС‚ РЅР° %d РјРёРЅ. РџСЂРёС‡РёРЅР°: %s",gName[targetid],minutes,reason);
+        new muteMsg[180];format(muteMsg,sizeof muteMsg,"[MUTE] %s получил мут на %d мин. Причина: %s",gName[targetid],minutes,reason);
         SendClientMessageToAll(COLOR_ORANGE,muteMsg);return 1;
     }
     if (CommandMatch(cmdtext, "/unmute"))
     {
         new params[48],token[24],targetid;
-        if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РЎРЅСЏС‚СЊ РјСѓС‚ РјРѕР¶РµС‚ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёСЏ СЃРѕ 2 СѓСЂРѕРІРЅСЏ."),1;
+        if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"Снять мут может администрация со 2 уровня."),1;
         GetParams(cmdtext,params,sizeof params);
-        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /unmute ID"),1;
+        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /unmute ID"),1;
         targetid=strval(token);
-        if(!VX_Valid(targetid)) return SendClientMessage(playerid,COLOR_RED,"РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."),1;
-        if(!VX_AdminCanAct(playerid,targetid,2)) return SendClientMessage(playerid,COLOR_RED,"РќРµР»СЊР·СЏ СЃРЅСЏС‚СЊ РјСѓС‚ Сѓ СЂР°РІРЅРѕРіРѕ/СЃС‚Р°СЂС€РµРіРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°."),1;
+        if(!VX_Valid(targetid)) return SendClientMessage(playerid,COLOR_RED,"Игрок не найден."),1;
+        if(!VX_AdminCanAct(playerid,targetid,2)) return SendClientMessage(playerid,COLOR_RED,"Нельзя снять мут у равного/старшего администратора."),1;
         gAdminMuteUntil[targetid]=0;gAdminMuteReason[targetid][0]='\0';
-        SendClientMessage(targetid,COLOR_GREEN,"РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ СЃРЅСЏР» СЃ РІР°СЃ РјСѓС‚.");SendClientMessage(playerid,COLOR_GREEN,"РњСѓС‚ СЃРЅСЏС‚.");return 1;
+        SendClientMessage(targetid,COLOR_GREEN,"Администратор снял с вас мут.");SendClientMessage(playerid,COLOR_GREEN,"Мут снят.");return 1;
     }
     if (CommandMatch(cmdtext, "/goto"))
     {
         new params[48],token[24],targetid;Float:x,Float:y,Float:z;
-        if(gAdmin[playerid]<1) return SendClientMessage(playerid,COLOR_RED,"РўРµР»РµРїРѕСЂС‚Р°С†РёСЏ РґРѕСЃС‚СѓРїРЅР° Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
-        if(gVXSpec[playerid]!=INVALID_PLAYER_ID) return SendClientMessage(playerid,COLOR_YELLOW,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ /specoff."),1;
+        if(gAdmin[playerid]<1) return SendClientMessage(playerid,COLOR_RED,"Телепортация доступна администрации."),1;
+        if(gVXSpec[playerid]!=INVALID_PLAYER_ID) return SendClientMessage(playerid,COLOR_YELLOW,"Сначала завершите /specoff."),1;
         GetParams(cmdtext,params,sizeof params);
-        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /goto ID"),1;
-        targetid=strval(token);if(!VX_Valid(targetid) || targetid==playerid) return SendClientMessage(playerid,COLOR_RED,"РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."),1;
+        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /goto ID"),1;
+        targetid=strval(token);if(!VX_Valid(targetid) || targetid==playerid) return SendClientMessage(playerid,COLOR_RED,"Игрок не найден."),1;
         GetPlayerPos(targetid,x,y,z);SetPlayerInterior(playerid,GetPlayerInterior(targetid));SetPlayerVirtualWorld(playerid,GetPlayerVirtualWorld(targetid));
         SetPlayerPos(playerid,x+1.0,y,z);SetPlayerFacingAngle(playerid,180.0);SetCameraBehindPlayer(playerid);
-        SendClientMessage(playerid,COLOR_GREEN,"Р’С‹ С‚РµР»РµРїРѕСЂС‚РёСЂРѕРІР°РЅС‹ Рє РёРіСЂРѕРєСѓ.");return 1;
+        SendClientMessage(playerid,COLOR_GREEN,"Вы телепортированы к игроку.");return 1;
     }
     if (CommandMatch(cmdtext, "/gethere"))
     {
         new params[48],token[24],targetid;Float:x,Float:y,Float:z;
-        if(gAdmin[playerid]<3) return SendClientMessage(playerid,COLOR_RED,"/gethere РґРѕСЃС‚СѓРїРЅР° СЃ 3 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+        if(gAdmin[playerid]<3) return SendClientMessage(playerid,COLOR_RED,"/gethere доступна с 3 уровня администрации."),1;
         GetParams(cmdtext,params,sizeof params);
-        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /gethere ID"),1;
-        targetid=strval(token);if(!VX_AdminCanAct(playerid,targetid,3)) return SendClientMessage(playerid,COLOR_RED,"РќРµР»СЊР·СЏ РїРµСЂРµРјРµСЃС‚РёС‚СЊ СЌС‚РѕРіРѕ РёРіСЂРѕРєР°."),1;
-        if(gIsJailed[targetid] || gHandcuffed[targetid] || gVXHospital[targetid]) return SendClientMessage(playerid,COLOR_RED,"РќРµР»СЊР·СЏ РїРµСЂРµРјРµСЃС‚РёС‚СЊ РёРіСЂРѕРєР° РІ С‚СЋСЂСЊРјРµ, РЅР°СЂСѓС‡РЅРёРєР°С… РёР»Рё Р±РѕР»СЊРЅРёС†Рµ."),1;
+        if(!GetToken(params,0,token,sizeof token)) return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /gethere ID"),1;
+        targetid=strval(token);if(!VX_AdminCanAct(playerid,targetid,3)) return SendClientMessage(playerid,COLOR_RED,"Нельзя переместить этого игрока."),1;
+        if(gIsJailed[targetid] || gHandcuffed[targetid] || gVXHospital[targetid]) return SendClientMessage(playerid,COLOR_RED,"Нельзя переместить игрока в тюрьме, наручниках или больнице."),1;
         GetPlayerPos(playerid,x,y,z);SetPlayerInterior(targetid,GetPlayerInterior(playerid));SetPlayerVirtualWorld(targetid,GetPlayerVirtualWorld(playerid));
         SetPlayerPos(targetid,x+1.0,y,z);SetPlayerFacingAngle(targetid,180.0);SetCameraBehindPlayer(targetid);
-        SendClientMessage(targetid,COLOR_YELLOW,"РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РїРµСЂРµРјРµСЃС‚РёР» РІР°СЃ Рє СЃРµР±Рµ.");SendClientMessage(playerid,COLOR_GREEN,"РРіСЂРѕРє РїРµСЂРµРјРµС‰С‘РЅ Рє РІР°Рј.");return 1;
+        SendClientMessage(targetid,COLOR_YELLOW,"Администратор переместил вас к себе.");SendClientMessage(playerid,COLOR_GREEN,"Игрок перемещён к вам.");return 1;
     }
     if (CommandMatch(cmdtext, "/setadmin"))
     {
         new params[48],token[24],levelToken[16],targetid,level,query[192];
-        if(!IsOwner(playerid)) return SendClientMessage(playerid,COLOR_RED,"РќР°Р·РЅР°С‡Р°С‚СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёСЋ РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ РІР»Р°РґРµР»РµС† СЃРµСЂРІРµСЂР°."),1;
+        if(!IsOwner(playerid)) return SendClientMessage(playerid,COLOR_RED,"Назначать администрацию может только владелец сервера."),1;
         GetParams(cmdtext,params,sizeof params);
         if(!GetToken(params,0,token,sizeof token) || !GetToken(params,1,levelToken,sizeof levelToken))
-            return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /setadmin ID [0-4]"),1;
+            return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /setadmin ID [0-4]"),1;
         targetid=strval(token);level=strval(levelToken);
         if(!VX_Valid(targetid) || IsOwner(targetid) || level<0 || level>4)
-            return SendClientMessage(playerid,COLOR_RED,"РЈРєР°Р¶РёС‚Рµ Р°РєС‚РёРІРЅРѕРіРѕ РёРіСЂРѕРєР° (РЅРµ РІР»Р°РґРµР»СЊС†Р°) Рё СѓСЂРѕРІРµРЅСЊ 0-4."),1;
+            return SendClientMessage(playerid,COLOR_RED,"Укажите активного игрока (не владельца) и уровень 0-4."),1;
         gAdmin[targetid]=level;format(query,sizeof query,"UPDATE accounts SET admin=%d WHERE name='%q'",level,gName[targetid]);
-        if(!VX_SQL(query)) return SendClientMessage(playerid,COLOR_RED,"РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ СѓСЂРѕРІРµРЅСЊ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
-        format(query,sizeof query,"Р’Р°С€ СѓСЂРѕРІРµРЅСЊ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё РёР·РјРµРЅС‘РЅ РЅР° %d.",level);SendClientMessage(targetid,COLOR_ORANGE,query);
-        SendClientMessage(playerid,COLOR_GREEN,"РЈСЂРѕРІРµРЅСЊ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё СЃРѕС…СЂР°РЅС‘РЅ.");return 1;
+        if(!VX_SQL(query)) return SendClientMessage(playerid,COLOR_RED,"Не удалось сохранить уровень администрации."),1;
+        format(query,sizeof query,"Ваш уровень администрации изменён на %d.",level);SendClientMessage(targetid,COLOR_ORANGE,query);
+        SendClientMessage(playerid,COLOR_GREEN,"Уровень администрации сохранён.");return 1;
     }
     if (CommandMatch(cmdtext, "/adminhelp"))
     {
         new body[1200];body[0]='\0';
-        strcat(body,"РЈСЂРѕРІРµРЅСЊ 1: /a /reports /rtake /reply /rclose /spec /specmenu /specoff /goto\n",sizeof body);
-        strcat(body,"РЈСЂРѕРІРµРЅСЊ 2: /kick /jail /jailtime /unjail /warn /mute /unmute\n",sizeof body);
-        strcat(body,"РЈСЂРѕРІРµРЅСЊ 3: /ban /unban /gethere; РІ /spec РµСЃС‚СЊ Р±Р°РЅ, РєРёРє, РљРџР—, РјСѓС‚ Рё РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ\n",sizeof body);
-        strcat(body,"Р’Р»Р°РґРµР»РµС†: /setadmin ID [0-4], /setlevel ID [1-1000], /payday, /myadminlevel 5\n\n",sizeof body);
-        strcat(body,"РЎСЂРѕРє Р±Р°РЅР°: 0 = РЅР°РІСЃРµРіРґР°. Р‘Р°РЅС‹ СЃРѕС…СЂР°РЅСЏСЋС‚СЃСЏ РїРѕСЃР»Рµ РїРµСЂРµР·Р°РїСѓСЃРєР° СЃРµСЂРІРµСЂР°.",sizeof body);
-        return ShowPlayerDialog(playerid,DIALOG_HELP,DIALOG_STYLE_MSGBOX,"VEXORIUM | РљРѕРјР°РЅРґС‹ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё",body,"РћРљ","");
+        strcat(body,"Уровень 1: /a /reports /rtake /reply /rclose /spec /specmenu /specoff /goto\n",sizeof body);
+        strcat(body,"Уровень 2: /kick /jail /jailtime /unjail /warn /mute /unmute\n",sizeof body);
+        strcat(body,"Уровень 3: /ban /unban /gethere; в /spec есть бан, кик, КПЗ, мут и предупреждение\n",sizeof body);
+        strcat(body,"Владелец: /setadmin ID [0-4], /setlevel ID [1-1000], /payday, /myadminlevel 5\n\n",sizeof body);
+        strcat(body,"Срок бана: 0 = навсегда. Баны сохраняются после перезапуска сервера.",sizeof body);
+        return ShowPlayerDialog(playerid,DIALOG_HELP,DIALOG_STYLE_MSGBOX,"VEXORIUM | Команды администрации",body,"ОК","");
     }
     if (CommandMatch(cmdtext, "/a"))
     {
         new params[128], msg[160];
-        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."), 1;
+        if (gAdmin[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "Недостаточно прав."), 1;
         GetParams(cmdtext, params, sizeof params);
-        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /a [СЃРѕРѕР±С‰РµРЅРёРµ]"), 1;
-        format(msg, sizeof msg, "[РђРґРјРёРЅ-С‡Р°С‚] %s: %s", gName[playerid], params);
+        if (!strlen(params)) return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /a [сообщение]"), 1;
+        format(msg, sizeof msg, "[Админ-чат] %s: %s", gName[playerid], params);
         for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && gAdmin[i] > 0) SendClientMessage(i, COLOR_ORANGE, msg);
         return 1;
     }
-    SendClientMessage(playerid, COLOR_YELLOW, "РќРµРёР·РІРµСЃС‚РЅР°СЏ РєРѕРјР°РЅРґР°. РќР°РїРёС€РёС‚Рµ /help.");
+    SendClientMessage(playerid, COLOR_YELLOW, "Неизвестная команда. Напишите /help.");
     return 1;
 }
 
@@ -7029,27 +7029,27 @@ stock cmdtext_licbuy(playerid, const type[])
     if (!strcmp(type, "auto", true))
     {
         if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 8.0, 362.4587, 174.0056, 1008.3828))
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє СЃС‚РѕР№РєРµ Р»РёС†РµРЅР·РёР№ РІ РјСЌСЂРёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Подойдите к стойке лицензий в мэрии."), 1;
         if (gLicenseDriver[playerid])
-            return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РІРѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР°."), 1;
+            return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть водительские права."), 1;
         if (!gDrivingExamPassed[playerid])
-            return SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° СЃРґР°Р№С‚Рµ РјР°СЂС€СЂСѓС‚ РІ Р°РІС‚РѕС€РєРѕР»Рµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Сначала сдайте маршрут в автошколе."), 1;
         gLicenseDriver[playerid] = 1;
         gDrivingExamPassed[playerid] = 0;
         SavePlayer(playerid);
-        return SendClientMessage(playerid, COLOR_GREEN, "Р’РѕРґРёС‚РµР»СЊСЃРєРёРµ РїСЂР°РІР° РІС‹РґР°РЅС‹! РћРїР»Р°С‚Р° СѓР¶Рµ РІРєР»СЋС‡РµРЅР° РІ СЌРєР·Р°РјРµРЅ."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "Водительские права выданы! Оплата уже включена в экзамен."), 1;
     }
-    if (!strcmp(type, "weapon", true)) { licenseType = 2; price = 30000; if (gLicenseWeapon[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° РѕСЂСѓР¶РёРµ."), 1; }
-    else if (!strcmp(type, "boat", true)) { licenseType = 3; price = 20000; if (gLicenseBoat[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° Р»РѕРґРєСѓ."), 1; }
-    else if (!strcmp(type, "air", true)) { licenseType = 4; price = 40000; if (gLicenseAir[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р»РёС†РµРЅР·РёСЏ РЅР° СЃР°РјРѕР»С‘С‚."), 1; }
+    if (!strcmp(type, "weapon", true)) { licenseType = 2; price = 30000; if (gLicenseWeapon[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть лицензия на оружие."), 1; }
+    else if (!strcmp(type, "boat", true)) { licenseType = 3; price = 20000; if (gLicenseBoat[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть лицензия на лодку."), 1; }
+    else if (!strcmp(type, "air", true)) { licenseType = 4; price = 40000; if (gLicenseAir[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть лицензия на самолёт."), 1; }
     else return 1;
-    if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі РґР»СЏ РїРѕРєСѓРїРєРё Р»РёС†РµРЅР·РёРё."), 1;
+    if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "Недостаточно денег для покупки лицензии."), 1;
     gMoney[playerid] -= price; GivePlayerMoney(playerid, -price);
     if (licenseType == 2) gLicenseWeapon[playerid] = 1;
     else if (licenseType == 3) gLicenseBoat[playerid] = 1;
     else gLicenseAir[playerid] = 1;
     SavePlayer(playerid);
-    SendClientMessage(playerid, COLOR_GREEN, "РџРѕР·РґСЂР°РІР»СЏРµРј! Р›РёС†РµРЅР·РёСЏ СѓСЃРїРµС€РЅРѕ РїСЂРёРѕР±СЂРµС‚РµРЅР°.");
+    SendClientMessage(playerid, COLOR_GREEN, "Поздравляем! Лицензия успешно приобретена.");
     return 1;
 }
 
@@ -7065,52 +7065,52 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if(!response) return 1;
         new targetid=gVXSpec[playerid];
         if(!VX_Admin(playerid) || !VX_Valid(targetid))
-            return SendClientMessage(playerid,COLOR_RED,"РќР°Р±Р»СЋРґРµРЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ РёР»Рё С†РµР»СЊ РѕС‚РєР»СЋС‡РёР»Р°СЃСЊ."),1;
+            return SendClientMessage(playerid,COLOR_RED,"Наблюдение завершено или цель отключилась."),1;
         switch(listitem)
         {
             case 0:
             {
-                if(gAdmin[playerid]<3) return SendClientMessage(playerid,COLOR_RED,"Р‘Р°РЅ РґРѕСЃС‚СѓРїРµРЅ СЃ 3 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+                if(gAdmin[playerid]<3) return SendClientMessage(playerid,COLOR_RED,"Бан доступен с 3 уровня администрации."),1;
                 gVXSpecAction[playerid]=1;
-                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Р‘Р°РЅ РёРіСЂРѕРєР°","Р’РІРµРґРёС‚Рµ РјРёРЅСѓС‚С‹ Рё РїСЂРёС‡РёРЅСѓ. 0 = РЅР°РІСЃРµРіРґР°.\nРџСЂРёРјРµСЂ: 60 Р§РёС‚С‹","Р—Р°Р±Р°РЅРёС‚СЊ","РќР°Р·Р°Рґ");
+                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Бан игрока","Введите минуты и причину. 0 = навсегда.\nПример: 60 Читы","Забанить","Назад");
             }
             case 1:
             {
-                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РљРёРє РґРѕСЃС‚СѓРїРµРЅ СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"Кик доступен со 2 уровня администрации."),1;
                 gVXSpecAction[playerid]=2;
-                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | РљРёРє РёРіСЂРѕРєР°","Р’РІРµРґРёС‚Рµ РїСЂРёС‡РёРЅСѓ РѕС‚РєР»СЋС‡РµРЅРёСЏ:","РљРёРєРЅСѓС‚СЊ","РќР°Р·Р°Рґ");
+                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Кик игрока","Введите причину отключения:","Кикнуть","Назад");
             }
             case 2:
             {
-                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РљРџР— РґРѕСЃС‚СѓРїРЅРѕ СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"КПЗ доступно со 2 уровня администрации."),1;
                 gVXSpecAction[playerid]=3;
-                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | РџРѕСЃР°РґРёС‚СЊ РІ РљРџР—","Р’РІРµРґРёС‚Рµ РїСЂРёС‡РёРЅСѓ Р·Р°РєР»СЋС‡РµРЅРёСЏ:","РџРѕСЃР°РґРёС‚СЊ","РќР°Р·Р°Рґ");
+                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Посадить в КПЗ","Введите причину заключения:","Посадить","Назад");
             }
             case 3:
             {
-                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РћСЃРІРѕР±РѕР¶РґРµРЅРёРµ РґРѕСЃС‚СѓРїРЅРѕ СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
-                if(!gIsJailed[targetid]) return SendClientMessage(playerid,COLOR_YELLOW,"РРіСЂРѕРє РЅРµ РЅР°С…РѕРґРёС‚СЃСЏ РІ РљРџР—."),1;
+                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"Освобождение доступно со 2 уровня администрации."),1;
+                if(!gIsJailed[targetid]) return SendClientMessage(playerid,COLOR_YELLOW,"Игрок не находится в КПЗ."),1;
                 RP_Release(targetid,playerid,"Admin release from spec panel");
                 return VX_ShowSpecActions(playerid);
             }
             case 4:
             {
-                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РґРѕСЃС‚СѓРїРЅРѕ СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё."),1;
+                if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"Предупреждение доступно со 2 уровня администрации."),1;
                 gVXSpecAction[playerid]=4;
-                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ","Р’РІРµРґРёС‚Рµ РїСЂРёС‡РёРЅСѓ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ:","Р’С‹РґР°С‚СЊ","РќР°Р·Р°Рґ");
+                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Предупреждение","Введите причину предупреждения:","Выдать","Назад");
             }
             case 5:
             {
                 if(gAdmin[playerid]<2 || !VX_AdminCanAct(playerid,targetid,2))
-                    return SendClientMessage(playerid,COLOR_RED,"РњСѓС‚ С‚СЂРµР±СѓРµС‚ 2 СѓСЂРѕРІРµРЅСЊ; РЅРµР»СЊР·СЏ РјСѓС‚РёС‚СЊ СЃРµР±СЏ, РІР»Р°РґРµР»СЊС†Р° РёР»Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° СЂР°РІРЅРѕРіРѕ/СЃС‚Р°СЂС€РµРіРѕ СѓСЂРѕРІРЅСЏ."),1;
+                    return SendClientMessage(playerid,COLOR_RED,"Мут требует 2 уровень; нельзя мутить себя, владельца или администратора равного/старшего уровня."),1;
                 gVXSpecAction[playerid]=5;
-                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | РњСѓС‚ РёРіСЂРѕРєР°","Р’РІРµРґРёС‚Рµ РјРёРЅСѓС‚С‹ Рё РїСЂРёС‡РёРЅСѓ. РџСЂРёРјРµСЂ: 10 Р¤Р»СѓРґ","Р’С‹РґР°С‚СЊ РјСѓС‚","РќР°Р·Р°Рґ");
+                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Мут игрока","Введите минуты и причину. Пример: 10 Флуд","Выдать мут","Назад");
             }
             case 6:
             {
                 new Float:hp,Float:armour,info[256];
                 GetPlayerHealth(targetid,hp);GetPlayerArmour(targetid,armour);
-                format(info,sizeof info,"Р¦РµР»СЊ: %s [%d]\nРЈСЂРѕРІРµРЅСЊ РїРµСЂСЃРѕРЅР°Р¶Р°: %d\nРђРґРјРёРЅ-СѓСЂРѕРІРµРЅСЊ: %d\nР—РґРѕСЂРѕРІСЊРµ: %.1f | Р‘СЂРѕРЅСЏ: %.1f\nР РѕР·С‹СЃРє: %d / 6\nРњРёСЂ: %d | РРЅС‚РµСЂСЊРµСЂ: %d",
+                format(info,sizeof info,"Цель: %s [%d]\nУровень персонажа: %d\nАдмин-уровень: %d\nЗдоровье: %.1f | Броня: %.1f\nРозыск: %d / 6\nМир: %d | Интерьер: %d",
                     gName[targetid],targetid,gLevel[targetid],gAdmin[targetid],hp,armour,gWantedLevel[targetid],GetPlayerVirtualWorld(targetid),GetPlayerInterior(targetid));
                 SendClientMessage(playerid,COLOR_ORANGE,info);
                 return VX_ShowSpecActions(playerid);
@@ -7130,7 +7130,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         {
             GetToken(clean,0,token,sizeof token);minutes=strval(token);GetParams(clean,rest,sizeof rest);
             if(!token[0] || minutes<0 || minutes>525600 || strlen(rest)<3)
-                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Р‘Р°РЅ РёРіСЂРѕРєР°","Р¤РѕСЂРјР°С‚: РјРёРЅСѓС‚С‹ РїСЂРёС‡РёРЅР°. 0 = РЅР°РІСЃРµРіРґР°.","Р—Р°Р±Р°РЅРёС‚СЊ","РќР°Р·Р°Рґ");
+                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Бан игрока","Формат: минуты причина. 0 = навсегда.","Забанить","Назад");
             VX_AdminBanTarget(playerid,targetid,minutes,rest);
             gVXSpecAction[playerid]=0;return 1;
         }
@@ -7141,21 +7141,21 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             minutes=strval(muteMinutesToken);
             GetParams(clean,muteReason,sizeof muteReason);
             if(minutes<1 || minutes>1440 || strlen(muteReason)<3 || !VX_AdminCanAct(playerid,targetid,2))
-                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | РњСѓС‚ РёРіСЂРѕРєР°","Р¤РѕСЂРјР°С‚: РјРёРЅСѓС‚С‹ РїСЂРёС‡РёРЅР°. РЎСЂРѕРє 1-1440 РјРёРЅСѓС‚.","Р’С‹РґР°С‚СЊ РјСѓС‚","РќР°Р·Р°Рґ");
+                return VX_Show(playerid,DIALOG_ADMIN_SPEC_INPUT,DIALOG_STYLE_INPUT,"VEXORIUM | Мут игрока","Формат: минуты причина. Срок 1-1440 минут.","Выдать мут","Назад");
             gAdminMuteUntil[targetid]=gettime()+minutes*60;
             format(gAdminMuteReason[targetid],96,"%s",muteReason);
             new muteMessage[180];
-            format(muteMessage,sizeof muteMessage,"[MUTE] %s РїРѕР»СѓС‡РёР» РјСѓС‚ РЅР° %d РјРёРЅ. РџСЂРёС‡РёРЅР°: %s",gName[targetid],minutes,muteReason);
+            format(muteMessage,sizeof muteMessage,"[MUTE] %s получил мут на %d мин. Причина: %s",gName[targetid],minutes,muteReason);
             SendClientMessageToAll(COLOR_ORANGE,muteMessage);
-            SendClientMessage(targetid,COLOR_RED,"РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РІС‹РґР°Р» РІР°Рј РјСѓС‚.");
+            SendClientMessage(targetid,COLOR_RED,"Администратор выдал вам мут.");
             gVXSpecAction[playerid]=0;
             return VX_ShowSpecActions(playerid);
         }
-        if(strlen(clean)<3) return SendClientMessage(playerid,COLOR_YELLOW,"РЈРєР°Р¶РёС‚Рµ РїСЂРёС‡РёРЅСѓ РЅРµ РєРѕСЂРѕС‡Рµ 3 СЃРёРјРІРѕР»РѕРІ."),VX_ShowSpecActions(playerid);
+        if(strlen(clean)<3) return SendClientMessage(playerid,COLOR_YELLOW,"Укажите причину не короче 3 символов."),VX_ShowSpecActions(playerid);
         if(gVXSpecAction[playerid]==2) { VX_AdminKickTarget(playerid,targetid,clean); gVXSpecAction[playerid]=0; return 1; }
         if(gVXSpecAction[playerid]==3)
         {
-            if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."),1;
+            if(gAdmin[playerid]<2) return SendClientMessage(playerid,COLOR_RED,"Недостаточно прав."),1;
             RP_StartJail(playerid,targetid,RP_JAIL_DEFAULT,clean,1);gVXSpecAction[playerid]=0;
             if(VX_Valid(targetid)) return VX_ShowSpecActions(playerid);
             return 1;
@@ -7169,12 +7169,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (!response || hid < 1 || hid > VX_HOUSE_COUNT)
         {
             gHousePending[playerid] = 0;
-            return SendClientMessage(playerid, COLOR_YELLOW, "РџРѕРєСѓРїРє РґРѕРјР° РѕС‚РјРµРЅРµРЅР°."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "Покупк дома отменена."), 1;
         }
         if (strval(inputtext) != gHouseCaptchaA[playerid] + gHouseCaptchaB[playerid])
         {
             gHousePending[playerid] = 0;
-            return SendClientMessage(playerid, COLOR_RED, "РќРµРІРµСЂРЅС‹Р№ РѕС‚РІРµС‚. РџРѕРїСЂРѕР±СѓР№С‚Рµ РєСѓРїРёС‚СЊ РґРѕРј РµС‰С‘ СЂР°Р·."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Неверный ответ. Попробуйте купить дом ещё раз."), 1;
         }
         return VX_HouseCompletePurchase(playerid, hid);
     }
@@ -7182,13 +7182,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     {
         new inviter = gOrgInviteFrom[playerid];
         gOrgInviteFrom[playerid] = INVALID_PLAYER_ID;
-        if (!response) return SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РѕС‚РєР°Р·Р°Р»РёСЃСЊ РѕС‚ РїСЂРёРіР»Р°С€РµРЅРёСЏ РІ РѕСЂРіР°РЅРёР·Р°С†РёСЋ."), 1;
+        if (!response) return SendClientMessage(playerid, COLOR_YELLOW, "Вы отказались от приглашения в организацию."), 1;
         if (inviter < 0 || inviter >= MAX_PLAYERS || !IsPlayerConnected(inviter) || !gLogged[inviter] || gFaction[inviter] == FACTION_NONE || gFactionRank[inviter] < 8 || gFaction[playerid] != FACTION_NONE || !VX_Near(playerid, inviter, 8.0) || !IsInOwnOrgInterior(inviter))
-            return SendClientMessage(playerid, COLOR_RED, "РџСЂРёРіР»Р°С€РµРЅРёРµ СѓСЃС‚Р°СЂРµР»Рѕ. РџРѕРїСЂРѕСЃРёС‚Рµ СЂСѓРєРѕРІРѕРґСЃС‚РІРѕ РѕС‚РїСЂР°РІРёС‚СЊ РЅРѕРІРѕРµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Приглашение устарело. Попросите руководство отправить новое."), 1;
         gFaction[playerid] = gFaction[inviter]; gFactionRank[playerid] = 1;
         SetPlayerSkin(playerid, VX_RespawnSkin(playerid)); SavePlayer(playerid); UpdatePlayerRoleColor(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїСЂРёРЅСЏС‚С‹ РІ РѕСЂРіР°РЅРёР·Р°С†РёСЋ. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /org Рё /orgmembers.");
-        SendClientMessage(inviter, COLOR_GREEN, "РРіСЂРѕРє РїСЂРёРЅСЏР» РїСЂРёРіР»Р°С€РµРЅРёРµ РІ РѕСЂРіР°РЅРёР·Р°С†РёСЋ.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы приняты в организацию. Используйте /org и /orgmembers.");
+        SendClientMessage(inviter, COLOR_GREEN, "Игрок принял приглашение в организацию.");
         return 1;
     }
     if(dialogid==DIALOG_CLOTHES || dialogid==DIALOG_CLOTHES_CONFIRM)
@@ -7201,14 +7201,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if(dialogid==DIALOG_CLOTHES)
         {
             if(listitem<0 || listitem>=VX_CLOTHES_COUNT || !VX_ClothesCanUse(playerid))
-                return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] РџСЂРёРјРµСЂРєР° РЅРµРґРѕСЃС‚СѓРїРЅР°. РџСЂРѕРІРµСЂСЊС‚Рµ СЂР°СЃРїРѕР»РѕР¶РµРЅРёРµ Рё С„РѕСЂРјСѓ."),1;
+                return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] Примерка недоступна. Проверьте расположение и форму."),1;
             gVXClothesBefore[playerid]=GetPlayerSkin(playerid);
             gVXClothesPreview[playerid]=listitem;
             SetPlayerSkin(playerid,gVXClothesModel[listitem]);
             new confirm[160];
-            format(confirm,sizeof confirm,"РЎС‚РёР»СЊ: %s\nРЎРєРёРЅ: %d\nР¦РµРЅР°: %d СЂСѓР±.\n\nРљСѓРїРёС‚СЊ СЌС‚РѕС‚ РєРѕРјРїР»РµРєС‚?",
+            format(confirm,sizeof confirm,"Стиль: %s\nСкин: %d\nЦена: %d руб.\n\nКупить этот комплект?",
                 gVXClothesLabel[listitem],gVXClothesModel[listitem],gVXClothesPrice[listitem]);
-            ShowPlayerDialog(playerid,DIALOG_CLOTHES_CONFIRM,DIALOG_STYLE_MSGBOX,"VEXORIUM | РџР РРњР•Р РљРђ",confirm,"РљСѓРїРёС‚СЊ","РћС‚РјРµРЅР°");
+            ShowPlayerDialog(playerid,DIALOG_CLOTHES_CONFIRM,DIALOG_STYLE_MSGBOX,"VEXORIUM | ПРИМЕРКА",confirm,"Купить","Отмена");
             return 1;
         }
         new index=gVXClothesPreview[playerid];
@@ -7216,7 +7216,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if(!VX_ClothesNear(playerid) || !VX_ClothesCanUse(playerid))
         {
             VX_ClothesCancel(playerid);
-            return SendClientMessage(playerid,COLOR_RED,"[РћР”Р•Р–Р”Рђ] РџРѕРєСѓРїРєР° РѕС‚РјРµРЅРµРЅР°: РїРѕРєРёРЅСѓС‚ РјР°РіР°Р·РёРЅ РёР»Рё РЅР°РґРµС‚Р° С„РѕСЂРјР°."),1;
+            return SendClientMessage(playerid,COLOR_RED,"[ОДЕЖДА] Покупка отменена: покинут магазин или надета форма."),1;
         }
         if(!VX_ClothesBuy(playerid,index))VX_ClothesCancel(playerid);
         return 1;
@@ -7242,98 +7242,98 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (!response) return 1;
         if (listitem == 0)
         {
-            if (gMedkits[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[INV] РЈ РІР°СЃ РЅРµС‚ Р°РїС‚РµС‡РµРє."), 1;
+            if (gMedkits[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[INV] У вас нет аптечек."), 1;
             new Float:hp; GetPlayerHealth(playerid, hp);
-            if (hp >= 100.0) return SendClientMessage(playerid, COLOR_YELLOW, "[INV] Р—РґРѕСЂРѕРІСЊРµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРѕ РЅР° 100%."), 1;
-            gMedkits[playerid]--; SetPlayerHealth(playerid, 100.0); SavePlayer(playerid); SendClientMessage(playerid, COLOR_GREEN, "[INV] Р’С‹ РёСЃРїРѕР»СЊР·РѕРІР°Р»Рё Р°РїС‚РµС‡РєСѓ. Р—РґРѕСЂРѕРІСЊРµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРѕ." );
-            new medText[128]; format(medText, sizeof medText, "* %s РґРѕСЃС‚Р°Р» Р°РїС‚РµС‡РєСѓ Рё РѕР±СЂР°Р±РѕС‚Р°Р» СЂР°РЅС‹.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, medText, 20.0);
+            if (hp >= 100.0) return SendClientMessage(playerid, COLOR_YELLOW, "[INV] Здоровье восстановлено на 100%."), 1;
+            gMedkits[playerid]--; SetPlayerHealth(playerid, 100.0); SavePlayer(playerid); SendClientMessage(playerid, COLOR_GREEN, "[INV] Вы использовали аптечку. Здоровье восстановлено." );
+            new medText[128]; format(medText, sizeof medText, "* %s достал аптечку и обработал раны.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, medText, 20.0);
         }
         else if (listitem == 1)
         {
-            if (gFood[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[INV] РЈ РІР°СЃ РЅРµС‚ РµРґС‹."), 1;
-            new Float:hp; GetPlayerHealth(playerid, hp); if (hp < 95.0) SetPlayerHealth(playerid, hp + 5.0); gFood[playerid]--; SavePlayer(playerid); SendClientMessage(playerid, COLOR_GREEN, "[INV] Р’С‹ РїРѕРµР»Рё. Р•РґР° РёСЃРїРѕР»СЊР·РѕРІР°РЅР°." );
-            new foodText[128]; format(foodText, sizeof foodText, "* %s РґРѕСЃС‚Р°Р» РµРґСѓ Рё РЅР°С‡Р°Р» РµСЃС‚СЊ.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, foodText, 20.0);
+            if (gFood[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[INV] У вас нет еды."), 1;
+            new Float:hp; GetPlayerHealth(playerid, hp); if (hp < 95.0) SetPlayerHealth(playerid, hp + 5.0); gFood[playerid]--; SavePlayer(playerid); SendClientMessage(playerid, COLOR_GREEN, "[INV] Вы поели. Еда использована." );
+            new foodText[128]; format(foodText, sizeof foodText, "* %s достал еду и начал есть.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, foodText, 20.0);
         }
         else if (listitem == 2)
         {
-            if (gWater[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[INV] РЈ РІР°СЃ РЅРµС‚ РІРѕРґС‹."), 1;
-            gWater[playerid]--; SavePlayer(playerid); SendClientMessage(playerid, COLOR_GREEN, "[INV] Р’С‹ РІС‹РїРёР»Рё РІРѕРґСѓ." );
-            new waterText[128]; format(waterText, sizeof waterText, "* %s РґРѕСЃС‚Р°Р» Р±СѓС‚С‹Р»РєСѓ РІРѕРґС‹ Рё СЃРґРµР»Р°Р» РЅРµСЃРєРѕР»СЊРєРѕ РіР»РѕС‚РєРѕРІ.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, waterText, 20.0);
+            if (gWater[playerid] < 1) return SendClientMessage(playerid, COLOR_RED, "[INV] У вас нет воды."), 1;
+            gWater[playerid]--; SavePlayer(playerid); SendClientMessage(playerid, COLOR_GREEN, "[INV] Вы выпили воду." );
+            new waterText[128]; format(waterText, sizeof waterText, "* %s достал бутылку воды и сделал несколько глотков.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, waterText, 20.0);
         }
         else if (listitem == 3)
         {
             SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USECELLPHONE);
             new shopText[512];
             shopText[0] = '\0';
-            strcat(shopText, "РљР›РђРЎРЎРРљРђ | Р§РµСЂРЅС‹Рµ РѕС‡РєРё - 1 500 СЂСѓР±.\n");
-            strcat(shopText, "РљР›РђРЎРЎРРљРђ | РЈР»РёС‡РЅР°СЏ РєРµРїРєР° - 2 500 СЂСѓР±.\n");
-            strcat(shopText, "РљР›РђРЎРЎРРљРђ | РЁР°РїРєР°-Р±РёРЅРё - 3 500 СЂСѓР±.\n");
-            strcat(shopText, "РЎРўРР›Р¬ | РљРѕРІР±РѕР№СЃРєР°СЏ С€Р»СЏРїР° - 7 500 СЂСѓР±.\n");
-            strcat(shopText, "РЎРўРР›Р¬ | РҐРѕРєРєРµР№РЅР°СЏ РјР°СЃРєР° - 9 000 СЂСѓР±.\n");
-            strcat(shopText, "РџР Р•РњРРЈРњ | Р—РѕР»РѕС‚С‹Рµ РѕС‡РєРё - 15 000 СЂСѓР±.\n");
-            strcat(shopText, "РџР Р•РњРРЈРњ | Р”РёР·Р°Р№РЅРµСЂСЃРєР°СЏ РєРµРїРєР° - 22 000 СЂСѓР±.\n");
-            strcat(shopText, "Р­Р›РРўРђ | Р РѕСЃРєРѕС€РЅР°СЏ РјР°СЃРєР° - 35 000 СЂСѓР±.\n");
-            strcat(shopText, "Р­Р›РРўРђ | Р‘СЂРёР»Р»РёР°РЅС‚РѕРІС‹Р№ СЃС‚РёР»СЊ - 55 000 СЂСѓР±.\n");
-            strcat(shopText, "VIP | РљРѕСЂРѕР»РµРІСЃРєРёР№ Р°РєСЃРµСЃСЃСѓР°СЂ - 85 000 СЂСѓР±.\n");
-            strcat(shopText, "РћС‚РєСЂРѕР№С‚Рµ /inv, С‡С‚РѕР±С‹ РЅР°РґРµС‚СЊ РёР»Рё СЃРЅСЏС‚СЊ");
-            ShowPlayerDialog(playerid, DIALOG_SHOP_ACC, DIALOG_STYLE_LIST, "VEXORIUM | РњР°РіР°Р·РёРЅ Р°РєСЃРµСЃСЃСѓР°СЂРѕРІ", shopText, "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            strcat(shopText, "КЛАССИКА | Черные очки - 1 500 руб.\n");
+            strcat(shopText, "КЛАССИКА | Уличная кепка - 2 500 руб.\n");
+            strcat(shopText, "КЛАССИКА | Шапка-бини - 3 500 руб.\n");
+            strcat(shopText, "СТИЛЬ | Ковбойская шляпа - 7 500 руб.\n");
+            strcat(shopText, "СТИЛЬ | Хоккейная маска - 9 000 руб.\n");
+            strcat(shopText, "ПРЕМИУМ | Золотые очки - 15 000 руб.\n");
+            strcat(shopText, "ПРЕМИУМ | Дизайнерская кепка - 22 000 руб.\n");
+            strcat(shopText, "ЭЛИТА | Роскошная маска - 35 000 руб.\n");
+            strcat(shopText, "ЭЛИТА | Бриллиантовый стиль - 55 000 руб.\n");
+            strcat(shopText, "VIP | Королевский аксессуар - 85 000 руб.\n");
+            strcat(shopText, "Откройте /inv, чтобы надеть или снять");
+            ShowPlayerDialog(playerid, DIALOG_SHOP_ACC, DIALOG_STYLE_LIST, "VEXORIUM | Магазин аксессуаров", shopText, "Выбрать", "Закрыть");
         }
         else if (listitem == 4)
         {
-            if (gAccessoryModel[playerid] <= 0) return SendClientMessage(playerid, COLOR_YELLOW, "[РРќР’Р•РќРўРђР Р¬] РЈ РІР°СЃ РЅРµС‚ Р°РєСЃРµСЃСЃСѓР°СЂР°. РљСѓРїРёС‚Рµ РµРіРѕ С‡РµСЂРµР· /shopacc."), 1;
+            if (gAccessoryModel[playerid] <= 0) return SendClientMessage(playerid, COLOR_YELLOW, "[ИНВЕНТАРЬ] У вас нет аксессуара. Купите его через /shopacc."), 1;
             if (IsPlayerAttachedObjectSlotUsed(playerid, 0)) RemovePlayerAttachedObject(playerid, 0);
-            if (!SetPlayerAttachedObject(playerid, 0, gAccessoryModel[playerid], 2, 0.10, 0.02, 0.00, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0)) return SendClientMessage(playerid, COLOR_RED, "[РРќР’Р•РќРўРђР Р¬] РќРµ СѓРґР°Р»РѕСЃСЊ РЅР°РґРµС‚СЊ Р°РєСЃРµСЃСЃСѓР°СЂ."), 1;
-            new accText[128]; format(accText, sizeof accText, "* %s РЅР°РґРµР» Р°РєСЃРµСЃСЃСѓР°СЂ.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, accText, 20.0);
-            SendClientMessage(playerid, COLOR_GREEN, "[РРќР’Р•РќРўРђР Р¬] РђРєСЃРµСЃСЃСѓР°СЂ РЅР°РґРµС‚.");
+            if (!SetPlayerAttachedObject(playerid, 0, gAccessoryModel[playerid], 2, 0.10, 0.02, 0.00, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0)) return SendClientMessage(playerid, COLOR_RED, "[ИНВЕНТАРЬ] Не удалось надеть аксессуар."), 1;
+            new accText[128]; format(accText, sizeof accText, "* %s надел аксессуар.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, accText, 20.0);
+            SendClientMessage(playerid, COLOR_GREEN, "[ИНВЕНТАРЬ] Аксессуар надет.");
         }
         else if (listitem == 5)
         {
             if (IsPlayerAttachedObjectSlotUsed(playerid, 0)) RemovePlayerAttachedObject(playerid, 0);
-            new accText[128]; format(accText, sizeof accText, "* %s СЃРЅСЏР» Р°РєСЃРµСЃСЃСѓР°СЂ.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, accText, 20.0);
-            SendClientMessage(playerid, COLOR_GREEN, "[РРќР’Р•РќРўРђР Р¬] РђРєСЃРµСЃСЃСѓР°СЂ СЃРЅСЏС‚ Рё РѕСЃС‚Р°Р»СЃСЏ РІ РёРЅРІРµРЅС‚Р°СЂРµ.");
+            new accText[128]; format(accText, sizeof accText, "* %s снял аксессуар.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, accText, 20.0);
+            SendClientMessage(playerid, COLOR_GREEN, "[ИНВЕНТАРЬ] Аксессуар снят и остался в инвентаре.");
         }
         return 1;
     }
     if (dialogid == DIALOG_PHONE)
     {
         if (!response) return 1;
-        if (listitem == 0) ShowPlayerDialog(playerid, DIALOG_PHONE_SMS_TARGET, DIALOG_STYLE_INPUT, "VEXORIUM | SMS", "Р’РІРµРґРёС‚Рµ ID РёРіСЂРѕРєР°, РєРѕС‚РѕСЂРѕРјСѓ Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅРѕ SMS:", "Р”Р°Р»РµРµ", "РћС‚РјРµРЅР°");
+        if (listitem == 0) ShowPlayerDialog(playerid, DIALOG_PHONE_SMS_TARGET, DIALOG_STYLE_INPUT, "VEXORIUM | SMS", "Введите ID игрока, которому будет отправлено SMS:", "Далее", "Отмена");
         else if (listitem == 1) OnPlayerCommandText(playerid, "/gps");
         else if (listitem == 2)
         {
             new Float:cx, Float:cy, Float:cz, dispatch[160]; GetPlayerPos(playerid, cx, cy, cz);
-            format(dispatch, sizeof dispatch, "[112] Р’С‹Р·РѕРІ РїРѕР»РёС†РёРё: %s (ID %d), РєРѕРѕСЂРґРёРЅР°С‚С‹ %.1f, %.1f, %.1f", gName[playerid], playerid, cx, cy, cz);
+            format(dispatch, sizeof dispatch, "[112] Вызов полиции: %s (ID %d), координаты %.1f, %.1f, %.1f", gName[playerid], playerid, cx, cy, cz);
             for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && gFaction[i] == FACTION_POLICE) SendClientMessage(i, COLOR_YELLOW, dispatch);
-            SendClientMessage(playerid, COLOR_GREEN, "[112] Р’С‹Р·РѕРІ РѕС‚РїСЂР°РІР»РµРЅ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј РїРѕР»РёС†РёРё." );
+            SendClientMessage(playerid, COLOR_GREEN, "[112] Вызов отправлен сотрудникам полиции." );
         }
         else if (listitem == 3)
         {
             new Float:cx, Float:cy, Float:cz, dispatch[160]; GetPlayerPos(playerid, cx, cy, cz);
-            format(dispatch, sizeof dispatch, "[103] Р’С‹Р·РѕРІ СЃРєРѕСЂРѕР№: %s (ID %d), РєРѕРѕСЂРґРёРЅР°С‚С‹ %.1f, %.1f, %.1f", gName[playerid], playerid, cx, cy, cz);
+            format(dispatch, sizeof dispatch, "[103] Вызов скорой: %s (ID %d), координаты %.1f, %.1f, %.1f", gName[playerid], playerid, cx, cy, cz);
             for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && gFaction[i] == FACTION_HOSPITAL) SendClientMessage(i, COLOR_YELLOW, dispatch);
-            SendClientMessage(playerid, COLOR_GREEN, "[103] Р’С‹Р·РѕРІ РѕС‚РїСЂР°РІР»РµРЅ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј Р±РѕР»СЊРЅРёС†С‹." );
+            SendClientMessage(playerid, COLOR_GREEN, "[103] Вызов отправлен сотрудникам больницы." );
         }
         else if (listitem == 5) OnPlayerCommandText(playerid, "/taxi");
-        else { new msg[96]; format(msg, sizeof msg, "[VEXORIUM] Р’Р°С€ ID: %d. РЎРѕРѕР±С‰Р°Р№С‚Рµ РµРіРѕ РґСЂСѓР·СЊСЏРј.", playerid); SendClientMessage(playerid, COLOR_GREEN, msg); }
+        else { new msg[96]; format(msg, sizeof msg, "[VEXORIUM] Ваш ID: %d. Сообщайте его друзьям.", playerid); SendClientMessage(playerid, COLOR_GREEN, msg); }
         return 1;
     }
     if (dialogid == DIALOG_PHONE_SMS_TARGET)
     {
         if (!response) return 1;
         new targetid = strval(inputtext);
-        if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "[SMS] РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ."), 1;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || targetid == playerid || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "[SMS] Игрок не найден."), 1;
         gPhoneSmsTarget[playerid] = targetid;
-        ShowPlayerDialog(playerid, DIALOG_PHONE_SMS_TEXT, DIALOG_STYLE_INPUT, "VEXORIUM | SMS", "РќР°РїРёС€РёС‚Рµ С‚РµРєСЃС‚ SMS (РґРѕ 120 СЃРёРјРІРѕР»РѕРІ):", "РћС‚РїСЂР°РІРёС‚СЊ", "РћС‚РјРµРЅР°");
+        ShowPlayerDialog(playerid, DIALOG_PHONE_SMS_TEXT, DIALOG_STYLE_INPUT, "VEXORIUM | SMS", "Напишите текст SMS (до 120 символов):", "Отправить", "Отмена");
         return 1;
     }
     if (dialogid == DIALOG_PHONE_SMS_TEXT)
     {
         if (!response) return 1;
         new targetid = gPhoneSmsTarget[playerid], msg[160], outgoing[192];
-        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "[SMS] РРіСЂРѕРє РѕС‚РєР»СЋС‡РёР»СЃСЏ."), 1;
-        if (strlen(inputtext) < 1) return SendClientMessage(playerid, COLOR_RED, "[SMS] РџСѓСЃС‚РѕРµ СЃРѕРѕР±С‰РµРЅРёРµ РЅРµР»СЊР·СЏ РѕС‚РїСЂР°РІРёС‚СЊ."), 1;
-        format(outgoing, sizeof outgoing, "[SMS] РћС‚ %s: %s", gName[playerid], inputtext); SendClientMessage(targetid, COLOR_YELLOW, outgoing);
-        format(msg, sizeof msg, "[SMS] Р’С‹ РѕС‚РїСЂР°РІРёР»Рё %s: %s", gName[targetid], inputtext); SendClientMessage(playerid, COLOR_GREEN, msg); gPhoneSmsTarget[playerid] = INVALID_PLAYER_ID;
+        if (targetid < 0 || targetid >= MAX_PLAYERS || !IsPlayerConnected(targetid) || !gLogged[targetid]) return SendClientMessage(playerid, COLOR_RED, "[SMS] Игрок отключился."), 1;
+        if (strlen(inputtext) < 1) return SendClientMessage(playerid, COLOR_RED, "[SMS] Пустое сообщение нельзя отправить."), 1;
+        format(outgoing, sizeof outgoing, "[SMS] От %s: %s", gName[playerid], inputtext); SendClientMessage(targetid, COLOR_YELLOW, outgoing);
+        format(msg, sizeof msg, "[SMS] Вы отправили %s: %s", gName[targetid], inputtext); SendClientMessage(playerid, COLOR_GREEN, msg); gPhoneSmsTarget[playerid] = INVALID_PLAYER_ID;
         return 1;
     }
     if (dialogid == DIALOG_SHOP_ACC)
@@ -7342,7 +7342,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (!response) return 1;
         if (listitem == 10)
         {
-            ShowPlayerDialog(playerid, DIALOG_ITEM_INVENTORY, DIALOG_STYLE_LIST, "VEXORIUM | РРЅРІРµРЅС‚Р°СЂСЊ", "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р°РїС‚РµС‡РєСѓ\nРЎСЉРµСЃС‚СЊ РµРґСѓ\nР’С‹РїРёС‚СЊ РІРѕРґСѓ\nРњР°РіР°Р·РёРЅ Р°РєСЃРµСЃСЃСѓР°СЂРѕРІ\nРќР°РґРµС‚СЊ Р°РєСЃРµСЃСЃСѓР°СЂ\nРЎРЅСЏС‚СЊ Р°РєСЃРµСЃСЃСѓР°СЂ", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ");
+            ShowPlayerDialog(playerid, DIALOG_ITEM_INVENTORY, DIALOG_STYLE_LIST, "VEXORIUM | Инвентарь", "Использовать аптечку\nСъесть еду\nВыпить воду\nМагазин аксессуаров\nНадеть аксессуар\nСнять аксессуар", "Выбрать", "Закрыть");
             return 1;
         }
         new model, price;
@@ -7360,12 +7360,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             case 9: { model = 19015; price = 85000; }
             default: return 1;
         }
-        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "[РђРљРЎР•РЎРЎРЈРђР Р«] РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі РґР»СЏ РїРѕРєСѓРїРєРё."), 1;
-        if (!TakeCash(playerid, price)) return SendClientMessage(playerid, COLOR_RED, "[РђРљРЎР•РЎРЎРЈРђР Р«] РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕРІРµСЃС‚Рё РѕРїР»Р°С‚Сѓ."), 1;
+        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "[АКСЕССУАРЫ] Недостаточно денег для покупки."), 1;
+        if (!TakeCash(playerid, price)) return SendClientMessage(playerid, COLOR_RED, "[АКСЕССУАРЫ] Не удалось провести оплату."), 1;
         gAccessoryModel[playerid] = model;
         new buyAccText[144]; format(buyAccText, sizeof buyAccText, "* %s bought an accessory.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, buyAccText, 20.0);
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "[РђРљРЎР•РЎРЎРЈРђР Р«] РџРѕРєСѓРїРєР° СЃРѕС…СЂР°РЅРµРЅР°. РћС‚РєСЂРѕР№С‚Рµ /inv Рё РІС‹Р±РµСЂРёС‚Рµ РЅР°РґРµРІР°РЅРёРµ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[АКСЕССУАРЫ] Покупка сохранена. Откройте /inv и выберите надевание.");
         return 1;
     }
     if (dialogid == DIALOG_SHOP)
@@ -7374,16 +7374,16 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (!gMarketInside[playerid] || GetPlayerVirtualWorld(playerid) != VX_MARKET_WORLD ||
             GetPlayerInterior(playerid) != VX_MARKET_INTERIOR ||
             !IsPlayerInRangeOfPoint(playerid, 3.5, VX_MARKET_COUNTER_X, VX_MARKET_COUNTER_Y, VX_MARKET_COUNTER_Z))
-            return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ РїРѕРєСѓРїРєРё РїРѕРґРѕР№РґРёС‚Рµ Рє РєР°СЃСЃРµ РІРЅСѓС‚СЂРё РјР°СЂРєРµС‚Р° 24/7."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Для покупки подойдите к кассе внутри маркета 24/7."), 1;
         new item = listitem < 3 ? listitem : listitem - 1;
         if(listitem==3)
         {
-            if(!VX_CanCarry(playerid,1,1) || !VX_CanCarry(playerid,2,1) || VX_Weight(playerid)>VX_WEIGHT_LIMIT-1000) return SendClientMessage(playerid,COLOR_RED,"РРЅРІРµРЅС‚Р°СЂСЊ Р·Р°РїРѕР»РЅРµРЅ."),1;
+            if(!VX_CanCarry(playerid,1,1) || !VX_CanCarry(playerid,2,1) || VX_Weight(playerid)>VX_WEIGHT_LIMIT-1000) return SendClientMessage(playerid,COLOR_RED,"Инвентарь заполнен."),1;
         }
-        else if(listitem<0 || listitem>6 || !VX_CanCarry(playerid,item,1)) return SendClientMessage(playerid,COLOR_RED,"РРЅРІРµРЅС‚Р°СЂСЊ Р·Р°РїРѕР»РЅРµРЅ РёР»Рё РІС‹Р±СЂР°РЅ РЅРµРІРµСЂРЅС‹Р№ РїСЂРµРґРјРµС‚."),1;
+        else if(listitem<0 || listitem>6 || !VX_CanCarry(playerid,item,1)) return SendClientMessage(playerid,COLOR_RED,"Инвентарь заполнен или выбран неверный предмет."),1;
         new price = 0;
         if (listitem == 0) price = 1200; else if (listitem == 1) price = 250; else if (listitem == 2) price = 180; else if (listitem == 3) price = 350; else if (listitem == 4) price = 3000; else if (listitem == 5) price = 1500; else if (listitem == 6) price = 8000; else return 1;
-        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "[SHOP] РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі."), 1;
+        if (gMoney[playerid] < price) return SendClientMessage(playerid, COLOR_RED, "[SHOP] Недостаточно денег."), 1;
         if (listitem == 0) gMedkits[playerid]++;
         else if (listitem == 1) gFood[playerid]++;
         else if (listitem == 2) gWater[playerid]++;
@@ -7392,14 +7392,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         else if (listitem == 5) gSimCards[playerid]++;
         else if (listitem == 6) gLockpicks[playerid]++;
         gMoney[playerid] -= price; GivePlayerMoney(playerid, -price); SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "[SHOP] РџРѕРєСѓРїРє СѓСЃРїРµС€РЅР°. РџСЂРµРґРјРµС‚С‹ РґРѕР±Р°РІР»РµРЅС‹ РІ РёРЅРІРµРЅС‚Р°СЂСЊ." );
+        SendClientMessage(playerid, COLOR_GREEN, "[SHOP] Покупк успешна. Предметы добавлены в инвентарь." );
         return 1;
     }
     if (dialogid == DIALOG_LICENSE_MARKET)
     {
         if (!response) return 1;
         if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 362.4587, 174.0056, 1008.3828))
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє СЃС‚РѕР№РєРµ Р»РёС†РµРЅР·РёР№ РІ РјСЌСЂРёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Подойдите к стойке лицензий в мэрии."), 1;
         switch (listitem)
         {
             case 0: return cmdtext_licbuy(playerid, "weapon");
@@ -7413,31 +7413,31 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     {
         if (!response) return 1;
         if (GetPlayerInterior(playerid) != 3 || GetPlayerVirtualWorld(playerid) != 101 || !IsPlayerInRangeOfPoint(playerid, 5.0, 358.8, 174.0056, 1008.3828))
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє СЃС‚РѕР№РєРµ РѕС„РѕСЂРјР»РµРЅРёСЏ РїР°СЃРїРѕСЂС‚Р° РІ РјСЌСЂРёРё."), 1;
-        if (gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РїР°СЃРїРѕСЂС‚."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Подойдите к стойке оформления паспорта в мэрии."), 1;
+        if (gHasPassport[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть паспорт."), 1;
         gHasPassport[playerid] = 1;
         new passportQuery[160];
         format(passportQuery, sizeof passportQuery, "UPDATE accounts SET has_passport=1 WHERE name='%q'", gName[playerid]);
         new DBResult:passportRes = db_query(gDatabase, passportQuery); if (passportRes) db_free_result(passportRes);
-        SendClientMessage(playerid, COLOR_GREEN, "РџР°СЃРїРѕСЂС‚ СѓСЃРїРµС€РЅРѕ РѕС„РѕСЂРјР»РµРЅ! РўРµРїРµСЂСЊ РІР°Рј РґРѕСЃС‚СѓРїРЅС‹ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РЅР° СЂР°Р±РѕС‚Сѓ Рё РіРѕСЂРѕРґСЃРєРёРµ СѓСЃР»СѓРіРё.");
+        SendClientMessage(playerid, COLOR_GREEN, "Паспорт успешно оформлен! Теперь вам доступны устройство на работу и городские услуги.");
         return 1;
     }
     if (dialogid == DIALOG_AUTOSCHOOL)
     {
-        if (!response) return SendClientMessage(playerid, COLOR_YELLOW, "Р­РєР·Р°РјРµРЅ РѕС‚РјРµРЅС‘РЅ."), 1;
+        if (!response) return SendClientMessage(playerid, COLOR_YELLOW, "Экзамен отменён."), 1;
         if (!gLogged[playerid] || GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || !IsPlayerInRangeOfPoint(playerid, 4.0, -2026.8, -96.5, 35.2))
-            return SendClientMessage(playerid, COLOR_RED, "РџРѕРґРѕР№РґРёС‚Рµ Рє РёРЅСЃС‚СЂСѓРєС‚РѕСЂСѓ Р°РІС‚РѕС€РєРѕР»С‹ РµС‰С‘ СЂР°Р·."), 1;
-        if (gLicenseDriver[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РІРѕРґРёС‚РµР»СЊСЃРєР°СЏ Р»РёС†РµРЅР·РёСЏ."), 1;
-        if (gDrivingTestStage[playerid] > 0) return SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ СѓР¶Рµ РїСЂРѕС…РѕРґРёС‚Рµ СЌРєР·Р°РјРµРЅ."), 1;
-        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_RED, "Р’С‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р° РїРµСЂРµРґ РЅР°С‡Р°Р»РѕРј СЌРєР·Р°РјРµРЅР°."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Подойдите к инструктору автошколы ещё раз."), 1;
+        if (gLicenseDriver[playerid]) return SendClientMessage(playerid, COLOR_GREEN, "У вас уже есть водительская лицензия."), 1;
+        if (gDrivingTestStage[playerid] > 0) return SendClientMessage(playerid, COLOR_YELLOW, "Вы уже проходите экзамен."), 1;
+        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_RED, "Выйдите из транспорта перед началом экзамена."), 1;
         // Park the exam vehicle on the open roadside outside the school, not at the entrance/building.
         gDrivingTestVehicle[playerid] = CreateVehicle(405, -2039.5, -100.0, 35.2, 270.0, 1, 1, 600);
-        if (gDrivingTestVehicle[playerid] == INVALID_VEHICLE_ID) return SendClientMessage(playerid, COLOR_RED, "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ СѓС‡РµР±РЅСѓСЋ РјР°С€РёРЅСѓ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ."), 1;
+        if (gDrivingTestVehicle[playerid] == INVALID_VEHICLE_ID) return SendClientMessage(playerid, COLOR_RED, "Не удалось создать учебную машину. Попробуйте позже."), 1;
         gDrivingTestStage[playerid] = 1;
         PutPlayerInVehicle(playerid, gDrivingTestVehicle[playerid], 0);
         DisablePlayerCheckpoint(playerid);
         SetPlayerCheckpoint(playerid, -2232.5854, 69.5824, 35.1718, 5.0);
-        SendClientMessage(playerid, COLOR_GREEN, "РЈС‡РµР±РЅР°СЏ РјР°С€РёРЅР° Р°СЂРµРЅРґРѕРІР°РЅР°. РЎР»РµРґСѓР№С‚Рµ РїРѕ РєСЂР°СЃРЅС‹Рј С‚РѕС‡РєР°Рј, РЅРµ РїРѕРєРёРґР°СЏ РјР°С€РёРЅСѓ." );
+        SendClientMessage(playerid, COLOR_GREEN, "Учебная машина арендована. Следуйте по красным точкам, не покидая машину." );
         return 1;
     }
     if (dialogid == DIALOG_POLICE_TABLET) return 1;
@@ -7447,27 +7447,27 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (gFaction[playerid] == FACTION_FBI)
         {
             if (gFactionRank[playerid] < 1 || !IsInOwnOrgInterior(playerid) || GetPlayerDistanceFromPoint(playerid, 258.5231, 76.3146, 1003.6406) > 4.0)
-                return SendClientMessage(playerid, COLOR_RED, "FBI: РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°СЂРєРµСЂСѓ РѕСЂСѓР¶РµР№РЅРѕРіРѕ СЃРєР»Р°РґР°."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "FBI: Подойдите к маркеру оружейного склада."), 1;
             switch (listitem)
             {
-                case 0: { GivePlayerWeapon(playerid, 23, 30); SendClientMessage(playerid, COLOR_GREEN, "РўР°Р№Р·РµСЂ USP РІС‹РґР°РЅ (30 РїР°С‚СЂРѕРЅРѕРІ)."); }
-                case 1: { GivePlayerWeapon(playerid, 25, 60); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё РґСЂРѕР±РѕРІРёРє Рё 60 РїР°С‚СЂРѕРЅРѕРІ."); }
-                case 2: { GivePlayerWeapon(playerid, 29, 120); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё MP5 Рё 120 РїР°С‚СЂРѕРЅРѕРІ."); }
-                case 3: { GivePlayerWeapon(playerid, 30, 120); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё РђРљ-47 Рё 120 РїР°С‚СЂРѕРЅРѕРІ."); }
-                case 4: { GivePlayerWeapon(playerid, 31, 120); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё Рњ4 Рё 120 РїР°С‚СЂРѕРЅРѕРІ."); }
-                case 5: { GivePlayerWeapon(playerid, 33, 20); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё РІРёРЅС‚РѕРІРєСѓ Рё 20 РїР°С‚СЂРѕРЅРѕРІ."); }
-                case 6: { SetPlayerArmour(playerid, 100.0); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё Р±СЂРѕРЅРµР¶РёР»РµС‚."); }
+                case 0: { GivePlayerWeapon(playerid, 23, 30); SendClientMessage(playerid, COLOR_GREEN, "Тайзер USP выдан (30 патронов)."); }
+                case 1: { GivePlayerWeapon(playerid, 25, 60); SendClientMessage(playerid, COLOR_GREEN, "Вы получили дробовик и 60 патронов."); }
+                case 2: { GivePlayerWeapon(playerid, 29, 120); SendClientMessage(playerid, COLOR_GREEN, "Вы получили MP5 и 120 патронов."); }
+                case 3: { GivePlayerWeapon(playerid, 30, 120); SendClientMessage(playerid, COLOR_GREEN, "Вы получили АК-47 и 120 патронов."); }
+                case 4: { GivePlayerWeapon(playerid, 31, 120); SendClientMessage(playerid, COLOR_GREEN, "Вы получили М4 и 120 патронов."); }
+                case 5: { GivePlayerWeapon(playerid, 33, 20); SendClientMessage(playerid, COLOR_GREEN, "Вы получили винтовку и 20 патронов."); }
+                case 6: { SetPlayerArmour(playerid, 100.0); SendClientMessage(playerid, COLOR_GREEN, "Вы получили бронежилет."); }
             }
             return 1;
         }
         else if (gFaction[playerid] != FACTION_POLICE || !IsInPoliceStation(playerid) || GetPlayerDistanceFromPoint(playerid, 258.52, 76.8268, 1003.6406) > 4.0)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РґРѕР»Р¶РЅС‹ РЅР°С…РѕРґРёС‚СЊСЃСЏ Сѓ СЃРєР»Р°РґР° LSPD."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы должны находиться у склада LSPD."), 1;
         switch (listitem)
         {
-            case 0: { GivePlayerWeapon(playerid, 3, 1); SendClientMessage(playerid, COLOR_GREEN, "[РџРћР›РР¦РРЇ] Р’С‹РґР°РЅР° РґСѓР±РёРЅРєР°."); }
-            case 1: { GivePlayerWeapon(playerid, 31, 100); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё M4 Рё 100 РїР°С‚СЂРѕРЅРѕРІ РјР°РєСЃРёРјСѓРј Р·Р° РѕРґРЅРѕ РїРѕР»СѓС‡РµРЅРёРµ."); }
-            case 2: { GivePlayerWeapon(playerid, 22, 100); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё РїРёСЃС‚РѕР»РµС‚ Рё 100 РїР°С‚СЂРѕРЅРѕРІ РјР°РєСЃРёРјСѓРј Р·Р° РѕРґРЅРѕ РїРѕР»СѓС‡РµРЅРёРµ."); }
-            case 3: { SetPlayerArmour(playerid, 100.0); SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё Р±СЂРѕРЅРµР¶РёР»РµС‚."); }
+            case 0: { GivePlayerWeapon(playerid, 3, 1); SendClientMessage(playerid, COLOR_GREEN, "[ПОЛИЦИЯ] Выдана дубинка."); }
+            case 1: { GivePlayerWeapon(playerid, 31, 100); SendClientMessage(playerid, COLOR_GREEN, "Вы получили M4 и 100 патронов максимум за одно получение."); }
+            case 2: { GivePlayerWeapon(playerid, 22, 100); SendClientMessage(playerid, COLOR_GREEN, "Вы получили пистолет и 100 патронов максимум за одно получение."); }
+            case 3: { SetPlayerArmour(playerid, 100.0); SendClientMessage(playerid, COLOR_GREEN, "Вы получили бронежилет."); }
         }
         return 1;
     }
@@ -7475,7 +7475,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     {
         if (!response) return 1;
         if (gFaction[playerid] < 1 || gFaction[playerid] > 6 || gFaction[playerid] == FACTION_POLICE || gFactionRank[playerid] < 1 || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "Р”РѕСЃС‚СѓРї Рє СЃРєР»Р°РґСѓ РѕСЂРіР°РЅРёР·Р°С†РёРё РїРѕС‚РµСЂСЏРЅ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Доступ к складу организации потерян."), 1;
         new query[192], stockAmmo = 0, stockArmour = 0;
         format(query, sizeof query, "SELECT ammo,armour FROM org_stashes WHERE faction_id=%d", gFaction[playerid]);
         new DBResult:orgStock = db_query(gDatabase, query);
@@ -7484,30 +7484,30 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (listitem == 0 || listitem == 1)
         {
             new ammoTake = (stockAmmo > 100) ? 100 : stockAmmo;
-            if (ammoTake <= 0) return SendClientMessage(playerid, COLOR_RED, "РќР° СЃРєР»Р°РґРµ РЅРµС‚ РїР°С‚СЂРѕРЅРѕРІ."), 1;
+            if (ammoTake <= 0) return SendClientMessage(playerid, COLOR_RED, "На складе нет патронов."), 1;
             new weaponid = (listitem == 0) ? 31 : 22;
             GivePlayerWeapon(playerid, weaponid, ammoTake);
             format(query, sizeof query, "UPDATE org_stashes SET ammo=MAX(0,ammo-%d) WHERE faction_id=%d", ammoTake, gFaction[playerid]);
             orgStock = db_query(gDatabase, query); if (orgStock) db_free_result(orgStock);
-            new msg[112]; format(msg, sizeof msg, "Р’С‹ РїРѕР»СѓС‡РёР»Рё РѕСЂСѓР¶РёРµ Рё %d РїР°С‚СЂРѕРЅРѕРІ СЃРѕ СЃРєР»Р°РґР° РѕСЂРіР°РЅРёР·Р°С†РёРё.", ammoTake); SendClientMessage(playerid, COLOR_GREEN, msg);
+            new msg[112]; format(msg, sizeof msg, "Вы получили оружие и %d патронов со склада организации.", ammoTake); SendClientMessage(playerid, COLOR_GREEN, msg);
         }
         else if (listitem == 2)
         {
-            if (stockArmour < 1) return SendClientMessage(playerid, COLOR_RED, "РќР° СЃРєР»Р°РґРµ Р·Р°РєРѕРЅС‡РёР»РёСЃСЊ Р±СЂРѕРЅРµР¶РёР»РµС‚С‹."), 1;
+            if (stockArmour < 1) return SendClientMessage(playerid, COLOR_RED, "На складе закончились бронежилеты."), 1;
             SetPlayerArmour(playerid, 100.0);
             format(query, sizeof query, "UPDATE org_stashes SET armour=MAX(0,armour-1) WHERE faction_id=%d", gFaction[playerid]);
             orgStock = db_query(gDatabase, query); if (orgStock) db_free_result(orgStock);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё Р±СЂРѕРЅРµР¶РёР»РµС‚. Р—Р°РїР°СЃ СЃРїРёСЃР°РЅ СЃРѕ СЃРєР»Р°РґР°.");
+            SendClientMessage(playerid, COLOR_GREEN, "Вы получили бронежилет. Запас списан со склада.");
         }
         else if (listitem == 3)
         {
             new msg[192];
             format(query, sizeof query, "SELECT money,materials,ammo,armour FROM org_stashes WHERE faction_id=%d", gFaction[playerid]);
             orgStock = db_query(gDatabase, query);
-            if (orgStock && db_num_rows(orgStock)) format(msg, sizeof msg, "Р”РµРЅСЊРіРё: %d СЂСѓР±.\nРњР°С‚РµСЂРёР°Р»С‹: %d\nРџР°С‚СЂРѕРЅС‹: %d\nР‘СЂРѕРЅРµР¶РёР»РµС‚С‹: %d", db_get_field_int(orgStock,0), db_get_field_int(orgStock,1), db_get_field_int(orgStock,2), db_get_field_int(orgStock,3));
-            else format(msg, sizeof msg, "РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ Р·Р°РїР°СЃС‹ СЃРєР»Р°РґР°.");
+            if (orgStock && db_num_rows(orgStock)) format(msg, sizeof msg, "Деньги: %d руб.\nМатериалы: %d\nПатроны: %d\nБронежилеты: %d", db_get_field_int(orgStock,0), db_get_field_int(orgStock,1), db_get_field_int(orgStock,2), db_get_field_int(orgStock,3));
+            else format(msg, sizeof msg, "Не удалось прочитать запасы склада.");
             if (orgStock) db_free_result(orgStock);
-            ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "РЎРєР»Р°Рґ РѕСЂРіР°РЅРёР·Р°С†РёРё", msg, "Р—Р°РєСЂС‹С‚СЊ", "");
+            ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "Склад организации", msg, "Закрыть", "");
         }
         return 1;
     }
@@ -7518,43 +7518,43 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gGang[playerid], bx, by, bz);
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || GetPlayerDistanceFromPoint(playerid, bx, by, bz) > 12.0)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РґРѕР»Р¶РЅС‹ РЅР°С…РѕРґРёС‚СЊСЃСЏ РЅР° Р±Р°Р·Рµ СЃРІРѕРµР№ Р±Р°РЅРґС‹."), 1;
-        if (listitem == 0) ShowPlayerDialog(playerid, DIALOG_GANG_DEPOSIT, DIALOG_STYLE_INPUT, "РЎРєР»Р°Рґ Р±Р°РЅРґС‹ | Р’РЅРµСЃС‚Рё", "Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ, РєРѕС‚РѕСЂСѓСЋ С…РѕС‚РёС‚Рµ РїРѕР»РѕР¶РёС‚СЊ РЅР° СЃРєР»Р°Рґ:", "Р’РЅРµСЃС‚Рё", "РќР°Р·Р°Рґ");
-        else if (listitem == 1) ShowPlayerDialog(playerid, DIALOG_GANG_WITHDRAW, DIALOG_STYLE_INPUT, "РЎРєР»Р°Рґ Р±Р°РЅРґС‹ | РЎРЅСЏС‚СЊ", "Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ, РєРѕС‚РѕСЂСѓСЋ С…РѕС‚РёС‚Рµ СЃРЅСЏС‚СЊ СЃРѕ СЃРєР»Р°РґР°:", "РЎРЅСЏС‚СЊ", "РќР°Р·Р°Рґ");
+            return SendClientMessage(playerid, COLOR_RED, "Вы должны находиться на базе своей банды."), 1;
+        if (listitem == 0) ShowPlayerDialog(playerid, DIALOG_GANG_DEPOSIT, DIALOG_STYLE_INPUT, "Склад банды | Внести", "Введите сумму, которую хотите положить на склад:", "Внести", "Назад");
+        else if (listitem == 1) ShowPlayerDialog(playerid, DIALOG_GANG_WITHDRAW, DIALOG_STYLE_INPUT, "Склад банды | Снять", "Введите сумму, которую хотите снять со склада:", "Снять", "Назад");
         else if (listitem == 2)
         {
-            new msg[96]; format(msg, sizeof msg, "РќР° СЃРєР»Р°РґРµ Р±Р°РЅРґС‹: %d СЂСѓР±.", GetGangStashMoney(gGang[playerid]));
+            new msg[96]; format(msg, sizeof msg, "На складе банды: %d руб.", GetGangStashMoney(gGang[playerid]));
             SendClientMessage(playerid, COLOR_GREEN, msg);
         }
         else if (listitem == 3) ShowGangWeaponMenu(playerid);
         else if (listitem == 4)
         {
             SetPlayerArmour(playerid, 100.0);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕР»СѓС‡РёР»Рё Р±СЂРѕРЅРµР¶РёР»РµС‚ РЅР° СЃРєР»Р°РґРµ Р±Р°РЅРґС‹.");
+            SendClientMessage(playerid, COLOR_GREEN, "Вы получили бронежилет на складе банды.");
         }
         return 1;
     }
     if (dialogid == DIALOG_GANG_DEPOSIT || dialogid == DIALOG_GANG_WITHDRAW)
     {
-        if (!response) { ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "РЎРєР»Р°Рґ Р±Р°РЅРґС‹", "РџРѕР»РѕР¶РёС‚СЊ РґРµРЅСЊРіРё\nРЎРЅСЏС‚СЊ РґРµРЅСЊРіРё\nР‘Р°Р»Р°РЅСЃ СЃРєР»Р°РґР°\nРћСЂСѓР¶РёРµ Рё РїР°С‚СЂРѕРЅС‹", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ"); return 1; }
+        if (!response) { ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "Склад банды", "Положить деньги\nСнять деньги\nБаланс склада\nОружие и патроны", "Выбрать", "Закрыть"); return 1; }
         if (gGang[playerid] < 1 || gGang[playerid] > 4) return 1;
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gGang[playerid], bx, by, bz);
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || GetPlayerDistanceFromPoint(playerid, bx, by, bz) > 12.0)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РґРѕР»Р¶РЅС‹ РЅР°С…РѕРґРёС‚СЊСЃСЏ РЅР° Р±Р°Р·Рµ СЃРІРѕРµР№ Р±Р°РЅРґС‹."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы должны находиться на базе своей банды."), 1;
         new amount = strval(inputtext), stash = GetGangStashMoney(gGang[playerid]), query[160];
-        if (amount < 1 || amount > 1000000000) return SendClientMessage(playerid, COLOR_RED, "Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅСѓСЋ СЃСѓРјРјСѓ РѕС‚ 1 РґРѕ 1 000 000 000."), 1;
+        if (amount < 1 || amount > 1000000000) return SendClientMessage(playerid, COLOR_RED, "Введите корректную сумму от 1 до 1 000 000 000."), 1;
         if (dialogid == DIALOG_GANG_DEPOSIT)
         {
-            if (gMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "РЈ РІР°СЃ РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі."), 1;
+            if (gMoney[playerid] < amount) return SendClientMessage(playerid, COLOR_RED, "У вас недостаточно денег."), 1;
             gMoney[playerid] -= amount; GivePlayerMoney(playerid, -amount); SetGangStashMoney(gGang[playerid], stash + amount); SavePlayer(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "Р”РµРЅСЊРіРё РІРЅРµСЃРµРЅС‹ РЅР° РѕР±С‰РёР№ СЃРєР»Р°Рґ Р±Р°РЅРґС‹.");
+            SendClientMessage(playerid, COLOR_GREEN, "Деньги внесены на общий склад банды.");
         }
         else
         {
-            if (stash < amount) return SendClientMessage(playerid, COLOR_RED, "РќР° СЃРєР»Р°РґРµ РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі."), 1;
+            if (stash < amount) return SendClientMessage(playerid, COLOR_RED, "На складе недостаточно денег."), 1;
             gMoney[playerid] += amount; GivePlayerMoney(playerid, amount); SetGangStashMoney(gGang[playerid], stash - amount); SavePlayer(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "Р”РµРЅСЊРіРё СЃРЅСЏС‚С‹ СЃРѕ СЃРєР»Р°РґР° Р±Р°РЅРґС‹.");
+            SendClientMessage(playerid, COLOR_GREEN, "Деньги сняты со склада банды.");
         }
         format(query, sizeof query, "SELECT money FROM gang_stashes WHERE gang_id=%d", gGang[playerid]);
         return 1;
@@ -7566,29 +7566,29 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gGang[playerid], bx, by, bz);
         if (GetPlayerDistanceFromPoint(playerid, bx, by, bz) > 18.0 || GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РѕС‚РѕС€Р»Рё РѕС‚ РјР°РіР°Р·РёРЅР° РѕРґРµР¶РґС‹."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы отошли от магазина одежды."), 1;
         SetPlayerSkin(playerid, GetGangSkin(gGang[playerid], listitem + 1));
         gVXAccountSkin[playerid] = GetPlayerSkin(playerid);
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРµСЂРµРѕРґРµР»РёСЃСЊ РІ РѕРґРµР¶РґСѓ СЃРІРѕРµР№ Р±Р°РЅРґС‹. РЎРєРёРЅ СЃРѕС…СЂР°РЅС‘РЅ.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы переоделись в одежду своей банды. Скин сохранён.");
         return 1;
     }
     if (dialogid == DIALOG_GANG_WEAPONS)
     {
-        if (!response) { ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "РЎРєР»Р°Рґ Р±Р°РЅРґС‹", "РџРѕР»РѕР¶РёС‚СЊ РґРµРЅСЊРіРё\nРЎРЅСЏС‚СЊ РґРµРЅСЊРіРё\nР‘Р°Р»Р°РЅСЃ СЃРєР»Р°РґР°\nРћСЂСѓР¶РёРµ Рё РїР°С‚СЂРѕРЅС‹", "Р’С‹Р±СЂР°С‚СЊ", "Р—Р°РєСЂС‹С‚СЊ"); return 1; }
+        if (!response) { ShowPlayerDialog(playerid, DIALOG_GANG_STASH, DIALOG_STYLE_LIST, "Склад банды", "Положить деньги\nСнять деньги\nБаланс склада\nОружие и патроны", "Выбрать", "Закрыть"); return 1; }
         if (gGang[playerid] < 1 || gGang[playerid] > 4) return 1;
         if (listitem < 0 || listitem > 6) return 1;
         new Float:weaponBaseX, Float:weaponBaseY, Float:weaponBaseZ;
         GetGangBase(gGang[playerid], weaponBaseX, weaponBaseY, weaponBaseZ);
         if (GetPlayerDistanceFromPoint(playerid, weaponBaseX, weaponBaseY, weaponBaseZ) > 12.0 || GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0)
-            return SendClientMessage(playerid, COLOR_RED, "РћСЂСѓР¶РµР№РЅС‹Р№ СЃРєР»Р°Рґ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РЅР° Р±Р°Р·Рµ РІР°С€РµР№ Р±Р°РЅРґС‹."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Оружейный склад доступен только на базе вашей банды."), 1;
         new weaponIds[6] = {22,24,25,29,30,31};
-        new weaponNames[6][24] = {"РџРёСЃС‚РѕР»РµС‚ 9РјРј", "Desert Eagle", "Р”СЂРѕР±РѕРІРёРє", "MP5", "AK-47", "M4"};
+        new weaponNames[6][24] = {"Пистолет 9мм", "Desert Eagle", "Дробовик", "MP5", "AK-47", "M4"};
         new weaponid = weaponIds[listitem];
         new ammo = GetGangWeaponAmmo(gGang[playerid], weaponid);
         new msg[144];
-        format(msg, sizeof msg, "%s\nРќР° СЃРєР»Р°РґРµ: %d РїР°С‚СЂРѕРЅРѕРІ", weaponNames[listitem], ammo);
-        ShowPlayerDialog(playerid, DIALOG_GANG_WEAPON_ACTION, DIALOG_STYLE_LIST, msg, "Р’Р·СЏС‚СЊ СЃРѕ СЃРєР»Р°РґР°\nРџРѕР»РѕР¶РёС‚СЊ РЅР° СЃРєР»Р°Рґ", "Р’С‹Р±СЂР°С‚СЊ", "РќР°Р·Р°Рґ");
+        format(msg, sizeof msg, "%s\nНа складе: %d патронов", weaponNames[listitem], ammo);
+        ShowPlayerDialog(playerid, DIALOG_GANG_WEAPON_ACTION, DIALOG_STYLE_LIST, msg, "Взять со склада\nПоложить на склад", "Выбрать", "Назад");
         // The selected weapon is stored per-player until the action dialog returns.
         SetPVarInt(playerid, "GangStashWeapon", weaponid);
         return 1;
@@ -7601,27 +7601,27 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         new Float:bx, Float:by, Float:bz;
         GetGangBase(gGang[playerid], bx, by, bz);
         if (GetPlayerDistanceFromPoint(playerid, bx, by, bz) > 12.0 || GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0)
-            return SendClientMessage(playerid, COLOR_RED, "РћСЂСѓР¶РµР№РЅС‹Р№ СЃРєР»Р°Рґ РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РЅР° Р±Р°Р·Рµ РІР°С€РµР№ Р±Р°РЅРґС‹."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Оружейный склад доступен только на базе вашей банды."), 1;
         new weaponid = GetPVarInt(playerid, "GangStashWeapon");
         if (!GangWeaponAllowed(weaponid)) return 1;
         new storedAmmo = GetGangWeaponAmmo(gGang[playerid], weaponid);
         if (listitem == 0)
         {
-            if (storedAmmo < 1) return SendClientMessage(playerid, COLOR_RED, "РўР°РєРѕРіРѕ РѕСЂСѓР¶РёСЏ РёР»Рё РїР°С‚СЂРѕРЅРѕРІ СЃРµР№С‡Р°СЃ РЅРµС‚ РЅР° СЃРєР»Р°РґРµ."), 1;
+            if (storedAmmo < 1) return SendClientMessage(playerid, COLOR_RED, "Такого оружия или патронов сейчас нет на складе."), 1;
             new ammoTake = (storedAmmo > 100) ? 100 : storedAmmo;
             GivePlayerWeapon(playerid, weaponid, ammoTake);
             SetGangWeaponAmmo(gGang[playerid], weaponid, storedAmmo - ammoTake);
-            new takeMsg[128]; format(takeMsg, sizeof takeMsg, "Р’С‹ РїРѕР»СѓС‡РёР»Рё РѕСЂСѓР¶РёРµ Рё %d РїР°С‚СЂРѕРЅРѕРІ. Р›РёРјРёС‚ вЂ” 100 Р·Р° РѕРґРЅРѕ РїРѕР»СѓС‡РµРЅРёРµ.", ammoTake);
+            new takeMsg[128]; format(takeMsg, sizeof takeMsg, "Вы получили оружие и %d патронов. Лимит — 100 за одно получение.", ammoTake);
             SendClientMessage(playerid, COLOR_GREEN, takeMsg);
         }
         else
         {
             new currentWeapon = GetPlayerWeapon(playerid);
             new ammo = GetPlayerAmmo(playerid);
-            if (currentWeapon != weaponid || ammo < 1) return SendClientMessage(playerid, COLOR_RED, "Р’РѕР·СЊРјРёС‚Рµ РІ СЂСѓРєРё РІС‹Р±СЂР°РЅРЅРѕРµ РѕСЂСѓР¶РёРµ СЃ РїР°С‚СЂРѕРЅР°РјРё, Р·Р°С‚РµРј СЃРЅРѕРІР° РѕС‚РєСЂРѕР№С‚Рµ СЃРєР»Р°Рґ."), 1;
+            if (currentWeapon != weaponid || ammo < 1) return SendClientMessage(playerid, COLOR_RED, "Возьмите в руки выбранное оружие с патронами, затем снова откройте склад."), 1;
             SetPlayerAmmo(playerid, weaponid, 0);
             SetGangWeaponAmmo(gGang[playerid], weaponid, storedAmmo + ammo);
-            SendClientMessage(playerid, COLOR_GREEN, "РћСЂСѓР¶РёРµ Рё РїР°С‚СЂРѕРЅС‹ СЃРґР°РЅС‹ РЅР° РѕР±С‰РёР№ СЃРєР»Р°Рґ Р±Р°РЅРґС‹.");
+            SendClientMessage(playerid, COLOR_GREEN, "Оружие и патроны сданы на общий склад банды.");
         }
         DeletePVar(playerid, "GangStashWeapon");
         return ShowGangWeaponMenu(playerid);
@@ -7630,10 +7630,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     if (dialogid == DIALOG_GANG)
     {
         if (!response) return 1;
-        if (gFaction[playerid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° РІС‹Р№РґРёС‚Рµ РёР· РіРѕСЃСѓРґР°СЂСЃС‚РІРµРЅРЅРѕР№ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+        if (gFaction[playerid] != FACTION_NONE) return SendClientMessage(playerid, COLOR_RED, "Сначала выйдите из государственной организации."), 1;
         if (listitem == 4)
         {
-            if (gGang[playerid] == 0) return SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ Р±Р°РЅРґРµ."), 1;
+            if (gGang[playerid] == 0) return SendClientMessage(playerid, COLOR_YELLOW, "Вы не состоите в банде."), 1;
             gGang[playerid] = 0;
             SetPlayerSkin(playerid, 23);
             if (gAccessoryModel[playerid] > 0) SetPlayerAttachedObject(playerid, 0, gAccessoryModel[playerid], 2, 0.10, 0.02, 0.00, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
@@ -7641,7 +7641,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             format(civText, sizeof civText, "* %s changed into civilian clothes.", gName[playerid]);
             SendLocalMessage(playerid, COLOR_PINK, civText, 20.0);
             SavePlayer(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕРєРёРЅСѓР»Рё Р±Р°РЅРґСѓ. Р’С‹ РІРµСЂРЅСѓР»Рё РіСЂР°Р¶РґР°РЅСЃРєСѓСЋ РѕРґРµР¶РґСѓ.");
+            SendClientMessage(playerid, COLOR_GREEN, "Вы покинули банду. Вы вернули гражданскую одежду.");
             return 1;
         }
         new Float:gangJoinX[4] = {2495.0, 2000.0, 2769.0, 1840.0};
@@ -7649,12 +7649,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         new Float:gangJoinZ[4] = {13.5, 25.0, 10.9, 13.5};
         if (listitem < 0 || listitem > 3) return 1;
         if (GetPlayerDistanceFromPoint(playerid, gangJoinX[listitem], gangJoinY[listitem], gangJoinZ[listitem]) > 80.0)
-            return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ РІСЃС‚СѓРїР»РµРЅРёСЏ РїСЂРёРµР·Р¶Р°Р№С‚Рµ РЅР° Р±Р°Р·Сѓ РІС‹Р±СЂР°РЅРЅРѕР№ Р±Р°РЅРґС‹. РљРѕРѕСЂРґРёРЅР°С‚С‹ РґРѕСЃС‚СѓРїРЅС‹ С‡РµСЂРµР· /gps."), 1;
-        if (gGang[playerid] != 0) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ СѓР¶Рµ РІ Р±Р°РЅРґРµ. РЎРЅР°С‡Р°Р»Р° РїРѕРєРёРЅСЊС‚Рµ РµС‘ С‡РµСЂРµР· /gang."), 1;
-        gGang[playerid] = listitem + 1; SetPlayerSkin(playerid, GetGangSkin(gGang[playerid], 1)); if (gAccessoryModel[playerid] > 0) SetPlayerAttachedObject(playerid, 0, gAccessoryModel[playerid], 2, 0.10, 0.02, 0.00, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0); new gangJoinText[128]; format(gangJoinText, sizeof gangJoinText, "* %s РЅР°РґРµР» РѕРґРµР¶РґСѓ Р±Р°РЅРґС‹.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, gangJoinText, 20.0); SavePlayer(playerid);
+            return SendClientMessage(playerid, COLOR_RED, "Для вступления приезжайте на базу выбранной банды. Координаты доступны через /gps."), 1;
+        if (gGang[playerid] != 0) return SendClientMessage(playerid, COLOR_RED, "Вы уже в банде. Сначала покиньте её через /gang."), 1;
+        gGang[playerid] = listitem + 1; SetPlayerSkin(playerid, GetGangSkin(gGang[playerid], 1)); if (gAccessoryModel[playerid] > 0) SetPlayerAttachedObject(playerid, 0, gAccessoryModel[playerid], 2, 0.10, 0.02, 0.00, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0); new gangJoinText[128]; format(gangJoinText, sizeof gangJoinText, "* %s надел одежду банды.", gName[playerid]); SendLocalMessage(playerid, COLOR_PINK, gangJoinText, 20.0); SavePlayer(playerid);
         new gangName[32];
         switch (gGang[playerid]) { case 1: gangName = "Grove Street"; case 2: gangName = "Ballas"; case 3: gangName = "Los Santos Vagos"; case 4: gangName = "Varrios Aztecas"; }
-        new msg[96]; format(msg, sizeof msg, "Р’С‹ РІСЃС‚СѓРїРёР»Рё РІ Р±Р°РЅРґСѓ %s! Р’Р°С€ СЂР°РЅРі: РќРѕРІРёС‡РѕРє.", gangName);
+        new msg[96]; format(msg, sizeof msg, "Вы вступили в банду %s! Ваш ранг: Новичок.", gangName);
         SendClientMessage(playerid, COLOR_GREEN, msg); return 1;
     }
 
@@ -7665,25 +7665,25 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         {
             if (IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleID(playerid) == gBaseScooter)
                 RemovePlayerFromVehicle(playerid);
-            SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РѕС‚РєР°Р·Р°Р»РёСЃСЊ РѕС‚ Р°СЂРµРЅРґС‹. РЎРєСѓС‚РµСЂ РѕСЃС‚Р°Р»СЃСЏ РЅР° СЃС‚Р°СЂС‚РѕРІРѕР№ Р±Р°Р·Рµ.");
+            SendClientMessage(playerid, COLOR_YELLOW, "Вы отказались от аренды. Скутер остался на стартовой базе.");
             return 1;
         }
         if (!gLogged[playerid] || gFaction[playerid] != FACTION_NONE || gLevel[playerid] > 3)
         {
             if (IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleID(playerid) == gBaseScooter) RemovePlayerFromVehicle(playerid);
             if (gLevel[playerid] > 3)
-                return SendClientMessage(playerid, COLOR_RED, "РђСЂРµРЅРґР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РёРіСЂРѕРєР°Рј 1вЂ“3 СѓСЂРѕРІРЅСЏ."), 1;
-            return SendClientMessage(playerid, COLOR_RED, "РђСЂРµРЅРґР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РіСЂР°Р¶РґР°РЅСЃРєРёРј Р±РµР· РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+                return SendClientMessage(playerid, COLOR_RED, "Аренда доступна только игрокам 1–3 уровня."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Аренда доступна только гражданским без организации."), 1;
         }
         if (gRentalVehicle[playerid] != INVALID_VEHICLE_ID)
-            return SendClientMessage(playerid, COLOR_YELLOW, "РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р°СЂРµРЅРґРѕРІР°РЅРЅС‹Р№ СЃРєСѓС‚РµСЂ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "У вас уже есть арендованный скутер."), 1;
         if (gMoney[playerid] < RENT_SCOOTER_PRICE)
         {
             if (IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleID(playerid) == gBaseScooter) RemovePlayerFromVehicle(playerid);
-            return SendClientMessage(playerid, COLOR_RED, "Р”Р»СЏ Р°СЂРµРЅРґС‹ РЅСѓР¶РЅРѕ 250 СЂСѓР±Р»РµР№. РЎРєСѓС‚РµСЂ РѕСЃС‚Р°Р»СЃСЏ РЅР° Р±Р°Р·Рµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Для аренды нужно 250 рублей. Скутер остался на базе."), 1;
         }
         if (gBaseScooter == INVALID_VEHICLE_ID || !IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != gBaseScooter)
-            return SendClientMessage(playerid, COLOR_RED, "РЎРєСѓС‚РµСЂ СѓР¶Рµ РЅРµРґРѕСЃС‚СѓРїРµРЅ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРµСЃС‚СЊ РЅР° СЃР»РµРґСѓСЋС‰РёР№."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Скутер уже недоступен. Попробуйте сесть на следующий."), 1;
         new rentedVehicle = gBaseScooter;
         gMoney[playerid] -= RENT_SCOOTER_PRICE;
         ResetPlayerMoney(playerid);
@@ -7700,8 +7700,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         PutPlayerInVehicle(playerid, rentedVehicle, 0);
         SpawnBaseScooter();
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ Р°СЂРµРЅРґРѕРІР°Р»Рё Faggio Р·Р° 250 СЂСѓР±Р»РµР№. Р’С‹ РїРµСЂРµРјРµС‰РµРЅС‹ Рє РІРѕСЂРѕС‚Р°Рј СЃС‚Р°СЂС‚РѕРІРѕР№ Р±Р°Р·С‹ вЂ” РјРѕР¶РЅРѕ РІС‹РµР·Р¶Р°С‚СЊ!");
-        SendClientMessage(playerid, COLOR_GREEN, "РќР° Р±Р°Р·Рµ СѓР¶Рµ РїРѕСЏРІРёР»СЃСЏ РЅРѕРІС‹Р№ СЃРєСѓС‚РµСЂ РґР»СЏ СЃР»РµРґСѓСЋС‰РµРіРѕ РЅРѕРІРёС‡РєР°.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы арендовали Faggio за 250 рублей. Вы перемещены к воротам стартовой базы — можно выезжать!");
+        SendClientMessage(playerid, COLOR_GREEN, "На базе уже появился новый скутер для следующего новичка.");
         return 1;
     }
 
@@ -7710,7 +7710,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if(!response) return 1;
         if(GetPlayerInterior(playerid)!=0 || GetPlayerVirtualWorld(playerid)!=0
             || !IsPlayerInRangeOfPoint(playerid,18.0,2131.0,-1150.0,24.1))
-            return RP_Message(playerid,"Р’С‹ РѕС‚РѕС€Р»Рё РѕС‚ Р°РІС‚РѕСЃР°Р»РѕРЅР°.");
+            return RP_Message(playerid,"Вы отошли от автосалона.");
         new model,price;
         switch(listitem)
         {
@@ -7733,7 +7733,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         }
         if (strlen(inputtext) < 4 || strlen(inputtext) > 64)
         {
-            ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | РЎРћР—Р”РђРќРР• РђРљРљРђРЈРќРўРђ", "================================\n             V E X O R I U M\n\nРџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ 4-64 СЃРёРјРІРѕР»Р°.\nР’РІРµРґРё РїР°СЂРѕР»СЊ РµС‰С‘ СЂР°Р·.\nРСЃРїРѕР»СЊР·СѓР№ РїР°СЂРѕР»СЊ, РєРѕС‚РѕСЂС‹Р№ СЃРјРѕР¶РµС€СЊ Р·Р°РїРѕРјРЅРёС‚СЊ.", "РЎРћР—Р”РђРўР¬", "Р’Р«РҐРћР”");
+            ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | СОЗДАНИЕ АККАУНТА", "================================\n             V E X O R I U M\n\nПароль должен содержать 4-64 символа.\nВведи пароль ещё раз.\nИспользуй пароль, который сможешь запомнить.", "СОЗДАТЬ", "ВЫХОД");
             return 1;
         }
         format(gPassword[playerid], 65, "%s", inputtext);
@@ -7755,19 +7755,19 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         VX_ContractNotify(playerid);
         if(!RP_Load(playerid))
         {
-            SendClientMessage(playerid,COLOR_RED,"РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ RP-РґР°РЅРЅС‹Рµ. Р’С…РѕРґ РѕС‚РјРµРЅС‘РЅ РІРѕ РёР·Р±РµР¶Р°РЅРёРµ РїРѕС‚РµСЂРё РґР°РЅРЅС‹С….");
+            SendClientMessage(playerid,COLOR_RED,"Не удалось загрузить RP-данные. Вход отменён во избежание потери данных.");
             gLogged[playerid]=false;
             Kick(playerid); return 1;
         }
         LoadVexHudSettings(playerid);
         VX_ClothesLoad(playerid,23);
-        SendClientMessage(playerid, COLOR_WHITE, "[HUD] РЈРїСЂР°РІР»РµРЅРёРµ: /hud. РќР°СЃС‚СЂРѕР№РєР° СЂСѓСЃСЃРєРёС… Р±СѓРєРІ: /hudfont.");
+        SendClientMessage(playerid, COLOR_WHITE, "[HUD] Управление: /hud. Настройка русских букв: /hudfont.");
         if (gAccessoryModel[playerid] > 0) SetPlayerAttachedObject(playerid, 0, gAccessoryModel[playerid], 2, 0.10, 0.02, 0.00, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
         SetPlayerScore(playerid, gLevel[playerid]);
         SpawnLoggedPlayer(playerid, 1685.0, -2333.0, 13.5, 0.0, 23);
-        SendClientMessage(playerid, COLOR_GREEN, "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РЅР° VEXORIUM RP! Р’Р°Рј РЅР°С‡РёСЃР»РµРЅРѕ 5000 СЂСѓР±Р»РµР№.");
-        SendClientMessage(playerid, COLOR_WHITE, "Р’РІРµРґРёС‚Рµ /help РґР»СЏ СЃРїРёСЃРєР° РєРѕРјР°РЅРґ.");
-        if (gAdmin[playerid] == 5) SendClientMessage(playerid, COLOR_ORANGE, "[VEXORIUM] Р’Р°Рј РЅР°Р·РЅР°С‡РµРЅ СѓСЂРѕРІРµРЅСЊ РІР»Р°РґРµР»СЊС†Р° СЃРµСЂРІРµСЂР° (5).");
+        SendClientMessage(playerid, COLOR_GREEN, "Добро пожаловать на VEXORIUM RP! Вам начислено 5000 рублей.");
+        SendClientMessage(playerid, COLOR_WHITE, "Введите /help для списка команд.");
+        if (gAdmin[playerid] == 5) SendClientMessage(playerid, COLOR_ORANGE, "[VEXORIUM] Вам назначен уровень владельца сервера (5).");
         SavePlayer(playerid);
         return 1;
     }
@@ -7781,14 +7781,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         new query[512];
         format(query, sizeof query, "SELECT password,money,level,kills,deaths,skin,x,y,z,angle,job,admin,faction,faction_rank,ownedcar,spawnpref,gang,experience,license_driver,license_weapon,license_boat,license_air,has_passport,medkits,food,water,accessory,repairkits,simcards,lockpicks FROM accounts WHERE name='%q'", gName[playerid]);
         new DBResult:authResult = db_query(gDatabase, query);
-        if (!authResult) { printf("[VEXORIUM AUTH ERROR] SQLite query failed for %s", gName[playerid]); SendClientMessage(playerid, COLOR_RED, "РћС€РёР±РєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С… РїСЂРё РІС…РѕРґРµ. РџРѕРїСЂРѕР±СѓР№ РїРѕР·Р¶Рµ."); return 1; }
+        if (!authResult) { printf("[VEXORIUM AUTH ERROR] SQLite query failed for %s", gName[playerid]); SendClientMessage(playerid, COLOR_RED, "Ошибка базы данных при входе. Попробуй позже."); return 1; }
         if (!db_num_rows(authResult)) { db_free_result(authResult); printf("[VEXORIUM AUTH ERROR] Account row not found for %s", gName[playerid]); Kick(playerid); return 1; }
         new stored[65];
         db_get_field(authResult, 0, stored, sizeof stored);
         if (strcmp(stored, inputtext, false) != 0)
         {
             db_free_result(authResult);
-            ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "VEXORIUM | Р”РћР‘Р Рћ РџРћР–РђР›РћР’РђРўР¬", "================================\n             V E X O R I U M\n\nРќРµРІРµСЂРЅС‹Р№ РїР°СЂРѕР»СЊ.\nРџСЂРѕРІРµСЂСЊ РІРІРѕРґ Рё РїРѕРїСЂРѕР±СѓР№ РµС‰С‘ СЂР°Р·.\nРџР°СЂРѕР»СЊ С‡СѓРІСЃС‚РІРёС‚РµР»РµРЅ Рє СЂРµРіРёСЃС‚СЂСѓ.", "Р’РћР™РўР", "Р’Р«РҐРћР”");
+            ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "VEXORIUM | ДОБРО ПОЖАЛОВАТЬ", "================================\n             V E X O R I U M\n\nНеверный пароль.\nПроверь ввод и попробуй ещё раз.\nПароль чувствителен к регистру.", "ВОЙТИ", "ВЫХОД");
             return 1;
         }
         // Read all account columns before running another SQLite query.
@@ -7846,54 +7846,54 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         VX_ContractNotify(playerid);
         if(!RP_Load(playerid))
         {
-            SendClientMessage(playerid,COLOR_RED,"РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ RP-РґР°РЅРЅС‹Рµ. Р’С…РѕРґ РѕС‚РјРµРЅС‘РЅ РІРѕ РёР·Р±РµР¶Р°РЅРёРµ РїРѕС‚РµСЂРё РґР°РЅРЅС‹С….");
+            SendClientMessage(playerid,COLOR_RED,"Не удалось загрузить RP-данные. Вход отменён во избежание потери данных.");
             gLogged[playerid]=false;
             Kick(playerid); return 1;
         }
         LoadVexHudSettings(playerid);
         VX_ClothesLoad(playerid,skin);
-        SendClientMessage(playerid, COLOR_WHITE, "[HUD] РЈРїСЂР°РІР»РµРЅРёРµ: /hud. РќР°СЃС‚СЂРѕР№РєР° СЂСѓСЃСЃРєРёС… Р±СѓРєРІ: /hudfont.");
+        SendClientMessage(playerid, COLOR_WHITE, "[HUD] Управление: /hud. Настройка русских букв: /hudfont.");
         if (gAccessoryModel[playerid] > 0) SetPlayerAttachedObject(playerid, 0, gAccessoryModel[playerid], 2, 0.10, 0.02, 0.00, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
         SetPlayerScore(playerid, gLevel[playerid]);
         UpdatePlayerRoleColor(playerid);
         SpawnLoggedPlayer(playerid, x, y, z, a, skin);
         new welcome[144];
-        format(welcome, sizeof welcome, "  Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ, %s!", gName[playerid]);
+        format(welcome, sizeof welcome, "  Добро пожаловать, %s!", gName[playerid]);
         SendClientMessage(playerid, COLOR_GREEN, "========================================");
-        SendClientMessage(playerid, COLOR_GREEN, "  VEXORIUM RP | Р’РђРЁР• РРЎРўРћР РРЇ РќРђР§РРќРђР•РўРЎРЇ");
+        SendClientMessage(playerid, COLOR_GREEN, "  VEXORIUM RP | ВАШЕ ИСТОРИЯ НАЧИНАЕТСЯ");
         SendClientMessage(playerid, COLOR_WHITE, welcome);
-        SendClientMessage(playerid, COLOR_WHITE, "  Р¦РµРЅС‚СЂ РёРіСЂРѕРєР°: /hub | РРЅРІРµРЅС‚Р°СЂСЊ: /inv | РўРµР»РµС„РѕРЅ: /phone");
+        SendClientMessage(playerid, COLOR_WHITE, "  Центр игрока: /hub | Инвентарь: /inv | Телефон: /phone");
         SendClientMessage(playerid, COLOR_GREEN, "========================================");
-        if (gAdmin[playerid] == 5) SendClientMessage(playerid, COLOR_ORANGE, "[VEXORIUM] РЈ РІР°СЃ СѓСЂРѕРІРµРЅСЊ РІР»Р°РґРµР»СЊС†Р° СЃРµСЂРІРµСЂР° (5).");
+        if (gAdmin[playerid] == 5) SendClientMessage(playerid, COLOR_ORANGE, "[VEXORIUM] У вас уровень владельца сервера (5).");
         return 1;
     }
     if (dialogid == DIALOG_FACTION_GARAGE)
     {
         if (!response) return 1;
         if (gFaction[playerid] == FACTION_NONE || gFactionRank[playerid] < 1)
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РЅРµ СЃРѕСЃС‚РѕРёС‚Рµ РІ РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы не состоите в организации."), 1;
         if (listitem < 0 || listitem > 4 || gFactionRank[playerid] < (listitem * 2 + 1))
-            return SendClientMessage(playerid, COLOR_RED, "РўСЂР°РЅСЃРїРѕСЂС‚ РЅРµ РґРѕСЃС‚СѓРїРµРЅ РЅР° РІР°С€РµРј СЂР°РЅРіРµ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Транспорт не доступен на вашем ранге."), 1;
         new Float:gx, Float:gy, Float:gz;
         GetOrgGarage(gFaction[playerid], gx, gy, gz);
         if (gFaction[playerid] == FACTION_POLICE)
         {
             if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 ||
-                !IsPlayerInRangeOfPoint(playerid, 10.0, 1579.0, -1719.0, 13.5)) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ СѓР¶Рµ РЅРµ Сѓ РіР°СЂР°Р¶Р°."), 1;
+                !IsPlayerInRangeOfPoint(playerid, 10.0, 1579.0, -1719.0, 13.5)) return SendClientMessage(playerid, COLOR_RED, "Вы уже не у гаража."), 1;
         }
         else if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 ||
-                 !IsPlayerInRangeOfPoint(playerid, 10.0, gx, gy, gz)) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ СѓР¶Рµ РЅРµ Сѓ РіР°СЂР°Р¶Р°."), 1;
-        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° РІС‹Р№РґРёС‚Рµ РёР· С‚РµРєСѓС‰РµРіРѕ С‚СЂР°РЅСЃРїРѕСЂС‚Р°."), 1;
+                 !IsPlayerInRangeOfPoint(playerid, 10.0, gx, gy, gz)) return SendClientMessage(playerid, COLOR_RED, "Вы уже не у гаража."), 1;
+        if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "Сначала выйдите из текущего транспорта."), 1;
         // The locked parking-slot vehicle remains available for the next employee.
         // Check the delivery bay BEFORE retiring the previous vehicle.
         new Float:sx,Float:sy,Float:sz,Float:sa;
         new model=GetFactionVehicleModel(gFaction[playerid],listitem);
         if(!VX_FindFreeGarageSpawn(gFaction[playerid],listitem,model,sx,sy,sz,sa))
-            return SendClientMessage(playerid,COLOR_YELLOW,"[Р“РђР РђР–] РќРµС‚ СЃРІРѕР±РѕРґРЅРѕРіРѕ РјРµСЃС‚Р° РґР»СЏ С‚СЂР°РЅСЃРїРѕСЂС‚Р°. РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ."),1;
+            return SendClientMessage(playerid,COLOR_YELLOW,"[ГАРАЖ] Нет свободного места для транспорта. Попробуйте позже."),1;
         if (gFactionVehicle[playerid] != INVALID_VEHICLE_ID && GetVehicleModel(gFactionVehicle[playerid]) != 0)
         {
             if (IsFleetVehicleOccupied(gFactionVehicle[playerid]))
-                return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° РІРµСЂРЅРёС‚Рµ СЃРІРѕСЋ СЃР»СѓР¶РµР±РЅСѓСЋ РјР°С€РёРЅСѓ."), 1;
+                return SendClientMessage(playerid, COLOR_YELLOW, "Сначала верните свою служебную машину."), 1;
             new oldFactionVehicle = gFactionVehicle[playerid];
             if (gVehicleReturnTimer[oldFactionVehicle]) { KillTimer(gVehicleReturnTimer[oldFactionVehicle]); gVehicleReturnTimer[oldFactionVehicle] = 0; }
             gVXFleetAnchored[oldFactionVehicle]=false;
@@ -7905,7 +7905,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         }
         new vehicleid = CreateVehicle(model, sx, sy, sz, sa, 1, 1, 180);
         if (vehicleid == INVALID_VEHICLE_ID || GetVehicleModel(vehicleid) == 0)
-            return SendClientMessage(playerid, COLOR_RED, "РќРµ СѓРґР°Р»РѕСЃСЊ РІС‹РґР°С‚СЊ РјР°С€РёРЅСѓ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Не удалось выдать машину. Попробуйте ещё раз."), 1;
         gFactionVehicle[playerid] = vehicleid;
         gVXFleetAnchored[vehicleid]=false;
         gVehicleFaction[vehicleid] = gFaction[playerid];
@@ -7926,7 +7926,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         new factionName[32], vehicleName[48], garageMsg[160];
         GetFactionName(gFaction[playerid], factionName, sizeof factionName);
         GetFactionVehicleInfo(gFaction[playerid], listitem, vehicleName, sizeof vehicleName);
-        format(garageMsg, sizeof garageMsg, "РђРІС‚РѕРїР°СЂРє %s: РІС‹ Р·Р°Р±СЂР°Р»Рё %s. РЈ РєР°Р¶РґРѕРіРѕ СЃРѕС‚СЂСѓРґРЅРёРєР° СЃРІРѕСЏ РјР°С€РёРЅР°.", factionName, vehicleName);
+        format(garageMsg, sizeof garageMsg, "Автопарк %s: вы забрали %s. У каждого сотрудника своя машина.", factionName, vehicleName);
         SendClientMessage(playerid, COLOR_GREEN, garageMsg);
         return 1;
     }
@@ -7951,7 +7951,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     if (dialogid == DIALOG_POLICE_MENU)
     {
         if (!response) return 1;
-        if (!IsInPoliceStation(playerid)) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РІС‹С€Р»Рё РёР· СѓС‡Р°СЃС‚РєР°."), 1;
+        if (!IsInPoliceStation(playerid)) return SendClientMessage(playerid, COLOR_RED, "Вы вышли из участка."), 1;
         switch (listitem)
         {
             case 0: { SetPlayerPos(playerid, 246.4, 63.9, 1003.6); SetPlayerFacingAngle(playerid, 180.0); }
@@ -7961,10 +7961,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             case 4:
             {
                 if (gFaction[playerid] != FACTION_POLICE || gFactionRank[playerid] < 1)
-                    return SendClientMessage(playerid, COLOR_RED, "Р Р°Р·РґРµРІР°Р»РєР° РїСЂРµРґРЅР°Р·РЅР°С‡РµРЅР° С‚РѕР»СЊРєРѕ РґР»СЏ СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ РїРѕР»РёС†РёРё."), 1;
+                    return SendClientMessage(playerid, COLOR_RED, "Раздевалка предназначена только для сотрудников полиции."), 1;
                 SetPlayerPos(playerid, 255.3, 77.4, 1003.6);
                 SetPlayerFacingAngle(playerid, 180.0);
-                SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІ СЂР°Р·РґРµРІР°Р»РєРµ. Р’СЃС‚Р°РЅСЊС‚Рµ РЅР° РјР°СЂРєРµСЂ РѕРґРµР¶РґС‹, С‡С‚РѕР±С‹ РїРµСЂРµРѕРґРµС‚СЊСЃСЏ РїРѕ СЂР°РЅРіСѓ.");
+                SendClientMessage(playerid, COLOR_GREEN, "Вы в раздевалке. Встаньте на маркер одежды, чтобы переодеться по рангу.");
             }
             case 5:
             {
@@ -7975,7 +7975,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 SetPlayerPos(playerid, 1568.4843, -1690.4116, 5.8906);
                 SetPlayerFacingAngle(playerid, 90.0);
                 SetCameraBehindPlayer(playerid);
-                SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё Рє РіР°СЂР°Р¶Сѓ LSPD. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /garage РґР»СЏ РІС‹РґР°С‡Рё РјР°С€РёРЅС‹.");
+                SendClientMessage(playerid, COLOR_GREEN, "Вы вышли к гаражу LSPD. Используйте /garage для выдачи машины.");
                 return 1;
             }
             case 6:
@@ -7997,12 +7997,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     {
         if (!response) return 1;
         if (gFaction[playerid] == FACTION_NONE || !IsInOwnOrgInterior(playerid))
-            return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РїРѕРєРёРЅСѓР»Рё С€С‚Р°Р± РѕСЂРіР°РЅРёР·Р°С†РёРё."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "Вы покинули штаб организации."), 1;
         switch (listitem)
         {
-            case 0: { if (gFaction[playerid] == FACTION_FBI) SetPlayerPos(playerid, 246.4510, 65.5860, 1003.6410); else SetPlayerPos(playerid, 2496.0, -1692.0, 1014.7); SendClientMessage(playerid, COLOR_GREEN, "Р“Р»Р°РІРЅС‹Р№ С…РѕР»Р» С€С‚Р°Р±Р°."); }
-            case 1: { if (gFaction[playerid] == FACTION_FBI) SetPlayerPos(playerid, 249.0, 70.0, 1003.6410); else SetPlayerPos(playerid, 2491.0, -1687.0, 1014.7); SendClientMessage(playerid, COLOR_GREEN, "РљР°Р±РёРЅРµС‚ СЂСѓРєРѕРІРѕРґСЃС‚РІР° РѕСЂРіР°РЅРёР·Р°С†РёРё."); }
-            case 2: { if (gFaction[playerid] == FACTION_FBI) SetPlayerPos(playerid, 252.0, 75.0, 1003.6410); else SetPlayerPos(playerid, 2501.0, -1687.0, 1014.7); SendClientMessage(playerid, COLOR_GREEN, "РљРѕРјРЅР°С‚Р° СЃРѕР±СЂР°РЅРёР№. Р СѓРєРѕРІРѕРґРёС‚РµР»СЊ РјРѕР¶РµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ /formation."); }
+            case 0: { if (gFaction[playerid] == FACTION_FBI) SetPlayerPos(playerid, 246.4510, 65.5860, 1003.6410); else SetPlayerPos(playerid, 2496.0, -1692.0, 1014.7); SendClientMessage(playerid, COLOR_GREEN, "Главный холл штаба."); }
+            case 1: { if (gFaction[playerid] == FACTION_FBI) SetPlayerPos(playerid, 249.0, 70.0, 1003.6410); else SetPlayerPos(playerid, 2491.0, -1687.0, 1014.7); SendClientMessage(playerid, COLOR_GREEN, "Кабинет руководства организации."); }
+            case 2: { if (gFaction[playerid] == FACTION_FBI) SetPlayerPos(playerid, 252.0, 75.0, 1003.6410); else SetPlayerPos(playerid, 2501.0, -1687.0, 1014.7); SendClientMessage(playerid, COLOR_GREEN, "Комната собраний. Руководитель может использовать /formation."); }
             case 3:
             {
                 new Float:x, Float:y, Float:z;
@@ -8010,7 +8010,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0);
                 SetPlayerPos(playerid, x - 1.5, y - 2.5, z); SetPlayerFacingAngle(playerid, 90.0);
                 SetCameraBehindPlayer(playerid);
-                SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё Рє Р°РІС‚РѕРїР°СЂРєСѓ. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /garage РґР»СЏ СЃР»СѓР¶РµР±РЅРѕРіРѕ С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+                SendClientMessage(playerid, COLOR_GREEN, "Вы вышли к автопарку. Используйте /garage для служебного транспорта.");
                 return 1;
             }
             case 4:
@@ -8030,7 +8030,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     SetPlayerFacingAngle(playerid, 90.0);
                 }
                 SetCameraBehindPlayer(playerid);
-                SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹С€Р»Рё РёР· Р·РґР°РЅРёСЏ РѕСЂРіР°РЅРёР·Р°С†РёРё.");
+                SendClientMessage(playerid, COLOR_GREEN, "Вы вышли из здания организации.");
                 return 1;
             }
         }
@@ -8049,38 +8049,38 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             gSpawnPreference[playerid] = 2;
         ApplySavedSpawn(playerid);
         SavePlayer(playerid);
-        SendClientMessage(playerid, COLOR_YELLOW, "РњРµСЃС‚Рѕ РїРѕСЏРІР»РµРЅРёСЏ СЃРѕС…СЂР°РЅРµРЅРѕ. Р’С‹ Р±СѓРґРµС‚Рµ РїРѕСЏРІР»СЏС‚СЊСЃСЏ Р·РґРµСЃСЊ РїСЂРё СЃР»РµРґСѓСЋС‰РёС… РІС…РѕРґР°С… Рё РїРѕСЃР»Рµ СЃРјРµСЂС‚Рё. РР·РјРµРЅРёС‚СЊ РІС‹Р±РѕСЂ РјРѕР¶РЅРѕ С‡РµСЂРµР· /spawn.");
+        SendClientMessage(playerid, COLOR_YELLOW, "Место появления сохранено. Вы будете появляться здесь при следующих входах и после смерти. Изменить выбор можно через /spawn.");
         return 1;
     }
     if (dialogid == DIALOG_GPS)
     {
         if (!response) return 1;
-        if (gWorkStage[playerid] > 0) return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€Рё РёР»Рё РѕС‚РјРµРЅРё С‚РµРєСѓС‰РёР№ СЂР°Р±РѕС‡РёР№ РјР°СЂС€СЂСѓС‚."), 1;
+        if (gWorkStage[playerid] > 0) return SendClientMessage(playerid, COLOR_YELLOW, "Сначала заверши или отмени текущий рабочий маршрут."), 1;
         if (listitem == 0)
-            ShowPlayerDialog(playerid, DIALOG_GPS_PUBLIC, DIALOG_STYLE_LIST, "VEXORIUM RP | РћР±С‰РµСЃС‚РІРµРЅРЅС‹Рµ РјРµСЃС‚Р°", "РњСЌСЂРёСЏ\nР‘Р¦Р Р‘\nР‘Р°РЅРє\nРђРІС‚РѕРІРѕРєР·Р°Р»\nР¦РµРЅС‚СЂ РіРѕСЂРѕРґР°\nРђРІС‚РѕС€РєРѕР»Р°", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_PUBLIC, DIALOG_STYLE_LIST, "VEXORIUM RP | Общественные места", "Мэрия\nБЦРБ\nБанк\nАвтовокзал\nЦентр города\nАвтошкола", "Маршрут", "Назад");
         else if (listitem == 1)
-            ShowPlayerDialog(playerid, DIALOG_GPS_ORGS, DIALOG_STYLE_LIST, "VEXORIUM RP | РћСЂРіР°РЅРёР·Р°С†РёРё", "РњСЌСЂРёСЏ\nРџРѕР»РёС†РёСЏ LSPD\nР‘Р¦Р Р‘\nРђСЂРјРёСЏ\nР’РњР¤\nР’Р’РЎ\nFBI вЂ” Р¤РµРґРµСЂР°Р»СЊРЅРѕРµ Р±СЋСЂРѕ", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_ORGS, DIALOG_STYLE_LIST, "VEXORIUM RP | Организации", "Мэрия\nПолиция LSPD\nБЦРБ\nАрмия\nВМФ\nВВС\nFBI — Федеральное бюро", "Маршрут", "Назад");
         else if (listitem == 2)
-            ShowPlayerDialog(playerid, DIALOG_GPS_JOBS, DIALOG_STYLE_LIST, "VEXORIUM RP | Р Р°Р±РѕС‚С‹ РґР»СЏ РЅРѕРІРёС‡РєРѕРІ", "РЁР°С…С‚Р°\nР С‹Р±Р°Р»РєР°\nР“СЂСѓР·С‡РёРє\nРўР°РєСЃРёСЃС‚\nР’РѕРґРёС‚РµР»СЊ Р°РІС‚РѕР±СѓСЃР°", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_JOBS, DIALOG_STYLE_LIST, "VEXORIUM RP | Работы для новичков", "Шахта\nРыбалка\nГрузчик\nТаксист\nВодитель автобуса", "Маршрут", "Назад");
         else if (listitem == 3)
-            ShowPlayerDialog(playerid, DIALOG_GPS_WORKS, DIALOG_STYLE_LIST, "VEXORIUM RP | РџРѕ СЂР°Р±РѕС‚Рµ", "РџРѕР¶Р°СЂРЅС‹Р№\nРўР°РєСЃРёСЃС‚\nР”Р°Р»СЊРЅРѕР±РѕР№С‰РёРє\nР’РѕРґРёС‚РµР»СЊ Р°РІС‚РѕР±СѓСЃР°\nРЁР°С…С‚С‘СЂ", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_WORKS, DIALOG_STYLE_LIST, "VEXORIUM RP | По работе", "Пожарный\nТаксист\nДальнобойщик\nВодитель автобуса\nШахтёр", "Маршрут", "Назад");
         else if (listitem == 4)
-            ShowPlayerDialog(playerid, DIALOG_GPS_GANGS, DIALOG_STYLE_LIST, "VEXORIUM RP | РќРµР»РµРіР°Р»СЊРЅС‹Рµ РѕСЂРіР°РЅРёР·Р°С†РёРё", "Grove Street\nBallas\nLos Santos Vagos\nVarrios Los Aztecas\nРђРІС‚РѕСѓРіРѕРЅ", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_GANGS, DIALOG_STYLE_LIST, "VEXORIUM RP | Нелегальные организации", "Grove Street\nBallas\nLos Santos Vagos\nVarrios Los Aztecas\nАвтоугон", "Маршрут", "Назад");
         else if (listitem == 5)
-            ShowPlayerDialog(playerid, DIALOG_GPS_TRANSPORT, DIALOG_STYLE_LIST, "VEXORIUM RP | РўСЂР°РЅСЃРїРѕСЂС‚ Рё РђР—РЎ", "РђРІС‚РѕСЃР°Р»РѕРЅ / РјРѕСЏ РјР°С€РёРЅР°\nР‘Р»РёР¶Р°Р№С€Р°СЏ РђР—РЎ\nРђРІС‚РѕСЃРµСЂРІРёСЃ\nРђРІС‚РѕС€РєРѕР»Р°", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_TRANSPORT, DIALOG_STYLE_LIST, "VEXORIUM RP | Транспорт и АЗС", "Автосалон / моя машина\nБлижайшая АЗС\nАвтосервис\nАвтошкола", "Маршрут", "Назад");
         else if (listitem == 6)
-            ShowPlayerDialog(playerid, DIALOG_GPS_SHOPS, DIALOG_STYLE_LIST, "VEXORIUM RP | РњР°РіР°Р·РёРЅС‹", "Р‘Р»РёР¶Р°Р№С€РёР№ РјР°СЂРєРµС‚ 24/7\nР‘Р»РёР¶Р°Р№С€РёР№ РјР°РіР°Р·РёРЅ РѕРґРµР¶РґС‹\nРњСЌСЂРёСЏ Рё Р»РёС†РµРЅР·РёРё", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_SHOPS, DIALOG_STYLE_LIST, "VEXORIUM RP | Магазины", "Ближайший маркет 24/7\nБлижайший магазин одежды\nМэрия и лицензии", "Маршрут", "Назад");
         else if (listitem == 7)
-            ShowPlayerDialog(playerid, DIALOG_GPS_HOUSING, DIALOG_STYLE_LIST, "VEXORIUM RP | РќРµРґРІРёР¶РёРјРѕСЃС‚СЊ", "Р‘Р»РёР¶Р°Р№С€РёР№ СЃРІРѕР±РѕРґРЅС‹Р№ РґРѕРј\nРњРѕР№ РґРѕРј", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_HOUSING, DIALOG_STYLE_LIST, "VEXORIUM RP | Недвижимость", "Ближайший свободный дом\nМой дом", "Маршрут", "Назад");
         else if (listitem == 8)
-            ShowPlayerDialog(playerid, DIALOG_GPS_MEDICAL, DIALOG_STYLE_LIST, "VEXORIUM RP | РњРµРґРёС†РёРЅР°", "Р‘Р¦Р Р‘ вЂ” РіР»Р°РІРЅС‹Р№ РІС…РѕРґ\nРђРїС‚РµРєР° Сѓ Р±РѕР»СЊРЅРёС†С‹\nР”РёСЃРїРµС‚С‡РµСЂ СЃРєРѕСЂРѕР№ РїРѕРјРѕС‰Рё", "РњР°СЂС€СЂСѓС‚", "РќР°Р·Р°Рґ");
+            ShowPlayerDialog(playerid, DIALOG_GPS_MEDICAL, DIALOG_STYLE_LIST, "VEXORIUM RP | Медицина", "БЦРБ — главный вход\nАптека у больницы\nДиспетчер скорой помощи", "Маршрут", "Назад");
         return 1;
     }
     if (dialogid == DIALOG_GPS_PUBLIC || dialogid == DIALOG_GPS_ORGS || dialogid == DIALOG_GPS_JOBS || dialogid == DIALOG_GPS_GANGS || dialogid == DIALOG_GPS_WORKS
         || dialogid == DIALOG_GPS_TRANSPORT || dialogid == DIALOG_GPS_SHOPS || dialogid == DIALOG_GPS_HOUSING || dialogid == DIALOG_GPS_MEDICAL)
     {
         if (!response) { ShowGPS(playerid); return 1; }
-        if (gWorkStage[playerid] > 0) return SendClientMessage(playerid, COLOR_YELLOW, "РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€Рё РёР»Рё РѕС‚РјРµРЅРё С‚РµРєСѓС‰РёР№ СЂР°Р±РѕС‡РёР№ РјР°СЂС€СЂСѓС‚."), 1;
+        if (gWorkStage[playerid] > 0) return SendClientMessage(playerid, COLOR_YELLOW, "Сначала заверши или отмени текущий рабочий маршрут."), 1;
         new Float:x, Float:y, Float:z;
         if (dialogid == DIALOG_GPS_PUBLIC)
         {
@@ -8114,7 +8114,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             if (listitem == 4)
             {
                 if (!gCarjackActive[playerid] || gCarjackVehicle[playerid] == INVALID_VEHICLE_ID || GetVehicleModel(gCarjackVehicle[playerid]) == 0)
-                    return SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Р—Р°РїСѓСЃС‚РёС‚Рµ Р°РІС‚РѕСѓРіРѕРЅС‰РёРєР° РІ СЂР°Р±РѕС‚Сѓ С‡РµСЂРµР· /job, Р·Р°С‚РµРј /work."), 1;
+                    return SendClientMessage(playerid, COLOR_YELLOW, "[VEXORIUM] Запустите автоугонщика в работу через /job, затем /work."), 1;
                 if (gWorkStage[playerid] == 11)
                     GetGangBase(gCarjackDestination[playerid], x, y, z);
                 else
@@ -8136,11 +8136,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         {
             switch (listitem)
             {
-                case 0: { x = VX_FIRE_STATION_X; y = VX_FIRE_STATION_Y; z = VX_FIRE_STATION_Z; } // РџРѕР¶Р°СЂРЅР°СЏ С‡Р°СЃС‚СЊ РІ Commerce
-                case 1: { x = 1479.0; y = -1739.0; z = 13.5; } // РўР°РєСЃРё
-                case 2: { x = 2195.0; y = -2254.0; z = 13.5; } // Р”Р°Р»СЊРЅРѕР±РѕР№С‰РёРє
-                case 3: { x = 1810.0; y = -1900.0; z = 13.4; } // РђРІС‚РѕР±СѓСЃРЅС‹Р№ РїР°СЂРє
-                case 4: { x = 820.0; y = 856.0; z = 12.0; } // РЁР°С…С‚Р°
+                case 0: { x = VX_FIRE_STATION_X; y = VX_FIRE_STATION_Y; z = VX_FIRE_STATION_Z; } // Пожарная часть в Commerce
+                case 1: { x = 1479.0; y = -1739.0; z = 13.5; } // Такси
+                case 2: { x = 2195.0; y = -2254.0; z = 13.5; } // Дальнобойщик
+                case 3: { x = 1810.0; y = -1900.0; z = 13.4; } // Автобусный парк
+                case 4: { x = 820.0; y = 856.0; z = 12.0; } // Шахта
                 default: return 1;
             }
         }
@@ -8155,7 +8155,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         GetVehiclePos(personalCar, x, y, z);
                     else { x = 2131.0; y = -1150.0; z = 24.1; }
                 }
-                case 1: if (!VX_GPSNearestGas(playerid, x, y, z)) return SendClientMessage(playerid, COLOR_RED, "РђР—РЎ РЅРµ РЅР°Р№РґРµРЅС‹."), 1;
+                case 1: if (!VX_GPSNearestGas(playerid, x, y, z)) return SendClientMessage(playerid, COLOR_RED, "АЗС не найдены."), 1;
                 case 2: { x = 1940.0; y = -1772.0; z = 13.4; }
                 case 3: { x = -2026.8; y = -96.5; z = 35.2; }
                 default: return 1;
@@ -8165,8 +8165,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         {
             switch (listitem)
             {
-                case 0: if (!VX_GPSNearestMarket(playerid, x, y, z)) return SendClientMessage(playerid, COLOR_RED, "РњР°СЂРєРµС‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹."), 1;
-                case 1: if (!VX_GPSNearestClothes(playerid, x, y, z)) return SendClientMessage(playerid, COLOR_RED, "РњР°РіР°Р·РёРЅС‹ РѕРґРµР¶РґС‹ РЅРµ РЅР°Р№РґРµРЅС‹."), 1;
+                case 0: if (!VX_GPSNearestMarket(playerid, x, y, z)) return SendClientMessage(playerid, COLOR_RED, "Маркеты не найдены."), 1;
+                case 1: if (!VX_GPSNearestClothes(playerid, x, y, z)) return SendClientMessage(playerid, COLOR_RED, "Магазины одежды не найдены."), 1;
                 case 2: { x = 1481.0; y = -1771.0; z = 18.8; }
                 default: return 1;
             }
@@ -8176,12 +8176,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             if (listitem == 0)
             {
                 if (!VX_GPSFindHouse(playerid, 0, x, y, z))
-                    return SendClientMessage(playerid, COLOR_YELLOW, "РЎРІРѕР±РѕРґРЅС‹С… РґРѕРјРѕРІ СЃРµР№С‡Р°СЃ РЅРµС‚."), 1;
+                    return SendClientMessage(playerid, COLOR_YELLOW, "Свободных домов сейчас нет."), 1;
             }
             else if (listitem == 1)
             {
                 if (!VX_GPSFindHouse(playerid, 1, x, y, z))
-                    return SendClientMessage(playerid, COLOR_YELLOW, "РЈ РІР°СЃ РїРѕРєР° РЅРµС‚ РґРѕРјР°. Р’С‹Р±РµСЂРёС‚Рµ Р±Р»РёР¶Р°Р№С€РёР№ СЃРІРѕР±РѕРґРЅС‹Р№ РґРѕРј Рё РїРѕРґРѕР№РґРёС‚Рµ Рє С‚Р°Р±Р»РёС‡РєРµ."), 1;
+                    return SendClientMessage(playerid, COLOR_YELLOW, "У вас пока нет дома. Выберите ближайший свободный дом и подойдите к табличке."), 1;
             }
             else return 1;
         }
@@ -8209,7 +8209,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         }
         SetPlayerCheckpoint(playerid, x, y, z, 5.0);
         gGpsActive[playerid] = true;
-        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM GPS] РњР°СЂС€СЂСѓС‚ РѕС‚РјРµС‡РµРЅ РЅР° СЂР°РґР°СЂРµ. GPS РЅРµ С‚РµР»РµРїРѕСЂС‚РёСЂСѓРµС‚ вЂ” СЃР»РµРґСѓР№ Рє РѕС‚РјРµС‚РєРµ.");
+        SendClientMessage(playerid, COLOR_GREEN, "[VEXORIUM GPS] Маршрут отмечен на радаре. GPS не телепортирует — следуй к отметке.");
         return 1;
     }
     if (dialogid == DIALOG_CARJACK_HACK)
@@ -8218,10 +8218,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (!gCarjackActive[playerid] || gCarjackVehicle[playerid] == INVALID_VEHICLE_ID || GetVehicleModel(gCarjackVehicle[playerid]) == 0) return 1;
         new Float:x, Float:y, Float:z;
         GetVehiclePos(gCarjackVehicle[playerid], x, y, z);
-        if (GetPlayerDistanceFromPoint(playerid, x, y, z) > 5.0) return SendClientMessage(playerid, COLOR_RED, "Р’С‹ РѕС‚РѕС€Р»Рё СЃР»РёС€РєРѕРј РґР°Р»РµРєРѕ РѕС‚ РјР°С€РёРЅС‹."), 1;
+        if (GetPlayerDistanceFromPoint(playerid, x, y, z) > 5.0) return SendClientMessage(playerid, COLOR_RED, "Вы отошли слишком далеко от машины."), 1;
         if (listitem != gCarjackCode[playerid])
         {
-            SendClientMessage(playerid, COLOR_RED, "РќРµРІРµСЂРЅС‹Р№ РїСЂРѕРІРѕРґ! Р—Р°РјРѕРє РЅРµ РѕС‚РєСЂС‹С‚. РџРѕРїСЂРѕР±СѓР№С‚Рµ /hack РµС‰С‘ СЂР°Р·.");
+            SendClientMessage(playerid, COLOR_RED, "Неверный провод! Замок не открыт. Попробуйте /hack ещё раз.");
             return 1;
         }
         gCarjackUnlocked[playerid] = true;
@@ -8229,29 +8229,29 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         SetVehicleParamsForPlayer(gCarjackVehicle[playerid], playerid, 0, 0);
         DisablePlayerCheckpoint(playerid);
         // Dispatcher notification is sent when the thief actually starts driving.
-        SendClientMessage(playerid, COLOR_GREEN, "Р—Р°РјРѕРє РѕС‚РєСЂС‹С‚! РЎР°РґРёС‚РµСЃСЊ Р·Р° СЂСѓР»СЊ Рё РґРѕСЃС‚Р°РІСЊС‚Рµ РјР°С€РёРЅСѓ РЅР° Р±Р°Р·Сѓ Р»СЋР±РѕР№ Р±Р°РЅРґС‹. Р—Р° СЃРґР°С‡Сѓ РЅР°С‡РёСЃР»РёС‚СЃСЏ 100000 СЂСѓР±Р»РµР№.");
+        SendClientMessage(playerid, COLOR_GREEN, "Замок открыт! Садитесь за руль и доставьте машину на базу любой банды. За сдачу начислится 100000 рублей.");
         return 1;
     }
     if (dialogid == DIALOG_JOB)
     {
         if (!response) return 1;
-        if(!RP_Free(playerid) || !gHasPassport[playerid]) return RP_Message(playerid,"Р”Р»СЏ СЂР°Р±РѕС‚С‹ РЅСѓР¶РµРЅ РїР°СЃРїРѕСЂС‚.");
+        if(!RP_Free(playerid) || !gHasPassport[playerid]) return RP_Message(playerid,"Для работы нужен паспорт.");
         if(listitem==5 && (gLevel[playerid]<3 || gFaction[playerid]!=FACTION_NONE))
-            return RP_Message(playerid,"РђРґРІРѕРєР°С‚: 3 СѓСЂРѕРІРµРЅСЊ Рё РѕС‚СЃСѓС‚СЃС‚РІРёРµ С‡Р»РµРЅСЃС‚РІР° РІРѕ С„СЂР°РєС†РёРё.");
-        if (gWorkStage[playerid] > 0) return SendClientMessage(playerid, COLOR_RED, "РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ С‚РµРєСѓС‰РёР№ РјР°СЂС€СЂСѓС‚."), 1;
+            return RP_Message(playerid,"Адвокат: 3 уровень и отсутствие членства во фракции.");
+        if (gWorkStage[playerid] > 0) return SendClientMessage(playerid, COLOR_RED, "Сначала завершите текущий маршрут."), 1;
         if (listitem < 0 || listitem > 6) return 1;
-        if (listitem == 4 && gLevel[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "РђРІС‚РѕСѓРіРѕРЅС‰РёРє РґРѕСЃС‚СѓРїРµРЅ СЃ 3 СѓСЂРѕРІРЅСЏ."), 1;
+        if (listitem == 4 && gLevel[playerid] < 3) return SendClientMessage(playerid, COLOR_RED, "Автоугонщик доступен с 3 уровня."), 1;
         gJob[playerid] = listitem + 1;
         // Put the uniform on immediately and persist it for the next login.
         SetPlayerSkin(playerid, VX_RespawnSkin(playerid));
         SavePlayer(playerid);
-        if (listitem == 0) SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ СѓСЃС‚СЂРѕРёР»РёСЃСЊ С‚Р°РєСЃРёСЃС‚РѕРј. Р’РІРµРґРёС‚Рµ /work, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ РјР°СЂС€СЂСѓС‚.");
-        else if (listitem == 1) SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ СѓСЃС‚СЂРѕРёР»РёСЃСЊ РґР°Р»СЊРЅРѕР±РѕР№С‰РёРєРѕРј. Р’РІРµРґРёС‚Рµ /work, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ РјР°СЂС€СЂСѓС‚.");
-        else if (listitem == 2) SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ СѓСЃС‚СЂРѕРёР»РёСЃСЊ РІРѕРґРёС‚РµР»РµРј Р°РІС‚РѕР±СѓСЃР°. Р’РІРµРґРёС‚Рµ /work, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ РјР°СЂС€СЂСѓС‚.");
-        else if (listitem == 3) SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ СѓСЃС‚СЂРѕРёР»РёСЃСЊ С€Р°С…С‚С‘СЂРѕРј. Р”РѕР±РµСЂРёС‚РµСЃСЊ РґРѕ С€Р°С…С‚С‹ Рё РІРІРµРґРёС‚Рµ /work, С‡С‚РѕР±С‹ РЅР°С‡Р°С‚СЊ РґРѕР±С‹С‡Сѓ.");
-        else if(listitem==4) SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ СѓСЃС‚СЂРѕРёР»РёСЃСЊ Р°РІС‚РѕСѓРіРѕРЅС‰РёРєРѕРј. РЎ 3 СѓСЂРѕРІРЅСЏ РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /work, С‡С‚РѕР±С‹ РЅР°Р№С‚Рё СЃР»СѓС‡Р°Р№РЅСѓСЋ РјР°С€РёРЅСѓ.");
-        else if(listitem==6) SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ СѓСЃС‚СЂРѕРёР»РёСЃСЊ РїРѕР¶Р°СЂРЅС‹Рј. Р’РІРµРґРёС‚Рµ /work Сѓ РїРѕР¶Р°СЂРЅРѕР№ С‡Р°СЃС‚Рё.");
-        else RP_Message(playerid,"Р’С‹ СѓСЃС‚СЂРѕРёР»РёСЃСЊ Р°РґРІРѕРєР°С‚РѕРј. /lawyer /clients /prison /defend ID.");
+        if (listitem == 0) SendClientMessage(playerid, COLOR_GREEN, "Вы устроились таксистом. Введите /work, чтобы начать маршрут.");
+        else if (listitem == 1) SendClientMessage(playerid, COLOR_GREEN, "Вы устроились дальнобойщиком. Введите /work, чтобы начать маршрут.");
+        else if (listitem == 2) SendClientMessage(playerid, COLOR_GREEN, "Вы устроились водителем автобуса. Введите /work, чтобы начать маршрут.");
+        else if (listitem == 3) SendClientMessage(playerid, COLOR_GREEN, "Вы устроились шахтёром. Доберитесь до шахты и введите /work, чтобы начать добычу.");
+        else if(listitem==4) SendClientMessage(playerid, COLOR_GREEN, "Вы устроились автоугонщиком. С 3 уровня используйте /work, чтобы найти случайную машину.");
+        else if(listitem==6) SendClientMessage(playerid, COLOR_GREEN, "Вы устроились пожарным. Введите /work у пожарной части.");
+        else RP_Message(playerid,"Вы устроились адвокатом. /lawyer /clients /prison /defend ID.");
         return 1;
     }
     return 0;
@@ -8317,7 +8317,7 @@ stock VX_Commit()
 }
 stock VX_Error(playerid)
 {
-    SendClientMessage(playerid, COLOR_RED, "РћС€РёР±РєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С…. РћРїРµСЂР°С†РёСЏ РѕС‚РјРµРЅРµРЅР°. РћР±СЂР°С‚РёС‚РµСЃСЊ Рє Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ.");
+    SendClientMessage(playerid, COLOR_RED, "Ошибка базы данных. Операция отменена. Обратитесь к администратору.");
     return 1;
 }
 stock VX_Number(const text[], &value, maximum = MAX_MONEY)
@@ -8361,11 +8361,11 @@ stock VX_ShowSpecActions(playerid)
 {
     new targetid=gVXSpec[playerid];
     if(!VX_Admin(playerid) || !VX_Valid(targetid) || targetid==playerid)
-        return SendClientMessage(playerid,COLOR_RED,"РЎРЅР°С‡Р°Р»Р° РІРєР»СЋС‡РёС‚Рµ /spec ID."),1;
+        return SendClientMessage(playerid,COLOR_RED,"Сначала включите /spec ID."),1;
     new title[128],body[384];
     format(title,sizeof title,"VEXORIUM | %s [%d]",gName[targetid],targetid);
-    format(body,sizeof body,"Р—Р°Р±Р°РЅРёС‚СЊ вЂ” 3 СѓСЂРѕРІРµРЅСЊ+\nРљРёРєРЅСѓС‚СЊ вЂ” 2 СѓСЂРѕРІРµРЅСЊ+\nРџРѕСЃР°РґРёС‚СЊ РІ РљРџР— вЂ” 2 СѓСЂРѕРІРµРЅСЊ+\nРћСЃРІРѕР±РѕРґРёС‚СЊ РёР· РљРџР— вЂ” 2 СѓСЂРѕРІРµРЅСЊ+\nР’С‹РґР°С‚СЊ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ вЂ” 2 СѓСЂРѕРІРµРЅСЊ+\nРњСѓС‚ вЂ” 2 СѓСЂРѕРІРµРЅСЊ+\nРРЅС„РѕСЂРјР°С†РёСЏ РѕР± РёРіСЂРѕРєРµ\nР—Р°РІРµСЂС€РёС‚СЊ РЅР°Р±Р»СЋРґРµРЅРёРµ");
-    return VX_Show(playerid,DIALOG_ADMIN_SPEC,DIALOG_STYLE_LIST,title,body,"Р”РµР№СЃС‚РІРёРµ","Р—Р°РєСЂС‹С‚СЊ");
+    format(body,sizeof body,"Забанить — 3 уровень+\nКикнуть — 2 уровень+\nПосадить в КПЗ — 2 уровень+\nОсвободить из КПЗ — 2 уровень+\nВыдать предупреждение — 2 уровень+\nМут — 2 уровень+\nИнформация об игроке\nЗавершить наблюдение");
+    return VX_Show(playerid,DIALOG_ADMIN_SPEC,DIALOG_STYLE_LIST,title,body,"Действие","Закрыть");
 }
 stock VX_AdminDelayedKick(playerid)
 {
@@ -8375,44 +8375,44 @@ stock VX_AdminDelayedKick(playerid)
 stock VX_AdminBanTarget(adminid,targetid,minutes,const rawReason[])
 {
     if(!VX_AdminCanAct(adminid,targetid,3))
-        return SendClientMessage(adminid,COLOR_RED,"Р‘Р°РЅ С‚СЂРµР±СѓРµС‚ 3 СѓСЂРѕРІРµРЅСЊ; РЅРµР»СЊР·СЏ Р±Р°РЅРёС‚СЊ СЃРµР±СЏ, РІР»Р°РґРµР»СЊС†Р° РёР»Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° СЂР°РІРЅРѕРіРѕ/Р±РѕР»РµРµ РІС‹СЃРѕРєРѕРіРѕ СѓСЂРѕРІРЅСЏ."),1;
+        return SendClientMessage(adminid,COLOR_RED,"Бан требует 3 уровень; нельзя банить себя, владельца или администратора равного/более высокого уровня."),1;
     new reason[120],query[512],message[192],expires=0;
     VX_CleanText(rawReason,reason,sizeof reason);
-    if(strlen(reason)<3) return SendClientMessage(adminid,COLOR_YELLOW,"РЈРєР°Р¶РёС‚Рµ РїСЂРёС‡РёРЅСѓ Р±Р°РЅР° (РјРёРЅРёРјСѓРј 3 СЃРёРјРІРѕР»Р°)."),1;
-    if(minutes<0 || minutes>525600) return SendClientMessage(adminid,COLOR_RED,"РЎСЂРѕРє Р±Р°РЅР°: 0 (РЅР°РІСЃРµРіРґР°) РёР»Рё 1-525600 РјРёРЅСѓС‚."),1;
+    if(strlen(reason)<3) return SendClientMessage(adminid,COLOR_YELLOW,"Укажите причину бана (минимум 3 символа)."),1;
+    if(minutes<0 || minutes>525600) return SendClientMessage(adminid,COLOR_RED,"Срок бана: 0 (навсегда) или 1-525600 минут."),1;
     if(minutes>0) expires=gettime()+minutes*60;
     format(query,sizeof query,"INSERT OR REPLACE INTO vx_admin_bans(name,reason,admin,expires,created) VALUES('%q','%q','%q',%d,%d)",gName[targetid],reason,gName[adminid],expires,gettime());
-    if(!VX_SQL(query)) return SendClientMessage(adminid,COLOR_RED,"РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ Р±Р°РЅ РІ Р±Р°Р·Рµ РґР°РЅРЅС‹С…."),1;
-    if(minutes==0) format(message,sizeof message,"[BAN] %s Р·Р°Р±Р°РЅРµРЅ РЅР°РІСЃРµРіРґР°. РџСЂРёС‡РёРЅР°: %s",gName[targetid],reason);
-    else format(message,sizeof message,"[BAN] %s Р·Р°Р±Р°РЅРµРЅ РЅР° %d РјРёРЅ. РџСЂРёС‡РёРЅР°: %s",gName[targetid],minutes,reason);
+    if(!VX_SQL(query)) return SendClientMessage(adminid,COLOR_RED,"Не удалось сохранить бан в базе данных."),1;
+    if(minutes==0) format(message,sizeof message,"[BAN] %s забанен навсегда. Причина: %s",gName[targetid],reason);
+    else format(message,sizeof message,"[BAN] %s забанен на %d мин. Причина: %s",gName[targetid],minutes,reason);
     SendClientMessageToAll(COLOR_ORANGE,message);
-    SendClientMessage(targetid,COLOR_RED,"Р’С‹ Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅС‹ РЅР° VEXORIUM RP. РџСЂРё РїРѕРІС‚РѕСЂРЅРѕРј РІС…РѕРґРµ Р±Р°РЅ Р±СѓРґРµС‚ РїСЂРѕРІРµСЂРµРЅ.");
-    SendClientMessage(adminid,COLOR_GREEN,"Р‘Р°РЅ СЃРѕС…СЂР°РЅС‘РЅ РІ Р±Р°Р·Рµ Рё Р±СѓРґРµС‚ РґРµР№СЃС‚РІРѕРІР°С‚СЊ РїРѕСЃР»Рµ РїРµСЂРµР·Р°С…РѕРґР°.");
+    SendClientMessage(targetid,COLOR_RED,"Вы заблокированы на VEXORIUM RP. При повторном входе бан будет проверен.");
+    SendClientMessage(adminid,COLOR_GREEN,"Бан сохранён в базе и будет действовать после перезахода.");
     SetTimerEx("VX_AdminDelayedKick",300,false,"i",targetid);
     return 1;
 }
 stock VX_AdminKickTarget(adminid,targetid,const rawReason[])
 {
     if(!VX_AdminCanAct(adminid,targetid,2))
-        return SendClientMessage(adminid,COLOR_RED,"РљРёРє С‚СЂРµР±СѓРµС‚ 2 СѓСЂРѕРІРµРЅСЊ; РЅРµР»СЊР·СЏ РєРёРєРЅСѓС‚СЊ СЃРµР±СЏ, РІР»Р°РґРµР»СЊС†Р° РёР»Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° СЂР°РІРЅРѕРіРѕ/Р±РѕР»РµРµ РІС‹СЃРѕРєРѕРіРѕ СѓСЂРѕРІРЅСЏ."),1;
+        return SendClientMessage(adminid,COLOR_RED,"Кик требует 2 уровень; нельзя кикнуть себя, владельца или администратора равного/более высокого уровня."),1;
     new reason[120],message[192];VX_CleanText(rawReason,reason,sizeof reason);
-    if(!strlen(reason)) format(reason,sizeof reason,"РќР°СЂСѓС€РµРЅРёРµ РїСЂР°РІРёР» СЃРµСЂРІРµСЂР°");
-    format(message,sizeof message,"[KICK] %s РѕС‚РєР»СЋС‡С‘РЅ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј %s. РџСЂРёС‡РёРЅР°: %s",gName[targetid],gName[adminid],reason);
+    if(!strlen(reason)) format(reason,sizeof reason,"Нарушение правил сервера");
+    format(message,sizeof message,"[KICK] %s отключён администратором %s. Причина: %s",gName[targetid],gName[adminid],reason);
     SendClientMessageToAll(COLOR_ORANGE,message);
-    SendClientMessage(targetid,COLOR_RED,"Р’С‹ РѕС‚РєР»СЋС‡РµРЅС‹ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј. РџСЂРёС‡РёРЅР°: СЃРјРѕС‚СЂРёС‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ СЃРµСЂРІРµСЂР°.");
+    SendClientMessage(targetid,COLOR_RED,"Вы отключены администратором. Причина: смотрите сообщение сервера.");
     SetTimerEx("VX_AdminDelayedKick",300,false,"i",targetid);
-    SendClientMessage(adminid,COLOR_GREEN,"РРіСЂРѕРє Р±СѓРґРµС‚ РѕС‚РєР»СЋС‡С‘РЅ.");
+    SendClientMessage(adminid,COLOR_GREEN,"Игрок будет отключён.");
     return 1;
 }
 stock VX_AdminWarnTarget(adminid,targetid,const rawReason[])
 {
     if(!VX_AdminCanAct(adminid,targetid,2))
-        return SendClientMessage(adminid,COLOR_RED,"РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ С‚СЂРµР±СѓРµС‚ 2 СѓСЂРѕРІРµРЅСЊ Рё РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РІС‹РґР°РЅРѕ СЂР°РІРЅРѕРјСѓ/СЃС‚Р°СЂС€РµРјСѓ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ."),1;
+        return SendClientMessage(adminid,COLOR_RED,"Предупреждение требует 2 уровень и не может быть выдано равному/старшему администратору."),1;
     new reason[120],query[384],message[192];VX_CleanText(rawReason,reason,sizeof reason);
-    if(strlen(reason)<3) return SendClientMessage(adminid,COLOR_YELLOW,"РЈРєР°Р¶РёС‚Рµ РїСЂРёС‡РёРЅСѓ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ."),1;
+    if(strlen(reason)<3) return SendClientMessage(adminid,COLOR_YELLOW,"Укажите причину предупреждения."),1;
     format(query,sizeof query,"INSERT INTO vx_admin_warns(name,admin,reason,created) VALUES('%q','%q','%q',%d)",gName[targetid],gName[adminid],reason,gettime());
-    if(!VX_SQL(query)) return SendClientMessage(adminid,COLOR_RED,"РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ."),1;
-    format(message,sizeof message,"[WARN] %s РїРѕР»СѓС‡РёР» РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РѕС‚ %s. РџСЂРёС‡РёРЅР°: %s",gName[targetid],gName[adminid],reason);
+    if(!VX_SQL(query)) return SendClientMessage(adminid,COLOR_RED,"Не удалось сохранить предупреждение."),1;
+    format(message,sizeof message,"[WARN] %s получил предупреждение от %s. Причина: %s",gName[targetid],gName[adminid],reason);
     SendClientMessageToAll(COLOR_ORANGE,message);
     return 1;
 }
@@ -8432,8 +8432,8 @@ stock VX_CheckBanBeforeAuth(playerid)
         VX_SQL(query);return 0;
     }
     new message[220];
-    if(expires==0) format(message,sizeof message,"Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ: РїРѕСЃС‚РѕСЏРЅРЅС‹Р№ Р±Р°РЅ. РџСЂРёС‡РёРЅР°: %s | РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ: %s",reason,adminName);
-    else format(message,sizeof message,"Р”РѕСЃС‚СѓРї Р·Р°РїСЂРµС‰С‘РЅ: Р±Р°РЅ РµС‰С‘ %d РјРёРЅ. РџСЂРёС‡РёРЅР°: %s | РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ: %s",(expires-gettime()+59)/60,reason,adminName);
+    if(expires==0) format(message,sizeof message,"Доступ запрещён: постоянный бан. Причина: %s | Администратор: %s",reason,adminName);
+    else format(message,sizeof message,"Доступ запрещён: бан ещё %d мин. Причина: %s | Администратор: %s",(expires-gettime()+59)/60,reason,adminName);
     SendClientMessage(playerid,COLOR_RED,message);
     SetTimerEx("VX_AdminDelayedKick",300,false,"i",playerid);
     return 1;
@@ -8457,7 +8457,7 @@ stock VX_CleanText(const input[], output[], size)
     output[n] = '\0';
     return n;
 }
-stock VX_Show(playerid, dialogid, style, const title[], const body[], const button[] = "Р’С‹Р±СЂР°С‚СЊ", const cancel[] = "Р—Р°РєСЂС‹С‚СЊ")
+stock VX_Show(playerid, dialogid, style, const title[], const body[], const button[] = "Выбрать", const cancel[] = "Закрыть")
 {
     // Legacy a_samp declares these strings without const.
     new dialogTitle[144], dialogBody[4096], dialogButton[32], dialogCancel[32];
@@ -8515,14 +8515,14 @@ stock VX_Init()
     gVXWardLobbyPickup = CreatePickup(1239,1,VX_WARD_LOBBY_X,VX_WARD_LOBBY_Y,VX_WARD_Z,VX_HOSPITAL_WORLD);
     gVXMedCertPickup = CreatePickup(1239,1,VX_LOBBY_CERT_X,VX_LOBBY_CERT_Y,VX_LOBBY_Z,VX_HOSPITAL_WORLD);
     gVXHospitalGaragePickup = CreatePickup(1239,1,1192.1529,-1335.5710,13.3984,0);
-    Create3DTextLabel("{66CCFF}Р‘Р¦Р Р‘ | Р“Р°СЂР°Р¶ СЃРєРѕСЂРѕР№ РїРѕРјРѕС‰Рё\n{FFFFFF}/hgarage | /mduty",COLOR_WHITE,1192.1529,-1335.5710,14.4,15.0,0,1);
-    Create3DTextLabel("{66CCFF}Р‘Р¦Р Р‘ | Р’РҐРћР”\nРЎС‚Р°С†РёРѕРЅР°СЂ, РєРѕР№РєРё, СЃРєРѕСЂР°СЏ РїРѕРјРѕС‰СЊ",COLOR_WHITE,1176.7,-1322.5,15.0,20.0,0,1);
+    Create3DTextLabel("{66CCFF}БЦРБ | Гараж скорой помощи\n{FFFFFF}/hgarage | /mduty",COLOR_WHITE,1192.1529,-1335.5710,14.4,15.0,0,1);
+    Create3DTextLabel("{66CCFF}БЦРБ | ВХОД\nСтационар, койки, скорая помощь",COLOR_WHITE,1176.7,-1322.5,15.0,20.0,0,1);
     // Removed duplicate /biz 3D labels that overlapped normal shop markers.
     gVXLastTick = gettime();
     gVXTimer = SetTimer("VX_Tick",1000,true);
     SetTimer("VX_VehicleSpeedTick",200,true);
     SetTimer("VX_CuffFollowTick",250,true);
-    print("[VEXORIUM UPDATE] Bank, inventory, phone, families, businesses, reports and Р‘Р¦Р Р‘ initialized.");
+    print("[VEXORIUM UPDATE] Bank, inventory, phone, families, businesses, reports and БЦРБ initialized.");
     return 1;
 }
 stock VX_Connect(playerid)
@@ -8639,9 +8639,9 @@ public VX_NeedsPulse()
         new Float:hp; GetPlayerHealth(playerid, hp);
         if (gThirst[playerid] == 0) SetPlayerHealth(playerid, (hp > 5.0) ? hp - 3.0 : 1.0);
         else if (gHunger[playerid] == 0) SetPlayerHealth(playerid, (hp > 5.0) ? hp - 1.0 : 1.0);
-        if (gThirst[playerid] <= 15) SendClientMessage(playerid, COLOR_RED, "Р’С‹ СЃРёР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїРёС‚СЊ! РљСѓРїРёС‚Рµ РІРѕРґСѓ РІ РјР°СЂРєРµС‚Рµ РёР»Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ РµС‘ РёР· РёРЅРІРµРЅС‚Р°СЂСЏ.");
-        else if (gHunger[playerid] <= 15) SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ РіРѕР»РѕРґРЅС‹. РљСѓРїРёС‚Рµ РµРґСѓ РІ РјР°СЂРєРµС‚Рµ РёР»Рё РёСЃРїРѕР»СЊР·СѓР№С‚Рµ РµС‘ РёР· РёРЅРІРµРЅС‚Р°СЂСЏ.");
-        if (gEnergy[playerid] <= 15) SendClientMessage(playerid, COLOR_YELLOW, "Р’С‹ СѓСЃС‚Р°Р»Рё. РћС‚РґРѕС…РЅРёС‚Рµ РІ СЃРѕР±СЃС‚РІРµРЅРЅРѕРј РґРѕРјРµ РєРѕРјР°РЅРґРѕР№ /rest.");
+        if (gThirst[playerid] <= 15) SendClientMessage(playerid, COLOR_RED, "Вы сильно хотите пить! Купите воду в маркете или используйте её из инвентаря.");
+        else if (gHunger[playerid] <= 15) SendClientMessage(playerid, COLOR_YELLOW, "Вы голодны. Купите еду в маркете или используйте её из инвентаря.");
+        if (gEnergy[playerid] <= 15) SendClientMessage(playerid, COLOR_YELLOW, "Вы устали. Отдохните в собственном доме командой /rest.");
         VX_NeedsSave(playerid);
     }
     return 1;
@@ -8670,7 +8670,7 @@ stock VX_ContractNotify(playerid)
         for (new i = 0; i < db_num_rows(r); i++)
         {
             db_get_field(r, 1, payer, sizeof payer); db_get_field(r, 3, purpose, sizeof purpose);
-            format(msg, sizeof msg, "[Р”РћР“РћР’РћР ] #%d РѕС‚ %s: %d СЂСѓР±. вЂ” %s. РџСЂРёРЅСЏС‚СЊ: /contractaccept %d", db_get_field_int(r, 0), payer, db_get_field_int(r, 2), purpose, db_get_field_int(r, 0));
+            format(msg, sizeof msg, "[ДОГОВОР] #%d от %s: %d руб. — %s. Принять: /contractaccept %d", db_get_field_int(r, 0), payer, db_get_field_int(r, 2), purpose, db_get_field_int(r, 0));
             SendClientMessage(playerid, COLOR_YELLOW, msg); db_next_row(r);
         }
         db_free_result(r);
@@ -8680,8 +8680,8 @@ stock VX_ContractNotify(playerid)
 stock VX_ContractCreate(playerid, targetid, amount, const purpose[])
 {
     if (!VX_Valid(playerid) || !VX_Valid(targetid) || amount < 1 || amount > 10000000 || amount > gMoney[playerid])
-        return SendClientMessage(playerid, COLOR_RED, "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С… РёР»Рё РЅРµРІРµСЂРЅР°СЏ СЃСѓРјРјР° РґРѕРіРѕРІРѕСЂР°."), 1;
-    if (strlen(purpose) < 2) return SendClientMessage(playerid, COLOR_RED, "РЈРєР°Р¶РёС‚Рµ РЅР°Р·РЅР°С‡РµРЅРёРµ РґРѕРіРѕРІРѕСЂР°."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "Недостаточно наличных или неверная сумма договора."), 1;
+    if (strlen(purpose) < 2) return SendClientMessage(playerid, COLOR_RED, "Укажите назначение договора."), 1;
     new query[512], cash = gMoney[playerid] - amount;
     if (!VX_Begin()) return VX_Error(playerid);
     format(query, sizeof query, "UPDATE accounts SET money=%d WHERE name='%q'", cash, gName[playerid]); VX_SQL(query);
@@ -8691,12 +8691,12 @@ stock VX_ContractCreate(playerid, targetid, amount, const purpose[])
     new DBResult:r = db_query(gDatabase, "SELECT last_insert_rowid()");
     new contractId = 0; if (r && db_num_rows(r)) contractId = db_get_field_int(r, 0); if (r) db_free_result(r);
     new msg[192];
-    format(msg, sizeof msg, "Р”РѕРіРѕРІРѕСЂ #%d СЃРѕР·РґР°РЅ: %d СЂСѓР±. РќР°Р·РЅР°С‡РµРЅРёРµ: %s. Р”РµРЅСЊРіРё СѓРґРµСЂР¶РёРІР°СЋС‚СЃСЏ РґРѕ СЂРµС€РµРЅРёСЏ РІС‚РѕСЂРѕР№ СЃС‚РѕСЂРѕРЅС‹.", contractId, amount, purpose);
+    format(msg, sizeof msg, "Договор #%d создан: %d руб. Назначение: %s. Деньги удерживаются до решения второй стороны.", contractId, amount, purpose);
     SendClientMessage(playerid, COLOR_GREEN, msg);
-    VX_Notify(playerid, "Р”РћР“РћР’РћР  РЎРћР—Р”РђРќ", "РЎСЂРµРґСЃС‚РІР° СѓРґРµСЂР¶РёРІР°СЋС‚СЃСЏ РґРѕ РѕС‚РІРµС‚Р°", VEX_HUD_ACCENT);
-    format(msg, sizeof msg, "РРіСЂРѕРє %s РїСЂРµРґР»Р°РіР°РµС‚ РґРѕРіРѕРІРѕСЂ #%d РЅР° %d СЂСѓР±. РќР°Р·РЅР°С‡РµРЅРёРµ: %s. РџСЂРёРЅСЏС‚СЊ: /contractaccept %d, РѕС‚РєР°Р·: /contractreject %d", gName[playerid], contractId, amount, purpose, contractId, contractId);
+    VX_Notify(playerid, "ДОГОВОР СОЗДАН", "Средства удерживаются до ответа", VEX_HUD_ACCENT);
+    format(msg, sizeof msg, "Игрок %s предлагает договор #%d на %d руб. Назначение: %s. Принять: /contractaccept %d, отказ: /contractreject %d", gName[playerid], contractId, amount, purpose, contractId, contractId);
     SendClientMessage(targetid, COLOR_YELLOW, msg);
-    VX_Notify(targetid, "РќРћР’Р«Р™ Р”РћР“РћР’РћР ", "РћС‚РєСЂРѕР№С‚Рµ СЃРїРёСЃРѕРє: /contracts", VEX_HUD_WARNING);
+    VX_Notify(targetid, "НОВЫЙ ДОГОВОР", "Откройте список: /contracts", VEX_HUD_WARNING);
     return 1;
 }
 stock VX_ContractList(playerid)
@@ -8704,12 +8704,12 @@ stock VX_ContractList(playerid)
     new q[256], payer[MAX_PLAYER_NAME + 1], payee[MAX_PLAYER_NAME + 1], purpose[72], line[192];
     format(q, sizeof q, "SELECT id,payer,payee,amount,purpose FROM vx_contracts WHERE status=0 AND (payer='%q' OR payee='%q') ORDER BY id DESC LIMIT 10", gName[playerid], gName[playerid]);
     new DBResult:r = db_query(gDatabase, q);
-    if (!r || !db_num_rows(r)) { if (r) db_free_result(r); return SendClientMessage(playerid, COLOR_YELLOW, "РђРєС‚РёРІРЅС‹С… РґРѕРіРѕРІРѕСЂРѕРІ РЅРµС‚."), 1; }
-    SendClientMessage(playerid, COLOR_YELLOW, "РђРєС‚РёРІРЅС‹Рµ РґРѕРіРѕРІРѕСЂС‹ (0 вЂ” РѕР¶РёРґР°РЅРёРµ, /contractaccept ID, /contractreject ID, /contractcancel ID):");
+    if (!r || !db_num_rows(r)) { if (r) db_free_result(r); return SendClientMessage(playerid, COLOR_YELLOW, "Активных договоров нет."), 1; }
+    SendClientMessage(playerid, COLOR_YELLOW, "Активные договоры (0 — ожидание, /contractaccept ID, /contractreject ID, /contractcancel ID):");
     for (new i = 0; i < db_num_rows(r); i++)
     {
         db_get_field(r, 1, payer, sizeof payer); db_get_field(r, 2, payee, sizeof payee); db_get_field(r, 4, purpose, sizeof purpose);
-        format(line, sizeof line, "#%d | %s -> %s | %d СЂСѓР±. | %s", db_get_field_int(r, 0), payer, payee, db_get_field_int(r, 3), purpose);
+        format(line, sizeof line, "#%d | %s -> %s | %d руб. | %s", db_get_field_int(r, 0), payer, payee, db_get_field_int(r, 3), purpose);
         SendClientMessage(playerid, COLOR_WHITE, line); db_next_row(r);
     }
     db_free_result(r); return 1;
@@ -8719,13 +8719,13 @@ stock VX_ContractResolve(playerid, contractId, action)
     new q[256], payer[MAX_PLAYER_NAME + 1], payee[MAX_PLAYER_NAME + 1], purpose[72], amount, status;
     format(q, sizeof q, "SELECT payer,payee,amount,purpose,status FROM vx_contracts WHERE id=%d", contractId);
     new DBResult:r = db_query(gDatabase, q);
-    if (!r || !db_num_rows(r)) { if (r) db_free_result(r); return SendClientMessage(playerid, COLOR_RED, "Р”РѕРіРѕРІРѕСЂ РЅРµ РЅР°Р№РґРµРЅ."), 1; }
+    if (!r || !db_num_rows(r)) { if (r) db_free_result(r); return SendClientMessage(playerid, COLOR_RED, "Договор не найден."), 1; }
     db_get_field(r, 0, payer, sizeof payer); db_get_field(r, 1, payee, sizeof payee); amount = db_get_field_int(r, 2); db_get_field(r, 3, purpose, sizeof purpose); status = db_get_field_int(r, 4); db_free_result(r);
-    if (status != 0) return SendClientMessage(playerid, COLOR_YELLOW, "Р­С‚РѕС‚ РґРѕРіРѕРІРѕСЂ СѓР¶Рµ Р·Р°РєСЂС‹С‚."), 1;
+    if (status != 0) return SendClientMessage(playerid, COLOR_YELLOW, "Этот договор уже закрыт."), 1;
     if (action == 1)
     {
-        if (strcmp(payee, gName[playerid], true) != 0) return SendClientMessage(playerid, COLOR_RED, "РџСЂРёРЅСЏС‚СЊ РґРѕРіРѕРІРѕСЂ РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ СѓРєР°Р·Р°РЅРЅС‹Р№ РїРѕР»СѓС‡Р°С‚РµР»СЊ."), 1;
-        if (gMoney[playerid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "РћСЃРІРѕР±РѕРґРёС‚Рµ РјРµСЃС‚Рѕ РґР»СЏ РґРµРЅРµРі: РїСЂРµРІС‹С€РµРЅ Р»РёРјРёС‚ РЅР°Р»РёС‡РЅС‹С…."), 1;
+        if (strcmp(payee, gName[playerid], true) != 0) return SendClientMessage(playerid, COLOR_RED, "Принять договор может только указанный получатель."), 1;
+        if (gMoney[playerid] > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "Освободите место для денег: превышен лимит наличных."), 1;
         new cash = gMoney[playerid] + amount;
         if (!VX_Begin()) return VX_Error(playerid);
         format(q, sizeof q, "UPDATE vx_contracts SET status=1 WHERE id=%d AND status=0", contractId); VX_SQL(q);
@@ -8734,11 +8734,11 @@ stock VX_ContractResolve(playerid, contractId, action)
         VX_MoneySync(playerid, cash, gBankMoney[playerid]);
         new other = INVALID_PLAYER_ID;
         for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && !strcmp(gName[i], payer, true)) { other = i; break; }
-        if (other != INVALID_PLAYER_ID) SendClientMessage(other, COLOR_GREEN, "Р’С‚РѕСЂР°СЏ СЃС‚РѕСЂРѕРЅР° РїСЂРёРЅСЏР»Р° РґРѕРіРѕРІРѕСЂ. Р”РµРЅСЊРіРё РїРµСЂРµС‡РёСЃР»РµРЅС‹ РїРѕР»СѓС‡Р°С‚РµР»СЋ.");
-        SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїСЂРёРЅСЏР»Рё РґРѕРіРѕРІРѕСЂ. РЎСЂРµРґСЃС‚РІР° РїРµСЂРµС‡РёСЃР»РµРЅС‹ РЅР° РІР°С€ СЃС‡С‘С‚ РЅР°Р»РёС‡РЅС‹С…."); return 1;
+        if (other != INVALID_PLAYER_ID) SendClientMessage(other, COLOR_GREEN, "Вторая сторона приняла договор. Деньги перечислены получателю.");
+        SendClientMessage(playerid, COLOR_GREEN, "Вы приняли договор. Средства перечислены на ваш счёт наличных."); return 1;
     }
-    if (action == 2 && strcmp(payee, gName[playerid], true) != 0) return SendClientMessage(playerid, COLOR_RED, "РћС‚РєР»РѕРЅРёС‚СЊ РґРѕРіРѕРІРѕСЂ РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ СѓРєР°Р·Р°РЅРЅС‹Р№ РїРѕР»СѓС‡Р°С‚РµР»СЊ."), 1;
-    if (action == 3 && strcmp(payer, gName[playerid], true) != 0) return SendClientMessage(playerid, COLOR_RED, "РћС‚РјРµРЅРёС‚СЊ РґРѕРіРѕРІРѕСЂ РјРѕР¶РµС‚ С‚РѕР»СЊРєРѕ Р°РІС‚РѕСЂ РїСЂРµРґР»РѕР¶РµРЅРёСЏ."), 1;
+    if (action == 2 && strcmp(payee, gName[playerid], true) != 0) return SendClientMessage(playerid, COLOR_RED, "Отклонить договор может только указанный получатель."), 1;
+    if (action == 3 && strcmp(payer, gName[playerid], true) != 0) return SendClientMessage(playerid, COLOR_RED, "Отменить договор может только автор предложения."), 1;
     new payerid = INVALID_PLAYER_ID, payerCash = 0;
     for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gLogged[i] && !strcmp(gName[i], payer, true)) { payerid = i; break; }
     if (payerid != INVALID_PLAYER_ID) payerCash = gMoney[payerid];
@@ -8746,19 +8746,19 @@ stock VX_ContractResolve(playerid, contractId, action)
     {
         format(q, sizeof q, "SELECT money FROM accounts WHERE name='%q'", payer);
         r = db_query(gDatabase, q);
-        if (!r || !db_num_rows(r)) { if (r) db_free_result(r); return SendClientMessage(playerid, COLOR_RED, "РќРµ СѓРґР°Р»РѕСЃСЊ РЅР°Р№С‚Рё СЃС‡С‘С‚ Р°РІС‚РѕСЂР° РґРѕРіРѕРІРѕСЂР°."), 1; }
+        if (!r || !db_num_rows(r)) { if (r) db_free_result(r); return SendClientMessage(playerid, COLOR_RED, "Не удалось найти счёт автора договора."), 1; }
         payerCash = db_get_field_int(r, 0); db_free_result(r);
     }
-    if (payerCash > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "РђРІС‚РѕСЂСѓ РґРѕРіРѕРІРѕСЂР° РЅСѓР¶РЅРѕ РѕСЃРІРѕР±РѕРґРёС‚СЊ РјРµСЃС‚Рѕ РґР»СЏ РІРѕР·РІСЂР°С‚Р° СЃСЂРµРґСЃС‚РІ."), 1;
+    if (payerCash > MAX_MONEY - amount) return SendClientMessage(playerid, COLOR_RED, "Автору договора нужно освободить место для возврата средств."), 1;
     new refunded = payerCash + amount, newStatus = (action == 2) ? 2 : 3;
     if (!VX_Begin()) return VX_Error(playerid);
     format(q, sizeof q, "UPDATE vx_contracts SET status=%d WHERE id=%d AND status=0", newStatus, contractId); VX_SQL(q);
     format(q, sizeof q, "UPDATE accounts SET money=%d WHERE name='%q'", refunded, payer); VX_SQL(q);
     if (!VX_Commit()) return VX_Error(playerid);
     if (payerid != INVALID_PLAYER_ID) VX_MoneySync(payerid, refunded, gBankMoney[payerid]);
-    if (action == 2) SendClientMessage(playerid, COLOR_YELLOW, "Р”РѕРіРѕРІРѕСЂ РѕС‚РєР»РѕРЅС‘РЅ. Р”РµРЅСЊРіРё РІРѕР·РІСЂР°С‰РµРЅС‹ Р°РІС‚РѕСЂСѓ.");
-    else SendClientMessage(playerid, COLOR_YELLOW, "Р”РѕРіРѕРІРѕСЂ РѕС‚РјРµРЅС‘РЅ. Р”РµРЅСЊРіРё РІРѕР·РІСЂР°С‰РµРЅС‹.");
-    if (payerid != INVALID_PLAYER_ID && payerid != playerid) SendClientMessage(payerid, COLOR_GREEN, "РЎСЂРµРґСЃС‚РІР° РїРѕ РґРѕРіРѕРІРѕСЂСѓ РІРѕР·РІСЂР°С‰РµРЅС‹ РЅР°Р»РёС‡РЅС‹РјРё.");
+    if (action == 2) SendClientMessage(playerid, COLOR_YELLOW, "Договор отклонён. Деньги возвращены автору.");
+    else SendClientMessage(playerid, COLOR_YELLOW, "Договор отменён. Деньги возвращены.");
+    if (payerid != INVALID_PLAYER_ID && payerid != playerid) SendClientMessage(payerid, COLOR_GREEN, "Средства по договору возвращены наличными.");
     return 1;
 }
 stock VX_OrgBalance(faction)
@@ -8778,22 +8778,22 @@ stock VX_BankLog(playerid,const kind[],amount,const peer[]="")
 }
 stock VX_BankOperation(playerid,action,amount,targetid=INVALID_PLAYER_ID)
 {
-    if(amount<=0 || amount>MAX_MONEY)return SendClientMessage(playerid,COLOR_RED,"РќРµРєРѕСЂСЂРµРєС‚РЅР°СЏ СЃСѓРјРјР°."),1;
+    if(amount<=0 || amount>MAX_MONEY)return SendClientMessage(playerid,COLOR_RED,"Некорректная сумма."),1;
     new cash=gMoney[playerid], bank=gBankMoney[playerid];
     if(action==0)
     {
-        if(cash<amount || bank>MAX_MONEY-amount)return SendClientMessage(playerid,COLOR_RED,"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С… РёР»Рё РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ СЃС‡С‘С‚Р°."),1;
+        if(cash<amount || bank>MAX_MONEY-amount)return SendClientMessage(playerid,COLOR_RED,"Недостаточно наличных или достигнут лимит счёта."),1;
         cash-=amount;bank+=amount;
     }
     else if(action==1)
     {
-        if(bank<amount || cash>MAX_MONEY-amount)return SendClientMessage(playerid,COLOR_RED,"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі РЅР° СЃС‡С‘С‚Рµ РёР»Рё РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РЅР°Р»РёС‡РЅС‹С…."),1;
+        if(bank<amount || cash>MAX_MONEY-amount)return SendClientMessage(playerid,COLOR_RED,"Недостаточно денег на счёте или достигнут лимит наличных."),1;
         bank-=amount;cash+=amount;
     }
     else
     {
-        if(!VX_Valid(targetid) || targetid==playerid)return SendClientMessage(playerid,COLOR_RED,"РџРѕР»СѓС‡Р°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ."),1;
-        if(bank<amount || gBankMoney[targetid]>MAX_MONEY-amount)return SendClientMessage(playerid,COLOR_RED,"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі РёР»Рё РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ СЃС‡С‘С‚Р° РїРѕР»СѓС‡Р°С‚РµР»СЏ."),1;
+        if(!VX_Valid(targetid) || targetid==playerid)return SendClientMessage(playerid,COLOR_RED,"Получатель не найден."),1;
+        if(bank<amount || gBankMoney[targetid]>MAX_MONEY-amount)return SendClientMessage(playerid,COLOR_RED,"Недостаточно денег или достигнут лимит счёта получателя."),1;
         bank-=amount;
     }
     if(!VX_Begin())return VX_Error(playerid);
@@ -8811,13 +8811,13 @@ stock VX_BankOperation(playerid,action,amount,targetid=INVALID_PLAYER_ID)
         VX_MoneySync(targetid,gMoney[targetid],gBankMoney[targetid]+amount);
         new m[144];format(m,sizeof m,"[BANK] %s transferred %d to your account.",gName[playerid],amount);SendClientMessage(targetid,COLOR_GREEN,m);
     }
-    SendClientMessage(playerid,COLOR_GREEN,"[Р‘РђРќРљ] РћРїРµСЂР°С†РёСЏ РІС‹РїРѕР»РЅРµРЅР° Рё СЃРѕС…СЂР°РЅРµРЅР°.");
+    SendClientMessage(playerid,COLOR_GREEN,"[БАНК] Операция выполнена и сохранена.");
     return VX_ShowBank(playerid);
 }
 stock VX_ShowBank(playerid)
 {
-    new title[100];format(title,sizeof title,"VEXORIUM | Р‘Р°РЅРє: %d | Cash: %d",gBankMoney[playerid],gMoney[playerid]);
-    return VX_Show(playerid,VX_BANK,DIALOG_STYLE_LIST,title,"РџРѕР»РѕР¶РёС‚СЊ РЅР°Р»РёС‡РЅС‹Рµ\nРЎРЅСЏС‚СЊ РЅР°Р»РёС‡РЅС‹Рµ\nРџРµСЂРµРІРµСЃС‚Рё РёРіСЂРѕРєСѓ\nРСЃС‚РѕСЂРёСЏ РѕРїРµСЂР°С†РёР№");
+    new title[100];format(title,sizeof title,"VEXORIUM | Банк: %d | Cash: %d",gBankMoney[playerid],gMoney[playerid]);
+    return VX_Show(playerid,VX_BANK,DIALOG_STYLE_LIST,title,"Положить наличные\nСнять наличные\nПеревести игроку\nИстория операций");
 }
 stock VX_BankHistory(playerid)
 {
@@ -8831,7 +8831,7 @@ stock VX_BankHistory(playerid)
         format(row,sizeof row,"%d\t%s\t%s\n",db_get_field_int(r,0),kind,peer);strcat(body,row);db_next_row(r);
     }
     if(r)db_free_result(r);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"РСЃС‚РѕСЂРёСЏ Р±Р°РЅРєР°",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"История банка",body,"OK","Закрыть");
 }
 stock VX_ItemCount(playerid,item)
 {
@@ -8858,22 +8858,22 @@ stock VX_ItemsSQL(playerid)
 stock VX_ShowInventory(playerid)
 {
     new body[1024],row[96],title[96];
-    format(title,sizeof title,"РРЅРІРµРЅС‚Р°СЂСЊ | %.1f / 30 kg",float(VX_Weight(playerid))/1000.0);
+    format(title,sizeof title,"Инвентарь | %.1f / 30 kg",float(VX_Weight(playerid))/1000.0);
     strcat(body,"Slot\tItem\tQuantity\tWeight\n");
     for(new i=0;i<6;i++){format(row,sizeof row,"%d\t%s\t%d\t%.2f kg\n",i+1,gVXItemName[i],VX_ItemCount(playerid,i),float(VX_ItemCount(playerid,i)*gVXItemWeight[i])/1000.0);strcat(body,row);}
-    strcat(body,"7\tРќР°РґРµС‚СЊ / СЃРЅСЏС‚СЊ Р°РєСЃРµСЃСЃСѓР°СЂ\t1\t-\n8\tPhone\t1\t-\n9\tРџРѕРґРЅСЏС‚СЊ РїСЂРµРґРјРµС‚ СЂСЏРґРѕРј\t-\t-\n");
+    strcat(body,"7\tНадеть / снять аксессуар\t1\t-\n8\tPhone\t1\t-\n9\tПоднять предмет рядом\t-\t-\n");
     return VX_Show(playerid,VX_INV,DIALOG_STYLE_TABLIST_HEADERS,title,body);
 }
 stock VX_UseItem(playerid,item)
 {
-    if(item<0 || item>=6 || VX_ItemCount(playerid,item)<1)return SendClientMessage(playerid,COLOR_RED,"РЈ РІР°СЃ РЅРµС‚ СЌС‚РѕРіРѕ РїСЂРµРґРјРµС‚Р°."),1;
-    if(gVXHospital[playerid])return SendClientMessage(playerid,COLOR_RED,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ Р»РµС‡РµРЅРёРµ РІ Р‘Р¦Р Р‘."),1;
-    if(item==5)return SendClientMessage(playerid,COLOR_YELLOW,"РћС‚РјС‹С‡РєР°s are used by the car theft job: /work and /hack."),1;
+    if(item<0 || item>=6 || VX_ItemCount(playerid,item)<1)return SendClientMessage(playerid,COLOR_RED,"У вас нет этого предмета."),1;
+    if(gVXHospital[playerid])return SendClientMessage(playerid,COLOR_RED,"Сначала завершите лечение в БЦРБ."),1;
+    if(item==5)return SendClientMessage(playerid,COLOR_YELLOW,"Отмычкаs are used by the car theft job: /work and /hack."),1;
     if(item==3)return OnPlayerCommandText(playerid,"/repairkit");
     new Float:hp;GetPlayerHealth(playerid,hp);
-    if(item==0 && hp>=100.0 && !(gRPInjury[playerid] & RP_INJ_BLEED))return SendClientMessage(playerid,COLOR_YELLOW,"РЈ РІР°СЃ СѓР¶Рµ РїРѕР»РЅРѕРµ Р·РґРѕСЂРѕРІСЊРµ."),1;
-    if(item==1 && gHunger[playerid]>=100 && hp>=100.0)return SendClientMessage(playerid,COLOR_YELLOW,"РЈ РІР°СЃ РЅРµС‚ С‡СѓРІСЃС‚РІР° РіРѕР»РѕРґР°."),1;
-    if(item==2 && gThirst[playerid]>=100 && hp>=100.0)return SendClientMessage(playerid,COLOR_YELLOW,"РЈ РІР°СЃ РЅРµС‚ Р¶Р°Р¶РґС‹."),1;
+    if(item==0 && hp>=100.0 && !(gRPInjury[playerid] & RP_INJ_BLEED))return SendClientMessage(playerid,COLOR_YELLOW,"У вас уже полное здоровье."),1;
+    if(item==1 && gHunger[playerid]>=100 && hp>=100.0)return SendClientMessage(playerid,COLOR_YELLOW,"У вас нет чувства голода."),1;
+    if(item==2 && gThirst[playerid]>=100 && hp>=100.0)return SendClientMessage(playerid,COLOR_YELLOW,"У вас нет жажды."),1;
     new old=VX_ItemCount(playerid,item);
     if(!VX_Begin())return VX_Error(playerid);
     VX_SetItem(playerid,item,old-1);VX_ItemsSQL(playerid);
@@ -8890,14 +8890,14 @@ stock VX_UseItem(playerid,item)
             gHunger[playerid] = VexHudClamp(gHunger[playerid] + 35, 0, 100);
             SetPlayerHealth(playerid, VX_FloatMin(100.0, hp + 2.0));
             VX_NeedsSave(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РїРѕРµР»Рё. РЎС‹С‚РѕСЃС‚СЊ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅР°.");
+            SendClientMessage(playerid, COLOR_GREEN, "Вы поели. Сытость восстановлена.");
         }
         case 2:
         {
             gThirst[playerid] = VexHudClamp(gThirst[playerid] + 40, 0, 100);
             SetPlayerHealth(playerid, VX_FloatMin(100.0, hp + 1.0));
             VX_NeedsSave(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "Р’С‹ РІС‹РїРёР»Рё РІРѕРґСѓ. Р–Р°Р¶РґР° СѓС‚РѕР»РµРЅР°.");
+            SendClientMessage(playerid, COLOR_GREEN, "Вы выпили воду. Жажда утолена.");
         }
         case 4:{gVXPhoneOn[playerid]=true;VX_Save(playerid);SendClientMessage(playerid,COLOR_GREEN,"SIM activated. Your permanent number is shown in /phone.");}
     }
@@ -8905,8 +8905,8 @@ stock VX_UseItem(playerid,item)
 }
 stock VX_GiveItem(playerid,targetid,item,amount)
 {
-    if(targetid==playerid || !VX_Near(playerid,targetid))return SendClientMessage(playerid,COLOR_RED,"РџРѕРґРѕР№РґРёС‚Рµ Рє РїРѕР»СѓС‡Р°С‚РµР»СЋ РЅР° СЂР°СЃСЃС‚РѕСЏРЅРёРµ РґРѕ 4 РјРµС‚СЂРѕРІ."),1;
-    if(item<0 || item>=6 || amount<=0 || amount>VX_ItemCount(playerid,item) || !VX_CanCarry(targetid,item,amount))return SendClientMessage(playerid,COLOR_RED,"РќРµРІРµСЂРЅС‹Р№ РїСЂРµРґРјРµС‚ / РєРѕР»РёС‡РµСЃС‚РІРѕ РёР»Рё РёРЅРІРµРЅС‚Р°СЂСЊ РїРѕР»СѓС‡Р°С‚РµР»СЏ Р·Р°РїРѕР»РЅРµРЅ."),1;
+    if(targetid==playerid || !VX_Near(playerid,targetid))return SendClientMessage(playerid,COLOR_RED,"Подойдите к получателю на расстояние до 4 метров."),1;
+    if(item<0 || item>=6 || amount<=0 || amount>VX_ItemCount(playerid,item) || !VX_CanCarry(targetid,item,amount))return SendClientMessage(playerid,COLOR_RED,"Неверный предмет / количество или инвентарь получателя заполнен."),1;
     new a=VX_ItemCount(playerid,item),b=VX_ItemCount(targetid,item);
     if(!VX_Begin())return VX_Error(playerid);
     VX_SetItem(playerid,item,a-amount);VX_SetItem(targetid,item,b+amount);
@@ -8922,7 +8922,7 @@ stock VX_ClearDrop(index)
 }
 stock VX_Drop(playerid,item,amount)
 {
-    if(item<0 || item>=6 || amount<=0 || amount>VX_ItemCount(playerid,item))return SendClientMessage(playerid,COLOR_RED,"РќРµРІРµСЂРЅС‹Р№ РїСЂРµРґРјРµС‚ РёР»Рё РєРѕР»РёС‡РµСЃС‚РІРѕ."),1;
+    if(item<0 || item>=6 || amount<=0 || amount>VX_ItemCount(playerid,item))return SendClientMessage(playerid,COLOR_RED,"Неверный предмет или количество."),1;
     new d=-1;for(new i=0;i<VX_MAX_DROPS;i++)if(!gVXDropQty[i]){d=i;break;}
     if(d<0)return SendClientMessage(playerid,COLOR_RED,"Ground item limit reached."),1;
     GetPlayerPos(playerid,gVXDropPos[d][0],gVXDropPos[d][1],gVXDropPos[d][2]);
@@ -8936,7 +8936,7 @@ stock VX_Drop(playerid,item,amount)
     gVXDropPickup[d]=pickup;gVXDropItem[d]=item;gVXDropQty[d]=amount;gVXDropExpiry[d]=gettime()+600;
     new m[120];format(m,sizeof m,"%s x%d\n/pickup | disappears in 10 minutes",gVXItemName[item],amount);
     gVXDropLabel[d]=Create3DTextLabel(m,COLOR_YELLOW,gVXDropPos[d][0],gVXDropPos[d][1],gVXDropPos[d][2]+0.5,8.0,gVXDropWorld[d],1);
-    SendClientMessage(playerid,COLOR_YELLOW,"РџСЂРµРґРјРµС‚ РІС‹Р±СЂРѕС€РµРЅ. РћРЅ РёСЃС‡РµР·РЅРµС‚ С‡РµСЂРµР· 10 РјРёРЅСѓС‚ РёР»Рё РїРѕСЃР»Рµ РїРµСЂРµР·Р°РїСѓСЃРєР° СЃРµСЂРІРµСЂР°.");return 1;
+    SendClientMessage(playerid,COLOR_YELLOW,"Предмет выброшен. Он исчезнет через 10 минут или после перезапуска сервера.");return 1;
 }
 stock VX_PickupItem(playerid)
 {
@@ -8945,26 +8945,26 @@ stock VX_PickupItem(playerid)
         if(!gVXDropQty[d] || gVXDropWorld[d]!=GetPlayerVirtualWorld(playerid) || gVXDropInterior[d]!=GetPlayerInterior(playerid))continue;
         if(!IsPlayerInRangeOfPoint(playerid,2.0,gVXDropPos[d][0],gVXDropPos[d][1],gVXDropPos[d][2]))continue;
         new item=gVXDropItem[d],amount=gVXDropQty[d],old=VX_ItemCount(playerid,item);
-        if(!VX_CanCarry(playerid,item,amount))return SendClientMessage(playerid,COLOR_RED,"Р’Р°С€ РёРЅРІРµРЅС‚Р°СЂСЊ Р·Р°РїРѕР»РЅРµРЅ."),1;
+        if(!VX_CanCarry(playerid,item,amount))return SendClientMessage(playerid,COLOR_RED,"Ваш инвентарь заполнен."),1;
         if(!VX_Begin())return VX_Error(playerid);
         VX_SetItem(playerid,item,old+amount);VX_ItemsSQL(playerid);
         if(!VX_Commit()){VX_SetItem(playerid,item,old);return VX_Error(playerid);}
         VX_ClearDrop(d);return VX_ShowInventory(playerid);
     }
-    return SendClientMessage(playerid,COLOR_YELLOW,"Р СЏРґРѕРј РЅРµС‚ РІС‹Р±СЂРѕС€РµРЅРЅС‹С… РїСЂРµРґРјРµС‚РѕРІ."),1;
+    return SendClientMessage(playerid,COLOR_YELLOW,"Рядом нет выброшенных предметов."),1;
 }
 stock VX_ShowPhone(playerid)
 {
     new title[96], phoneStatus[8], body[512];
-    if (gVXPhoneOn[playerid]) format(phoneStatus,sizeof phoneStatus,"Р’РљР›");
-    else format(phoneStatus,sizeof phoneStatus,"Р’Р«РљР›");
-    format(title,sizeof title,"VEXORIUM | РўРµР»РµС„РѕРЅ %d | %s",gVXPhone[playerid],phoneStatus);
+    if (gVXPhoneOn[playerid]) format(phoneStatus,sizeof phoneStatus,"ВКЛ");
+    else format(phoneStatus,sizeof phoneStatus,"ВЫКЛ");
+    format(title,sizeof title,"VEXORIUM | Телефон %d | %s",gVXPhone[playerid],phoneStatus);
     body[0] = '\0';
-    strcat(body, "РџРѕР·РІРѕРЅРёС‚СЊ РїРѕ РЅРѕРјРµСЂСѓ\nРћС‚РїСЂР°РІРёС‚СЊ SMS\nР’С…РѕРґСЏС‰РёРµ SMS (РїРѕСЃР»РµРґРЅРёРµ 15)\n", sizeof body);
-    strcat(body, "РљРѕРЅС‚Р°РєС‚С‹\nР‘Р°РЅРє\nGPS\nР’С‹Р·РІР°С‚СЊ СЃРєРѕСЂСѓСЋ: 103\n", sizeof body);
-    strcat(body, "Р’С‹Р·РІР°С‚СЊ РїРѕР»РёС†РёСЋ: 112\nР’РєР»СЋС‡РёС‚СЊ / РІС‹РєР»СЋС‡РёС‚СЊ\nРћС‚РІРµС‚РёС‚СЊ / Р·Р°РІРµСЂС€РёС‚СЊ Р·РІРѕРЅРѕРє\n", sizeof body);
-    strcat(body, "Р’С‹Р·РІР°С‚СЊ С‚Р°РєСЃРё\nР’С‹Р·РІР°С‚СЊ РјРµС…Р°РЅРёРєР°\nРњР°СЂС€СЂСѓС‚ Р°РІС‚РѕР±СѓСЃР°\n", sizeof body);
-    strcat(body, "РљР°С‚Р°Р»РѕРі Р±РёР·РЅРµСЃРѕРІ\nР“РѕСЂРѕРґСЃРєРёРµ РјРµСЂРѕРїСЂРёСЏС‚РёСЏ", sizeof body);
+    strcat(body, "Позвонить по номеру\nОтправить SMS\nВходящие SMS (последние 15)\n", sizeof body);
+    strcat(body, "Контакты\nБанк\nGPS\nВызвать скорую: 103\n", sizeof body);
+    strcat(body, "Вызвать полицию: 112\nВключить / выключить\nОтветить / завершить звонок\n", sizeof body);
+    strcat(body, "Вызвать такси\nВызвать механика\nМаршрут автобуса\n", sizeof body);
+    strcat(body, "Каталог бизнесов\nГородские мероприятия", sizeof body);
     return VX_Show(playerid,VX_PHONE,DIALOG_STYLE_LIST,title,body);
 }
 stock VX_FindPhone(number)
@@ -8976,11 +8976,11 @@ stock VX_Hangup(playerid)
 {
     new other=gVXCall[playerid];
     gVXCall[playerid]=INVALID_PLAYER_ID;gVXCallActive[playerid]=false;gVXCallAt[playerid]=0;
-    if(VX_Valid(playerid)){SetPlayerSpecialAction(playerid,SPECIAL_ACTION_STOPUSECELLPHONE);SendClientMessage(playerid,COLOR_YELLOW,"[РўР•Р›Р•Р¤РћРќ] Р—РІРѕРЅРѕРє Р·Р°РІРµСЂС€С‘РЅ.");}
+    if(VX_Valid(playerid)){SetPlayerSpecialAction(playerid,SPECIAL_ACTION_STOPUSECELLPHONE);SendClientMessage(playerid,COLOR_YELLOW,"[ТЕЛЕФОН] Звонок завершён.");}
     if(VX_Valid(other) && gVXCall[other]==playerid)
     {
         gVXCall[other]=INVALID_PLAYER_ID;gVXCallActive[other]=false;gVXCallAt[other]=0;
-        SetPlayerSpecialAction(other,SPECIAL_ACTION_STOPUSECELLPHONE);SendClientMessage(other,COLOR_YELLOW,"[РўР•Р›Р•Р¤РћРќ] Р—РІРѕРЅРѕРє Р·Р°РІРµСЂС€С‘РЅ.");
+        SetPlayerSpecialAction(other,SPECIAL_ACTION_STOPUSECELLPHONE);SendClientMessage(other,COLOR_YELLOW,"[ТЕЛЕФОН] Звонок завершён.");
     }
     return 1;
 }
@@ -8996,40 +8996,40 @@ stock VX_Call(playerid,number)
         for(new i=0;i<MAX_PLAYERS;i++)if(VX_Officer(i))SendClientMessage(i,COLOR_BLUE,m);
         return SendClientMessage(playerid,COLOR_GREEN,"[112] Police have been notified."),1;
     }
-    if(!gVXPhoneOn[playerid])return SendClientMessage(playerid,COLOR_RED,"Р’Р°С€ С‚РµР»РµС„РѕРЅ РІС‹РєР»СЋС‡РµРЅ."),1;
-    if(gettime()-gVXLastCall[playerid]<5)return SendClientMessage(playerid,COLOR_YELLOW,"РџРѕРІС‚РѕСЂРЅС‹Р№ Р·РІРѕРЅРѕРє РґРѕСЃС‚СѓРїРµРЅ С‡РµСЂРµР· 5 СЃРµРєСѓРЅРґ."),1;
+    if(!gVXPhoneOn[playerid])return SendClientMessage(playerid,COLOR_RED,"Ваш телефон выключен."),1;
+    if(gettime()-gVXLastCall[playerid]<5)return SendClientMessage(playerid,COLOR_YELLOW,"Повторный звонок доступен через 5 секунд."),1;
     new t=VX_FindPhone(number);
-    if(!VX_Valid(t) || t==playerid || !gVXPhoneOn[t])return SendClientMessage(playerid,COLOR_RED,"РђР±РѕРЅРµРЅС‚ РЅРµРґРѕСЃС‚СѓРїРµРЅ."),1;
-    if(gVXCall[playerid]!=INVALID_PLAYER_ID || gVXCall[t]!=INVALID_PLAYER_ID)return SendClientMessage(playerid,COLOR_RED,"Р›РёРЅРёСЏ Р·Р°РЅСЏС‚Р°. Р—Р°РІРµСЂС€РёС‚СЊ Р·РІРѕРЅРѕРє: /hangup."),1;
+    if(!VX_Valid(t) || t==playerid || !gVXPhoneOn[t])return SendClientMessage(playerid,COLOR_RED,"Абонент недоступен."),1;
+    if(gVXCall[playerid]!=INVALID_PLAYER_ID || gVXCall[t]!=INVALID_PLAYER_ID)return SendClientMessage(playerid,COLOR_RED,"Линия занята. Завершить звонок: /hangup."),1;
     gVXLastCall[playerid]=gettime();gVXCall[playerid]=t;gVXCall[t]=playerid;
     gVXCallAt[playerid]=gettime();gVXCallAt[t]=0;
     new m[128];format(m,sizeof m,"[PHONE] Incoming call from %d (%s). /answer or /hangup",gVXPhone[playerid],gName[playerid]);
-    SendClientMessage(t,COLOR_YELLOW,m);SendClientMessage(playerid,COLOR_GREEN,"[РўР•Р›Р•Р¤РћРќ] Р’С‹Р·РѕРІ... РѕР¶РёРґР°Р№С‚Рµ РѕС‚РІРµС‚Р° Р°Р±РѕРЅРµРЅС‚Р°.");PlayerPlaySound(t,1085,0.0,0.0,0.0);return 1;
+    SendClientMessage(t,COLOR_YELLOW,m);SendClientMessage(playerid,COLOR_GREEN,"[ТЕЛЕФОН] Вызов... ожидайте ответа абонента.");PlayerPlaySound(t,1085,0.0,0.0,0.0);return 1;
 }
 stock VX_Answer(playerid)
 {
     new t=gVXCall[playerid];
-    if(!VX_Valid(t) || gVXCall[t]!=playerid || gVXCallAt[playerid]!=0 || gVXCallActive[playerid])return SendClientMessage(playerid,COLOR_RED,"Р’С…РѕРґСЏС‰РµРіРѕ Р·РІРѕРЅРєР° РЅРµС‚."),1;
+    if(!VX_Valid(t) || gVXCall[t]!=playerid || gVXCallAt[playerid]!=0 || gVXCallActive[playerid])return SendClientMessage(playerid,COLOR_RED,"Входящего звонка нет."),1;
     gVXCallActive[playerid]=true;gVXCallActive[t]=true;
     SetPlayerSpecialAction(playerid,SPECIAL_ACTION_USECELLPHONE);SetPlayerSpecialAction(t,SPECIAL_ACTION_USECELLPHONE);
-    SendClientMessage(playerid,COLOR_GREEN,"[РўР•Р›Р•Р¤РћРќ] РЎРѕРµРґРёРЅРµРЅРёРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ. РџРёС€РёС‚Рµ РІ С‡Р°С‚. Р—Р°РІРµСЂС€РёС‚СЊ: /hangup.");
-    SendClientMessage(t,COLOR_GREEN,"[РўР•Р›Р•Р¤РћРќ] РЎРѕРµРґРёРЅРµРЅРёРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ. РџРёС€РёС‚Рµ РІ С‡Р°С‚. Р—Р°РІРµСЂС€РёС‚СЊ: /hangup.");return 1;
+    SendClientMessage(playerid,COLOR_GREEN,"[ТЕЛЕФОН] Соединение установлено. Пишите в чат. Завершить: /hangup.");
+    SendClientMessage(t,COLOR_GREEN,"[ТЕЛЕФОН] Соединение установлено. Пишите в чат. Завершить: /hangup.");return 1;
 }
 stock VX_SendSMS(playerid,number,const text[])
 {
-    if(!gVXPhoneOn[playerid])return SendClientMessage(playerid,COLOR_RED,"Р’Р°С€ С‚РµР»РµС„РѕРЅ РІС‹РєР»СЋС‡РµРЅ."),1;
-    if(gettime()-gVXLastSMS[playerid]<3)return SendClientMessage(playerid,COLOR_RED,"РџРѕРґРѕР¶РґРёС‚Рµ 3 СЃРµРєСѓРЅРґС‹ РїРµСЂРµРґ СЃР»РµРґСѓСЋС‰РёРј SMS."),1;
+    if(!gVXPhoneOn[playerid])return SendClientMessage(playerid,COLOR_RED,"Ваш телефон выключен."),1;
+    if(gettime()-gVXLastSMS[playerid]<3)return SendClientMessage(playerid,COLOR_RED,"Подождите 3 секунды перед следующим SMS."),1;
     new body[121];VX_CleanText(text,body,sizeof body);
-    if(!strlen(body))return SendClientMessage(playerid,COLOR_RED,"Р’РІРµРґРёС‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ РѕС‚ 1 РґРѕ 120 СЃРёРјРІРѕР»РѕРІ."),1;
+    if(!strlen(body))return SendClientMessage(playerid,COLOR_RED,"Введите сообщение от 1 до 120 символов."),1;
     new q[600];format(q,sizeof q,"SELECT name FROM vx_players WHERE phone=%d",number);
     new DBResult:r=db_query(gDatabase,q);new found=(r && db_num_rows(r)>0);if(r)db_free_result(r);
-    if(!found || number==gVXPhone[playerid])return SendClientMessage(playerid,COLOR_RED,"РќРѕРјРµСЂ РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РїСЂРёРЅР°РґР»РµР¶РёС‚ РІР°Рј."),1;
+    if(!found || number==gVXPhone[playerid])return SendClientMessage(playerid,COLOR_RED,"Номер не найден или принадлежит вам."),1;
     format(q,sizeof q,"INSERT INTO vx_sms(sender,recipient,body,created) VALUES(%d,%d,'%q',%d)",gVXPhone[playerid],number,body,gettime());
     if(!VX_SQL(q))return VX_Error(playerid);
     gVXLastSMS[playerid]=gettime();
     new target=VX_FindPhone(number),m[144];
     if(VX_Valid(target) && gVXPhoneOn[target]){format(m,sizeof m,"[SMS %d] %.115s",gVXPhone[playerid],body);SendClientMessage(target,COLOR_YELLOW,m);}
-    SendClientMessage(playerid,COLOR_GREEN,"SMS СЃРѕС…СЂР°РЅРµРЅРѕ РІРѕ РІС…РѕРґСЏС‰РёС… РїРѕР»СѓС‡Р°С‚РµР»СЏ, РґР°Р¶Рµ РµСЃР»Рё РѕРЅ РЅРµ РІ СЃРµС‚Рё.");return 1;
+    SendClientMessage(playerid,COLOR_GREEN,"SMS сохранено во входящих получателя, даже если он не в сети.");return 1;
 }
 stock VX_Inbox(playerid)
 {
@@ -9039,7 +9039,7 @@ stock VX_Inbox(playerid)
     strcat(body,"From\tMessage\n");
     if(r)for(new i=0;i<db_num_rows(r);i++){db_get_field(r,1,text,sizeof text);format(row,sizeof row,"%d\t%s\n",db_get_field_int(r,0),text);strcat(body,row);db_next_row(r);}
     if(r)db_free_result(r);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"РўРµР»РµС„РѕРЅ | Р’С…РѕРґСЏС‰РёРµ",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"Телефон | Входящие",body,"OK","Закрыть");
 }
 stock VX_Contacts(playerid)
 {
@@ -9055,12 +9055,12 @@ stock VX_Contacts(playerid)
     }
     if(r)db_free_result(r);
     if(!gVXListCount[playerid])return SendClientMessage(playerid,COLOR_YELLOW,"No contacts. /contactadd [number] [name]"),1;
-    return VX_Show(playerid,VX_CONTACTS,DIALOG_STYLE_TABLIST_HEADERS,"РљРѕРЅС‚Р°РєС‚С‹ | Р’С‹Р±РµСЂРёС‚Рµ РґР»СЏ Р·РІРѕРЅРєР°",body,"РџРѕР·РІРѕРЅРёС‚СЊ","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_CONTACTS,DIALOG_STYLE_TABLIST_HEADERS,"Контакты | Выберите для звонка",body,"Позвонить","Закрыть");
 }
 stock VX_Report(playerid,const text[])
 {
-    if(gVXReportId[playerid])return SendClientMessage(playerid,COLOR_YELLOW,"РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ РѕС‚РєСЂС‹С‚РѕРµ РѕР±СЂР°С‰РµРЅРёРµ. Р”РѕР¶РґРёС‚РµСЃСЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°."),1;
-    if(gettime()-gVXReportAt[playerid]<60)return SendClientMessage(playerid,COLOR_YELLOW,"РќРѕРІРѕРµ РѕР±СЂР°С‰РµРЅРёРµ РјРѕР¶РЅРѕ РѕС‚РїСЂР°РІРёС‚СЊ С‡РµСЂРµР· 60 СЃРµРєСѓРЅРґ."),1;
+    if(gVXReportId[playerid])return SendClientMessage(playerid,COLOR_YELLOW,"У вас уже есть открытое обращение. Дождитесь администратора."),1;
+    if(gettime()-gVXReportAt[playerid]<60)return SendClientMessage(playerid,COLOR_YELLOW,"Новое обращение можно отправить через 60 секунд."),1;
     new message[121];VX_CleanText(text,message,sizeof message);
     if(strlen(message)<4)return SendClientMessage(playerid,COLOR_YELLOW,"Usage: /report [message, 4-120 characters]"),1;
     new q[512];format(q,sizeof q,"INSERT INTO vx_reports(player,message,status,created,updated) VALUES('%q','%q',0,%d,%d)",gName[playerid],message,gettime(),gettime());
@@ -9070,11 +9070,11 @@ stock VX_Report(playerid,const text[])
     gVXReportAt[playerid]=gettime();gVXReportOwner[playerid]=INVALID_PLAYER_ID;
     new m[144];format(m,sizeof m,"[REPORT #%d] %s [%d]: %.72s",gVXReportId[playerid],gName[playerid],playerid,message);
     for(new i=0;i<MAX_PLAYERS;i++)if(VX_Admin(i))SendClientMessage(i,COLOR_ORANGE,m);
-    SendClientMessage(playerid,COLOR_GREEN,"РћР±СЂР°С‰РµРЅРёРµ СЃРѕС…СЂР°РЅРµРЅРѕ Рё РѕС‚РїСЂР°РІР»РµРЅРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");return 1;
+    SendClientMessage(playerid,COLOR_GREEN,"Обращение сохранено и отправлено администрации.");return 1;
 }
 stock VX_ReportList(playerid)
 {
-    if(!VX_Admin(playerid))return SendClientMessage(playerid,COLOR_RED,"Р”РѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°Рј."),1;
+    if(!VX_Admin(playerid))return SendClientMessage(playerid,COLOR_RED,"Доступно только администраторам."),1;
     new body[3800],row[150],name[25],message[121];gVXListCount[playerid]=0;
     new DBResult:r=db_query(gDatabase,"SELECT id,player,message,status FROM vx_reports WHERE status<2 ORDER BY id LIMIT 20");
     strcat(body,"Report\tPlayer\tStatus\tMessage\n");
@@ -9083,30 +9083,30 @@ stock VX_ReportList(playerid)
         new id=db_get_field_int(r,0),status=db_get_field_int(r,3);db_get_field(r,1,name,sizeof name);db_get_field(r,2,message,sizeof message);
         gVXList[playerid][gVXListCount[playerid]++]=id;
         new reportStatus[16];
-        if (status) format(reportStatus,sizeof reportStatus,"Р’ СЂР°Р±РѕС‚Рµ");
-        else format(reportStatus,sizeof reportStatus,"РћР¶РёРґР°РµС‚");
+        if (status) format(reportStatus,sizeof reportStatus,"В работе");
+        else format(reportStatus,sizeof reportStatus,"Ожидает");
         format(row,sizeof row,"%d\t%s\t%s\t%.65s\n",id,name,reportStatus,message);strcat(body,row);db_next_row(r);
     }
     if(r)db_free_result(r);
-    if(!gVXListCount[playerid])return SendClientMessage(playerid,COLOR_GREEN,"РћС‚РєСЂС‹С‚С‹С… РѕР±СЂР°С‰РµРЅРёР№ РЅРµС‚."),1;
-    return VX_Show(playerid,VX_REPORTS,DIALOG_STYLE_TABLIST_HEADERS,"Р РµРїРѕСЂС‚С‹ | Р’С‹Р±РµСЂРёС‚Рµ РґР»СЏ РїСЂРёРЅСЏС‚РёСЏ",body,"РџСЂРёРЅСЏС‚СЊ","Р—Р°РєСЂС‹С‚СЊ");
+    if(!gVXListCount[playerid])return SendClientMessage(playerid,COLOR_GREEN,"Открытых обращений нет."),1;
+    return VX_Show(playerid,VX_REPORTS,DIALOG_STYLE_TABLIST_HEADERS,"Репорты | Выберите для принятия",body,"Принять","Закрыть");
 }
 stock VX_ReportAction(playerid,id,action,const text[]="")
 {
-    if(!VX_Admin(playerid))return SendClientMessage(playerid,COLOR_RED,"Р”РѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°Рј."),1;
+    if(!VX_Admin(playerid))return SendClientMessage(playerid,COLOR_RED,"Доступно только администраторам."),1;
     new q[640],name[25],owner[25],status;
     format(q,sizeof q,"SELECT player,admin,status FROM vx_reports WHERE id=%d",id);
     new DBResult:r=db_query(gDatabase,q);
-    if(!r || !db_num_rows(r)){if(r)db_free_result(r);return SendClientMessage(playerid,COLOR_RED,"РћР±СЂР°С‰РµРЅРёРµ РЅРµ РЅР°Р№РґРµРЅРѕ."),1;}
+    if(!r || !db_num_rows(r)){if(r)db_free_result(r);return SendClientMessage(playerid,COLOR_RED,"Обращение не найдено."),1;}
     db_get_field(r,0,name,sizeof name);db_get_field(r,1,owner,sizeof owner);status=db_get_field_int(r,2);db_free_result(r);
-    if(status>=2)return SendClientMessage(playerid,COLOR_RED,"Р­С‚Рѕ РѕР±СЂР°С‰РµРЅРёРµ СѓР¶Рµ Р·Р°РєСЂС‹С‚Рѕ."),1;
-    if(strlen(owner) && strcmp(owner,gName[playerid],true)!=0)return SendClientMessage(playerid,COLOR_RED,"РћР±СЂР°С‰РµРЅРёРµ СѓР¶Рµ РїСЂРёРЅСЏС‚Рѕ РґСЂСѓРіРёРј Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂРѕРј."),1;
+    if(status>=2)return SendClientMessage(playerid,COLOR_RED,"Это обращение уже закрыто."),1;
+    if(strlen(owner) && strcmp(owner,gName[playerid],true)!=0)return SendClientMessage(playerid,COLOR_RED,"Обращение уже принято другим администратором."),1;
     new target=INVALID_PLAYER_ID;for(new i=0;i<MAX_PLAYERS;i++)if(VX_Valid(i) && !strcmp(gName[i],name,true)){target=i;break;}
     if(action==0)
     {
         format(q,sizeof q,"UPDATE vx_reports SET status=1,admin='%q',updated=%d WHERE id=%d AND status<2",gName[playerid],gettime(),id);
         if(!VX_SQL(q))return VX_Error(playerid);
-        if(VX_Valid(target)){gVXReportOwner[target]=playerid;SendClientMessage(target,COLOR_GREEN,"РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ РїСЂРёРЅСЏР» РІР°С€Рµ РѕР±СЂР°С‰РµРЅРёРµ.");}
+        if(VX_Valid(target)){gVXReportOwner[target]=playerid;SendClientMessage(target,COLOR_GREEN,"Администратор принял ваше обращение.");}
         new m[144];format(m,sizeof m,"Report #%d taken. Player ID: %d. /reply %d [text] | /rclose %d | /spec [ID]",id,target,id,id);SendClientMessage(playerid,COLOR_ORANGE,m);return 1;
     }
     if(!strlen(owner))return SendClientMessage(playerid,COLOR_RED,"Take the report first: /rtake [report number]"),1;
@@ -9117,11 +9117,11 @@ stock VX_ReportAction(playerid,id,action,const text[]="")
         if(!VX_SQL(q))return VX_Error(playerid);
         new m[144];format(m,sizeof m,"[ADMIN #%d] %.114s",id,body);
         if(VX_Valid(target))SendClientMessage(target,COLOR_ORANGE,m);
-        SendClientMessage(playerid,COLOR_GREEN,"РћС‚РІРµС‚ СЃРѕС…СЂР°РЅС‘РЅ. РРіСЂРѕРєСѓ РІ СЃРµС‚Рё РѕС‚РїСЂР°РІР»РµРЅРѕ СЃРѕРѕР±С‰РµРЅРёРµ.");return 1;
+        SendClientMessage(playerid,COLOR_GREEN,"Ответ сохранён. Игроку в сети отправлено сообщение.");return 1;
     }
     format(q,sizeof q,"UPDATE vx_reports SET status=2,updated=%d WHERE id=%d",gettime(),id);if(!VX_SQL(q))return VX_Error(playerid);
-    if(VX_Valid(target)){gVXReportId[target]=0;gVXReportOwner[target]=INVALID_PLAYER_ID;SendClientMessage(target,COLOR_GREEN,"Р’Р°С€Рµ РѕР±СЂР°С‰РµРЅРёРµ Р·Р°РєСЂС‹С‚Рѕ.");}
-    SendClientMessage(playerid,COLOR_GREEN,"РћР±СЂР°С‰РµРЅРёРµ Р·Р°РєСЂС‹С‚Рѕ Рё СЃРѕС…СЂР°РЅРµРЅРѕ РІ Р°СЂС…РёРІРµ.");return 1;
+    if(VX_Valid(target)){gVXReportId[target]=0;gVXReportOwner[target]=INVALID_PLAYER_ID;SendClientMessage(target,COLOR_GREEN,"Ваше обращение закрыто.");}
+    SendClientMessage(playerid,COLOR_GREEN,"Обращение закрыто и сохранено в архиве.");return 1;
 }
 stock VX_StopSpec(playerid)
 {
@@ -9143,9 +9143,9 @@ stock VX_RestoreSpec(playerid)
 }
 stock VX_StartSpec(playerid,targetid)
 {
-    if(!VX_Admin(playerid))return SendClientMessage(playerid,COLOR_RED,"Р”РѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°Рј."),1;
-    if(!VX_Valid(targetid) || targetid==playerid || gVXSpec[targetid]!=INVALID_PLAYER_ID || GetPlayerState(targetid)==PLAYER_STATE_SPECTATING)return SendClientMessage(playerid,COLOR_RED,"РќРµРІРѕР·РјРѕР¶РЅРѕ РЅР°Р±Р»СЋРґР°С‚СЊ Р·Р° СЌС‚РёРј РёРіСЂРѕРєРѕРј."),1;
-    if(gVXHospital[playerid] || gPvpActive[playerid] || gIsJailed[playerid] || gHandcuffed[playerid])return SendClientMessage(playerid,COLOR_RED,"РќРµР»СЊР·СЏ РІРєР»СЋС‡РёС‚СЊ РЅР°Р±Р»СЋРґРµРЅРёРµ РІРѕ РІСЂРµРјСЏ Р»РµС‡РµРЅРёСЏ, Р°СЂРµСЃС‚Р° РёР»Рё РґСѓСЌР»Рё."),1;
+    if(!VX_Admin(playerid))return SendClientMessage(playerid,COLOR_RED,"Доступно только администраторам."),1;
+    if(!VX_Valid(targetid) || targetid==playerid || gVXSpec[targetid]!=INVALID_PLAYER_ID || GetPlayerState(targetid)==PLAYER_STATE_SPECTATING)return SendClientMessage(playerid,COLOR_RED,"Невозможно наблюдать за этим игроком."),1;
+    if(gVXHospital[playerid] || gPvpActive[playerid] || gIsJailed[playerid] || gHandcuffed[playerid])return SendClientMessage(playerid,COLOR_RED,"Нельзя включить наблюдение во время лечения, ареста или дуэли."),1;
     if(gVXSpec[playerid]==INVALID_PLAYER_ID)
     {
         GetPlayerPos(playerid,gVXSpecPos[playerid][0],gVXSpecPos[playerid][1],gVXSpecPos[playerid][2]);GetPlayerFacingAngle(playerid,gVXSpecPos[playerid][3]);
@@ -9157,7 +9157,7 @@ stock VX_StartSpec(playerid,targetid)
     gVXSpec[playerid]=targetid;
     TogglePlayerSpectating(playerid,true);
     VX_SpecView(playerid);
-    SendClientMessage(playerid,COLOR_ORANGE,"РќР°Р±Р»СЋРґРµРЅРёРµ РІРєР»СЋС‡РµРЅРѕ. РњРµРЅСЋ РґРµР№СЃС‚РІРёР№ РѕС‚РєСЂС‹РІР°РµС‚СЃСЏ СЃСЂР°Р·Сѓ; РїРѕРІС‚РѕСЂРЅРѕ: /specmenu. Р’С‹С…РѕРґ: /specoff.");
+    SendClientMessage(playerid,COLOR_ORANGE,"Наблюдение включено. Меню действий открывается сразу; повторно: /specmenu. Выход: /specoff.");
     VX_ShowSpecActions(playerid);
     return 1;
 }
@@ -9187,13 +9187,13 @@ stock VX_DecayWanted(playerid)
         gWantedLevel[playerid]--;gVXWantedAt[playerid]+=VX_WANTED_SECONDS;changed=1;
     }
     if(!gWantedLevel[playerid])gVXWantedAt[playerid]=0;
-    if(changed){SetPlayerWantedLevel(playerid,gWantedLevel[playerid]);VX_Save(playerid);SendClientMessage(playerid,COLOR_GREEN,"[Р РћР—Р«РЎРљ] РџСЂРѕС€Р»Рѕ 30 РјРёРЅСѓС‚. РЈСЂРѕРІРµРЅСЊ СЂРѕР·С‹СЃРєР° СѓРјРµРЅСЊС€РµРЅ.");}
+    if(changed){SetPlayerWantedLevel(playerid,gWantedLevel[playerid]);VX_Save(playerid);SendClientMessage(playerid,COLOR_GREEN,"[РОЗЫСК] Прошло 30 минут. Уровень розыска уменьшен.");}
     return changed;
 }
 stock VX_Tablet(playerid)
 {
-    if(!VX_Officer(playerid))return SendClientMessage(playerid,COLOR_RED,"Р”РѕСЃС‚СѓРїРЅРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј РџРѕР»РёС†РёРё Рё FBI."),1;
-    RP_Message(playerid,"РџР»Р°РЅС€РµС‚: /case ID, /fines ID, /vcheck ID, /camlogs. /rphelp вЂ” РєРѕРјР°РЅРґС‹.");
+    if(!VX_Officer(playerid))return SendClientMessage(playerid,COLOR_RED,"Доступно сотрудникам Полиции и FBI."),1;
+    RP_Message(playerid,"Планшет: /case ID, /fines ID, /vcheck ID, /camlogs. /rphelp — команды.");
     new body[4000],row[128];gVXListCount[playerid]=0;
     strcat(body,"ID\tSuspect\tStars\tNext removal\n");
     for(new i=0;i<MAX_PLAYERS && gVXListCount[playerid]<40;i++)if(VX_Valid(i) && gWantedLevel[i]>0)
@@ -9201,13 +9201,13 @@ stock VX_Tablet(playerid)
         new n=gVXListCount[playerid]++;gVXList[playerid][n]=i;gVXListSession[playerid][n]=gVXSession[i];
         format(row,sizeof row,"%d\t%s\t%d / 6\t%d min\n",i,gName[i],gWantedLevel[i],(gVXWantedAt[i]-gettime()+59)/60);strcat(body,row);
     }
-    if(!gVXListCount[playerid])return SendClientMessage(playerid,COLOR_GREEN,"РРіСЂРѕРєРѕРІ РІ СЂРѕР·С‹СЃРєРµ СЃРµР№С‡Р°СЃ РЅРµС‚ РІ СЃРµС‚Рё."),1;
-    return VX_Show(playerid,VX_TABLET,DIALOG_STYLE_TABLIST_HEADERS,"РџРѕР»РёС†РёСЏ / FBI | Р РѕР·С‹СЃРє",body,"РџСЂРµСЃР»РµРґРѕРІР°С‚СЊ","Р—Р°РєСЂС‹С‚СЊ");
+    if(!gVXListCount[playerid])return SendClientMessage(playerid,COLOR_GREEN,"Игроков в розыске сейчас нет в сети."),1;
+    return VX_Show(playerid,VX_TABLET,DIALOG_STYLE_TABLIST_HEADERS,"Полиция / FBI | Розыск",body,"Преследовать","Закрыть");
 }
 stock VX_Track(playerid,targetid)
 {
-    if(!VX_Officer(playerid))return SendClientMessage(playerid,COLOR_RED,"Р”РѕСЃС‚СѓРїРЅРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј РџРѕР»РёС†РёРё Рё FBI."),1;
-    if(!VX_Valid(targetid) || !gWantedLevel[targetid])return SendClientMessage(playerid,COLOR_RED,"РРіСЂРѕРє РЅРµ РІ СЃРµС‚Рё РёР»Рё Р±РѕР»СЊС€Рµ РЅРµ РЅР°С…РѕРґРёС‚СЃСЏ РІ СЂРѕР·С‹СЃРєРµ."),1;
+    if(!VX_Officer(playerid))return SendClientMessage(playerid,COLOR_RED,"Доступно сотрудникам Полиции и FBI."),1;
+    if(!VX_Valid(targetid) || !gWantedLevel[targetid])return SendClientMessage(playerid,COLOR_RED,"Игрок не в сети или больше не находится в розыске."),1;
     if(gWorkStage[playerid]>0 || gDrivingTestStage[playerid]>0)return SendClientMessage(playerid,COLOR_RED,"Finish your job or driving test first."),1;
     gPursuitTarget[playerid]=targetid;gGpsActive[playerid]=false;RefreshCarjackPursuits();
     new m[144];format(m,sizeof m,"[TABLET] %s | Wanted %d/6 | Interior %d | World %d | /stoptrack",gName[targetid],gWantedLevel[targetid],GetPlayerInterior(targetid),GetPlayerVirtualWorld(targetid));
@@ -9242,39 +9242,39 @@ stock VX_EnterLobby(playerid)
     gLastPickupTick[playerid]=GetTickCount();
     gVXWardTimer[playerid]=SetTimerEx("VX_WardReady",VX_WARD_LOAD_MS,false,"iii",playerid,gVXSession[playerid],gVXWardSequence[playerid]);
     if(!gVXWardTimer[playerid])TogglePlayerControllable(playerid,true);
-    SendClientMessage(playerid,COLOR_BLUE,"[Р‘Р¦Р Р‘] Р’РїРµСЂРµРґРё СЂРµРіРёСЃС‚СЂР°С‚СѓСЂР°: /medcert. РЎРїСЂР°РІР° СЃР»СѓР¶РµР±РЅР°СЏ РґРІРµСЂСЊ РІ РїР°Р»Р°С‚С‹: /ward. Р’С‹С…РѕРґ: /exit.");
+    SendClientMessage(playerid,COLOR_BLUE,"[БЦРБ] Впереди регистратура: /medcert. Справа служебная дверь в палаты: /ward. Выход: /exit.");
     return 1;
 }
 stock VX_EnterWard(playerid)
 {
     if(!VX_Valid(playerid) || GetPlayerVirtualWorld(playerid)!=VX_HOSPITAL_WORLD) return 0;
     if(gFaction[playerid]!=FACTION_HOSPITAL || gFactionRank[playerid]<1)
-        return SendClientMessage(playerid,COLOR_RED,"[Р‘Р¦Р Р‘] Р”РѕСЃС‚СѓРї РІ РїР°Р»Р°С‚С‹ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј Р‘Р¦Р Р‘. РџР°С†РёРµРЅС‚РѕРІ РЅР°РїСЂР°РІР»СЏСЋС‚ РїСЂРё РіРѕСЃРїРёС‚Р°Р»РёР·Р°С†РёРё."),1;
-    if(!VX_InsideLobby(playerid)) return SendClientMessage(playerid,COLOR_YELLOW,"[Р‘Р¦Р Р‘] РџРѕРґРѕР№РґРёС‚Рµ Рє РґРІРµСЂРё СЃРїСЂР°РІР° РІ С…РѕР»Р»Рµ."),1;
+        return SendClientMessage(playerid,COLOR_RED,"[БЦРБ] Доступ в палаты только сотрудникам БЦРБ. Пациентов направляют при госпитализации."),1;
+    if(!VX_InsideLobby(playerid)) return SendClientMessage(playerid,COLOR_YELLOW,"[БЦРБ] Подойдите к двери справа в холле."),1;
     ClearAnimations(playerid);
     SetPlayerPos(playerid,VX_WARD_LOBBY_X,VX_WARD_LOBBY_Y,VX_WARD_Z);
     SetPlayerFacingAngle(playerid,270.0);SetCameraBehindPlayer(playerid);
     gLastPickupTick[playerid]=GetTickCount();
-    SendClientMessage(playerid,COLOR_GREEN,"[Р‘Р¦Р Р‘] Р’С‹ РІРѕС€Р»Рё РІ СЃС‚Р°С†РёРѕРЅР°СЂ. РќР°Р·Р°Рґ: /lobby РёР»Рё РјР°СЂРєРµСЂ Сѓ РґРІРµСЂРё.");
+    SendClientMessage(playerid,COLOR_GREEN,"[БЦРБ] Вы вошли в стационар. Назад: /lobby или маркер у двери.");
     return 1;
 }
 stock VX_ReturnLobby(playerid)
 {
     if(!VX_Valid(playerid) || !VX_InsideWard(playerid))return 0;
-    if(gVXHospital[playerid])return SendClientMessage(playerid,COLOR_RED,"[Р‘Р¦Р Р‘] РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ Р»РµС‡РµРЅРёРµ РЅР° РєРѕР№РєРµ."),1;
+    if(gVXHospital[playerid])return SendClientMessage(playerid,COLOR_RED,"[БЦРБ] Сначала завершите лечение на койке."),1;
     VX_FreeBed(playerid);ClearAnimations(playerid);
     TogglePlayerControllable(playerid,true);
     SetPlayerPos(playerid,VX_LOBBY_WARD_X-2.0,VX_LOBBY_WARD_Y,VX_LOBBY_Z);
     SetPlayerFacingAngle(playerid,270.0);SetCameraBehindPlayer(playerid);
     gLastPickupTick[playerid]=GetTickCount();
-    SendClientMessage(playerid,COLOR_GREEN,"[Р‘Р¦Р Р‘] Р’С‹ РІРµСЂРЅСѓР»РёСЃСЊ РІ С…РѕР»Р». Р’С‹С…РѕРґ: /exit.");
+    SendClientMessage(playerid,COLOR_GREEN,"[БЦРБ] Вы вернулись в холл. Выход: /exit.");
     return 1;
 }
 stock VX_MedCertificate(playerid)
 {
     if(!VX_Valid(playerid) || !VX_InsideLobby(playerid)
         || !IsPlayerInRangeOfPoint(playerid,4.0,VX_LOBBY_CERT_X,VX_LOBBY_CERT_Y,VX_LOBBY_Z))
-        return SendClientMessage(playerid,COLOR_YELLOW,"[Р‘Р¦Р Р‘] РџРѕРґРѕР№РґРёС‚Рµ Рє СЃС‚РѕР№РєРµ СЂРµРіРёСЃС‚СЂР°С‚СѓСЂС‹."),1;
+        return SendClientMessage(playerid,COLOR_YELLOW,"[БЦРБ] Подойдите к стойке регистратуры."),1;
     new q[256],DBResult:r,until=0;
     format(q,sizeof q,"SELECT valid_until FROM vx_medcert WHERE name='%q'",gName[playerid]);
     r=db_query(gDatabase,q);
@@ -9283,17 +9283,17 @@ stock VX_MedCertificate(playerid)
     db_free_result(r);
     if(until>gettime())
     {
-        new text[120];format(text,sizeof text,"[Р‘Р¦Р Р‘] Р’Р°С€Р° СЃРїСЂР°РІРєР° РґРµР№СЃС‚РІРёС‚РµР»СЊРЅР° РµС‰С‘ %d РґРЅ.",(until-gettime()+86399)/86400);
+        new text[120];format(text,sizeof text,"[БЦРБ] Ваша справка действительна ещё %d дн.",(until-gettime()+86399)/86400);
         SendClientMessage(playerid,COLOR_GREEN,text);return 1;
     }
-    if(gMoney[playerid]<VX_CERT_PRICE)return SendClientMessage(playerid,COLOR_RED,"[Р‘Р¦Р Р‘] РњРµРґСЃРїСЂР°РІРєР° СЃС‚РѕРёС‚ 1000 $. РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С…."),1;
+    if(gMoney[playerid]<VX_CERT_PRICE)return SendClientMessage(playerid,COLOR_RED,"[БЦРБ] Медсправка стоит 1000 $. Недостаточно наличных."),1;
     new cash=gMoney[playerid]-VX_CERT_PRICE;
     if(!VX_Begin())return VX_Error(playerid);
     format(q,sizeof q,"INSERT OR REPLACE INTO vx_medcert(name,valid_until) VALUES('%q',%d)",gName[playerid],gettime()+VX_CERT_DAYS*86400);
     VX_SQL(q);VX_MoneySQL(playerid,cash,gBankMoney[playerid]);
     if(!VX_Commit())return VX_Error(playerid);
     VX_MoneySync(playerid,cash,gBankMoney[playerid]);
-    SendClientMessage(playerid,COLOR_GREEN,"[Р‘Р¦Р Р‘] РњРµРґРёС†РёРЅСЃРєР°СЏ СЃРїСЂР°РІРєР° РѕС„РѕСЂРјР»РµРЅР° РЅР° 7 РґРЅРµР№. РЎС‚РѕРёРјРѕСЃС‚СЊ: 1000 $.");
+    SendClientMessage(playerid,COLOR_GREEN,"[БЦРБ] Медицинская справка оформлена на 7 дней. Стоимость: 1000 $.");
     return 1;
 }
 public VX_HospitalOutsideReady(playerid,session)
@@ -9329,9 +9329,9 @@ stock VX_EnterHospital(playerid)
     if(gVXHospital[playerid])
     {
         ResetPlayerWeapons(playerid); SetPlayerHealth(playerid,30.0); SetPlayerArmour(playerid,0.0);
-        SendClientMessage(playerid,COLOR_YELLOW,"[Р‘Р¦Р Р‘] Р—Р°Р№РјРёС‚Рµ СЃРІРѕР±РѕРґРЅСѓСЋ РєРѕР№РєСѓ: /bed РёР»Рё ALT. РџРѕСЃР»Рµ Р»РµС‡РµРЅРёСЏ: /exit.");
+        SendClientMessage(playerid,COLOR_YELLOW,"[БЦРБ] Займите свободную койку: /bed или ALT. После лечения: /exit.");
     }
-    else SendClientMessage(playerid,COLOR_BLUE,"[Р‘Р¦Р Р‘] РЎС‚Р°С†РёРѕРЅР°СЂ. /lobby - С…РѕР»Р», /exit - СѓР»РёС†Р°.");
+    else SendClientMessage(playerid,COLOR_BLUE,"[БЦРБ] Стационар. /lobby - холл, /exit - улица.");
     return 1;
 }
 
@@ -9339,12 +9339,12 @@ stock VX_HospitalExit(playerid)
 {
     if(!VX_Valid(playerid)) return 0;
     if(GetPlayerVirtualWorld(playerid)!=VX_HOSPITAL_WORLD || GetPlayerInterior(playerid)!=0)
-        return RP_Message(playerid,"Р’С‹ РЅРµ РІ Р·РґР°РЅРёРё Р‘Р¦Р Р‘.");
+        return RP_Message(playerid,"Вы не в здании БЦРБ.");
     if(gVXHospital[playerid])
     {
-        if(gVXBed[playerid]<0) return RP_Message(playerid,"[Р‘Р¦Р Р‘] РџРµСЂРµРґ РІС‹С…РѕРґРѕРј Р·Р°Р№РјРёС‚Рµ РєРѕР№РєСѓ: /bed РёР»Рё ALT. /hospitalinfo - РёРЅС„РѕСЂРјР°С†РёСЏ.");
+        if(gVXBed[playerid]<0) return RP_Message(playerid,"[БЦРБ] Перед выходом займите койку: /bed или ALT. /hospitalinfo - информация.");
         new msg[144];
-        format(msg,sizeof msg,"[Р‘Р¦Р Р‘] Р”Рѕ РІС‹РїРёСЃРєРё %d РјРёРЅ. %d СЃРµРє. РџРѕСЃР»Рµ Р»РµС‡РµРЅРёСЏ РІС‹С…РѕРґ РѕС‚РєСЂРѕРµС‚СЃСЏ.",gVXTreatment[playerid]/60,gVXTreatment[playerid]%60);
+        format(msg,sizeof msg,"[БЦРБ] До выписки %d мин. %d сек. После лечения выход откроется.",gVXTreatment[playerid]/60,gVXTreatment[playerid]%60);
         return RP_Message(playerid,msg);
     }
     if(gIsJailed[playerid] || gHandcuffed[playerid] || gTaserStunned[playerid]) return 1;
@@ -9359,7 +9359,7 @@ stock VX_HospitalExit(playerid)
     SetTimerEx("VX_HospitalOutsideReady",1800,false,"ii",playerid,gVXSession[playerid]);
     SetCameraBehindPlayer(playerid);
     gLastPickupTick[playerid]=GetTickCount();
-    SendClientMessage(playerid,COLOR_GREEN,"[Р‘Р¦Р Р‘] Р’С‹ РІС‹С€Р»Рё РёР· Р±РѕР»СЊРЅРёС†С‹.");
+    SendClientMessage(playerid,COLOR_GREEN,"[БЦРБ] Вы вышли из больницы.");
     return 1;
 }
 
@@ -9377,9 +9377,9 @@ stock VX_FreeBed(playerid)
 
 stock VX_OccupyBed(playerid)
 {
-    if(gVXWardTimer[playerid]) return RP_Message(playerid,"[Р‘Р¦Р Р‘] РџРѕРјРµС‰РµРЅРёРµ Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ. РЈРїСЂР°РІР»РµРЅРёРµ РІРєР»СЋС‡РёС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.");
-    if(!gVXHospital[playerid] || !VX_InsideWard(playerid))return SendClientMessage(playerid,COLOR_RED,"[Р‘Р¦Р Р‘] Р”Р»СЏ Р»РµС‡РµРЅРёСЏ РЅСѓР¶РЅРѕ РЅР°С…РѕРґРёС‚СЊСЃСЏ РІ РїР°Р»Р°С‚Рµ."),1;
-    if(gVXBed[playerid]>=0)return SendClientMessage(playerid,COLOR_YELLOW,"Р›РµС‡РµРЅРёРµ СѓР¶Рµ РёРґС‘С‚. РћСЃС‚Р°РІР°Р№С‚РµСЃСЊ РЅР° РєРѕР№РєРµ."),1;
+    if(gVXWardTimer[playerid]) return RP_Message(playerid,"[БЦРБ] Помещение загружается. Управление включится автоматически.");
+    if(!gVXHospital[playerid] || !VX_InsideWard(playerid))return SendClientMessage(playerid,COLOR_RED,"[БЦРБ] Для лечения нужно находиться в палате."),1;
+    if(gVXBed[playerid]>=0)return SendClientMessage(playerid,COLOR_YELLOW,"Лечение уже идёт. Оставайтесь на койке."),1;
     for(new b=0;b<VX_BEDS;b++)
     {
         if(!IsPlayerInRangeOfPoint(playerid,3.0,gVXBedPos[b][0],gVXBedPos[b][1],gVXBedPos[b][2]))continue;
@@ -9388,10 +9388,10 @@ stock VX_OccupyBed(playerid)
         SetPlayerPos(playerid,gVXBedPos[b][0],gVXBedPos[b][1],gVXBedPos[b][2]+0.25);SetPlayerFacingAngle(playerid,90.0);
         // GTA:SA BEACH bather is a lying/rest animation, rather than a knocked-down combat pose.
         ApplyAnimation(playerid,"BEACH","bather",4.1,1,0,0,1,0,1);TogglePlayerControllable(playerid,false);
-        new m[144];format(m,sizeof m,"[Р‘Р¦Р Р‘] РљРѕР№РєР° %d. Р›РµС‡РµРЅРёРµ: %d СЃРµРє. РЎРѕСЃС‚РѕСЏРЅРёРµ: /hospitalinfo.",b+1,gVXTreatment[playerid]);SendClientMessage(playerid,COLOR_BLUE,m);
+        new m[144];format(m,sizeof m,"[БЦРБ] Койка %d. Лечение: %d сек. Состояние: /hospitalinfo.",b+1,gVXTreatment[playerid]);SendClientMessage(playerid,COLOR_BLUE,m);
         VX_Save(playerid);return 1;
     }
-    return SendClientMessage(playerid,COLOR_YELLOW,"[Р‘Р¦Р Р‘] РџРѕРґРѕР№РґРёС‚Рµ Рє РЎР’РћР‘РћР”РќРћР™ РєРѕР№РєРµ РЅР° 3 РјРµС‚СЂР° Рё РІРІРµРґРёС‚Рµ /bed."),1;
+    return SendClientMessage(playerid,COLOR_YELLOW,"[БЦРБ] Подойдите к СВОБОДНОЙ койке на 3 метра и введите /bed."),1;
 }
 stock VX_DeathStart(playerid)
 {
@@ -9426,30 +9426,30 @@ public VX_DeathSpawn(playerid,session)
 }
 stock VX_MedRequest(playerid)
 {
-    if(gVXHospital[playerid])return SendClientMessage(playerid,COLOR_YELLOW,"Р’С‹ СѓР¶Рµ РІ Р‘Р¦Р Р‘. Р—Р°Р№РјРёС‚Рµ РєРѕР№РєСѓ: /bed."),1;
-    if(gVXMedCall[playerid])return SendClientMessage(playerid,COLOR_YELLOW,"Р’Р°С€ РІС‹Р·РѕРІ СЃРєРѕСЂРѕР№ СѓР¶Рµ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ."),1;
+    if(gVXHospital[playerid])return SendClientMessage(playerid,COLOR_YELLOW,"Вы уже в БЦРБ. Займите койку: /bed."),1;
+    if(gVXMedCall[playerid])return SendClientMessage(playerid,COLOR_YELLOW,"Ваш вызов скорой уже зарегистрирован."),1;
     if(gettime()-gVXLastMedCall[playerid]<60)return SendClientMessage(playerid,COLOR_RED,"Wait 60 seconds before calling again."),1;
     gVXMedCall[playerid]=1;gVXMedAssigned[playerid]=INVALID_PLAYER_ID;gVXLastMedCall[playerid]=gettime();
-    new m[144];format(m,sizeof m,"[Р‘Р¦Р Р‘ 103] Emergency call: %s [%d]. Accept: /maccept %d",gName[playerid],playerid,playerid);
+    new m[144];format(m,sizeof m,"[БЦРБ 103] Emergency call: %s [%d]. Accept: /maccept %d",gName[playerid],playerid,playerid);
     for(new i=0;i<MAX_PLAYERS;i++)if(VX_Medic(i))SendClientMessage(i,COLOR_BLUE,m);
-    SendClientMessage(playerid,COLOR_GREEN,"[103] Р’С‹Р·РѕРІ СЃРєРѕСЂРѕР№ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ. РћС‚РјРµРЅРёС‚СЊ: /medcancel.");return 1;
+    SendClientMessage(playerid,COLOR_GREEN,"[103] Вызов скорой зарегистрирован. Отменить: /medcancel.");return 1;
 }
 stock VX_MedCancel(playerid)
 {
     new medic=gVXMedAssigned[playerid];
-    if(VX_Valid(medic)){RemovePlayerMapIcon(medic,57);DisablePlayerCheckpoint(medic);SendClientMessage(medic,COLOR_YELLOW,"[103] РњРµРґРёС†РёРЅСЃРєРёР№ РІС‹Р·РѕРІ Р·Р°РІРµСЂС€С‘РЅ.");}
+    if(VX_Valid(medic)){RemovePlayerMapIcon(medic,57);DisablePlayerCheckpoint(medic);SendClientMessage(medic,COLOR_YELLOW,"[103] Медицинский вызов завершён.");}
     gVXMedCall[playerid]=0;gVXMedAssigned[playerid]=INVALID_PLAYER_ID;return 1;
 }
 stock VX_MedAccept(playerid,targetid)
 {
-    if(!VX_Medic(playerid))return SendClientMessage(playerid,COLOR_RED,"Р‘Р¦Р Р‘ staff on duty only. /mduty"),1;
-    if(!VX_Valid(targetid) || targetid==playerid || gVXMedCall[targetid]!=1)return SendClientMessage(playerid,COLOR_RED,"Р’С‹Р·РѕРІ РЅРµРґРѕСЃС‚СѓРїРµРЅ РёР»Рё СѓР¶Рµ РїСЂРёРЅСЏС‚."),1;
+    if(!VX_Medic(playerid))return SendClientMessage(playerid,COLOR_RED,"БЦРБ staff on duty only. /mduty"),1;
+    if(!VX_Valid(targetid) || targetid==playerid || gVXMedCall[targetid]!=1)return SendClientMessage(playerid,COLOR_RED,"Вызов недоступен или уже принят."),1;
     if(gWorkStage[playerid]>0 || gDrivingTestStage[playerid]>0)return SendClientMessage(playerid,COLOR_RED,"Finish your current route first."),1;
-    for(new i=0;i<MAX_PLAYERS;i++)if(gVXMedCall[i]==2 && gVXMedAssigned[i]==playerid)return SendClientMessage(playerid,COLOR_YELLOW,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ С‚РµРєСѓС‰РёР№ РІС‹Р·РѕРІ."),1;
+    for(new i=0;i<MAX_PLAYERS;i++)if(gVXMedCall[i]==2 && gVXMedAssigned[i]==playerid)return SendClientMessage(playerid,COLOR_YELLOW,"Сначала завершите текущий вызов."),1;
     gVXMedCall[targetid]=2;gVXMedAssigned[targetid]=playerid;gGpsActive[playerid]=false;
     new Float:x,Float:y,Float:z,m[144];GetPlayerPos(targetid,x,y,z);SetPlayerCheckpoint(playerid,x,y,z,4.0);
     format(m,sizeof m,"[103] %s is coming to help you.",gName[playerid]);SendClientMessage(targetid,COLOR_GREEN,m);
-    format(m,sizeof m,"[Р‘Р¦Р Р‘] Call accepted: %s, interior %d, world %d. /heal %d",gName[targetid],GetPlayerInterior(targetid),GetPlayerVirtualWorld(targetid),targetid);
+    format(m,sizeof m,"[БЦРБ] Call accepted: %s, interior %d, world %d. /heal %d",gName[targetid],GetPlayerInterior(targetid),GetPlayerVirtualWorld(targetid),targetid);
     SendClientMessage(playerid,COLOR_BLUE,m);return 1;
 }
 stock VX_Heal(playerid,targetid)
@@ -9486,7 +9486,7 @@ stock VX_HospitalPickup(playerid,pickupid)
         if(VX_InsideLobby(playerid) && GetTickCount()-gLastPickupTick[playerid]>=1500)
         {
             gLastPickupTick[playerid]=GetTickCount();
-            SendClientMessage(playerid,COLOR_BLUE,"[Р‘Р¦Р Р‘] РћС„РѕСЂРјРёС‚СЊ РјРµРґСЃРїСЂР°РІРєСѓ РЅР° 7 РґРЅРµР№: /medcert (1000 $).");
+            SendClientMessage(playerid,COLOR_BLUE,"[БЦРБ] Оформить медсправку на 7 дней: /medcert (1000 $).");
         }
         return 1;
     }
@@ -9523,7 +9523,7 @@ stock VX_HospitalPickup(playerid,pickupid)
         if(GetPlayerVirtualWorld(playerid)==VX_HOSPITAL_WORLD && gettime()>=gVXWardNotice[playerid])
         {
             gVXWardNotice[playerid]=gettime()+4;
-            SendClientMessage(playerid,COLOR_BLUE,"[Р‘Р¦Р Р‘] Р—Р°Р№РјРёС‚Рµ СЃРІРѕР±РѕРґРЅСѓСЋ РєРѕР№РєСѓ: /bed РёР»Рё ALT. РџРѕСЃР»Рµ Р»РµС‡РµРЅРёСЏ: /exit.");
+            SendClientMessage(playerid,COLOR_BLUE,"[БЦРБ] Займите свободную койку: /bed или ALT. После лечения: /exit.");
         }
         return 1;
     }
@@ -9539,35 +9539,35 @@ stock VX_ShowFamily(playerid)
     if(r && db_num_rows(r))
     {
         db_get_field(r,0,name,sizeof name);db_get_field(r,1,owner,sizeof owner);
-        format(body,sizeof body,"%s | Р’Р»Р°РґРµР»РµС†: %s | РљР°Р·РЅР°: %d\n/fc [text] | /finvite [ID] | /fleave\n/frank [ID] [1-3] | /fkick [ID]\n/fdeposit [amount] | /fwithdraw [amount]\n\nMembers:\n",name,owner,db_get_field_int(r,2));
+        format(body,sizeof body,"%s | Владелец: %s | Казна: %d\n/fc [text] | /finvite [ID] | /fleave\n/frank [ID] [1-3] | /fkick [ID]\n/fdeposit [amount] | /fwithdraw [amount]\n\nMembers:\n",name,owner,db_get_field_int(r,2));
     }
     if(r)db_free_result(r);
     format(q,sizeof q,"SELECT name,rank FROM vx_family_members WHERE family=%d ORDER BY rank DESC,name LIMIT 30",gVXFamily[playerid]);r=db_query(gDatabase,q);
     if(r)for(new i=0;i<db_num_rows(r);i++){db_get_field(r,0,owner,sizeof owner);format(row,sizeof row,"%s - rank %d\n",owner,db_get_field_int(r,1));strcat(body,row);db_next_row(r);}
     if(r)db_free_result(r);
-    return VX_Show(playerid,VX_FAMILY,DIALOG_STYLE_MSGBOX,"VEXORIUM | РЎРµРјСЊСЏ",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_FAMILY,DIALOG_STYLE_MSGBOX,"VEXORIUM | Семья",body,"OK","Закрыть");
 }
 stock VX_CreateFamily(playerid,const text[])
 {
     VX_LoadFamily(playerid);if(gVXFamily[playerid])return SendClientMessage(playerid,COLOR_RED,"Leave your current family first."),1;
     new name[41];VX_CleanText(text,name,sizeof name);if(strlen(name)<3)return SendClientMessage(playerid,COLOR_YELLOW,"Usage: /fcreate [name, 3-40 characters]"),1;
-    if(gMoney[playerid]<VX_FAMILY_PRICE)return SendClientMessage(playerid,COLOR_RED,"РЎРѕР·РґР°РЅРёРµ СЃРµРјСЊРё СЃС‚РѕРёС‚ 100000 СЂСѓР±Р»РµР№."),1;
+    if(gMoney[playerid]<VX_FAMILY_PRICE)return SendClientMessage(playerid,COLOR_RED,"Создание семьи стоит 100000 рублей."),1;
     if(!VX_Begin())return VX_Error(playerid);
     new q[400];format(q,sizeof q,"INSERT INTO vx_families(name,owner) VALUES('%q','%q')",name,gName[playerid]);VX_SQL(q);
     format(q,sizeof q,"INSERT INTO vx_family_members(name,family,rank) SELECT '%q',id,4 FROM vx_families WHERE owner='%q'",gName[playerid],gName[playerid]);VX_SQL(q);
     VX_MoneySQL(playerid,gMoney[playerid]-VX_FAMILY_PRICE,gBankMoney[playerid]);
-    if(!VX_Commit())return SendClientMessage(playerid,COLOR_RED,"РЎРµРјСЊСЏ РЅРµ СЃРѕР·РґР°РЅР°: РІРѕР·РјРѕР¶РЅРѕ, РЅР°Р·РІР°РЅРёРµ Р·Р°РЅСЏС‚Рѕ. Р”РµРЅСЊРіРё РЅРµ СЃРїРёСЃР°РЅС‹."),1;
+    if(!VX_Commit())return SendClientMessage(playerid,COLOR_RED,"Семья не создана: возможно, название занято. Деньги не списаны."),1;
     VX_MoneySync(playerid,gMoney[playerid]-VX_FAMILY_PRICE,gBankMoney[playerid]);VX_LoadFamily(playerid);return VX_ShowFamily(playerid);
 }
 stock VX_FamilyInvite(playerid,targetid)
 {
     VX_LoadFamily(playerid);
-    if(!gVXFamily[playerid] || gVXFamilyRank[playerid]<3)return SendClientMessage(playerid,COLOR_RED,"Р”РѕСЃС‚СѓРїРЅРѕ Р·Р°РјРµСЃС‚РёС‚РµР»СЋ РёР»Рё Р»РёРґРµСЂСѓ СЃРµРјСЊРё."),1;
+    if(!gVXFamily[playerid] || gVXFamilyRank[playerid]<3)return SendClientMessage(playerid,COLOR_RED,"Доступно заместителю или лидеру семьи."),1;
     if(!VX_Near(playerid,targetid) || targetid==playerid)return SendClientMessage(playerid,COLOR_RED,"Stand near the invitee."),1;
-    VX_LoadFamily(targetid);if(gVXFamily[targetid])return SendClientMessage(playerid,COLOR_RED,"РРіСЂРѕРє СѓР¶Рµ СЃРѕСЃС‚РѕРёС‚ РІ СЃРµРјСЊРµ."),1;
+    VX_LoadFamily(targetid);if(gVXFamily[targetid])return SendClientMessage(playerid,COLOR_RED,"Игрок уже состоит в семье."),1;
     gVXInvite[targetid]=gVXFamily[playerid];gVXInviteAt[targetid]=gettime()+60;
     new m[144];format(m,sizeof m,"[FAMILY] %s invites you to family #%d. /faccept within 60 seconds.",gName[playerid],gVXFamily[playerid]);SendClientMessage(targetid,COLOR_YELLOW,m);
-    SendClientMessage(playerid,COLOR_GREEN,"РџСЂРёРіР»Р°С€РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ.");return 1;
+    SendClientMessage(playerid,COLOR_GREEN,"Приглашение отправлено.");return 1;
 }
 stock VX_FamilyAccept(playerid)
 {
@@ -9601,71 +9601,71 @@ stock VX_FamilyRank(playerid,targetid,rank)
     if(rank==0)format(q,sizeof q,"DELETE FROM vx_family_members WHERE name='%q' AND family=%d",gName[targetid],gVXFamily[playerid]);
     else format(q,sizeof q,"UPDATE vx_family_members SET rank=%d WHERE name='%q' AND family=%d",rank,gName[targetid],gVXFamily[playerid]);
     if(!VX_SQL(q))return VX_Error(playerid);
-    VX_LoadFamily(targetid);SendClientMessage(targetid,COLOR_YELLOW,"Р’Р°С€Рµ С‡Р»РµРЅСЃС‚РІРѕ РёР»Рё СЂР°РЅРі РІ СЃРµРјСЊРµ РёР·РјРµРЅРµРЅС‹.");return VX_ShowFamily(playerid);
+    VX_LoadFamily(targetid);SendClientMessage(targetid,COLOR_YELLOW,"Ваше членство или ранг в семье изменены.");return VX_ShowFamily(playerid);
 }
 stock VX_FamilyLeave(playerid)
 {
     VX_LoadFamily(playerid);if(!gVXFamily[playerid])return 1;
     if(gVXFamilyRank[playerid]==4)return SendClientMessage(playerid,COLOR_YELLOW,"Leader: withdraw treasury funds, then use /fdisband CONFIRM."),1;
     new q[200];format(q,sizeof q,"DELETE FROM vx_family_members WHERE name='%q'",gName[playerid]);if(!VX_SQL(q))return VX_Error(playerid);
-    VX_LoadFamily(playerid);SendClientMessage(playerid,COLOR_YELLOW,"Р’С‹ РІС‹С€Р»Рё РёР· СЃРµРјСЊРё.");return 1;
+    VX_LoadFamily(playerid);SendClientMessage(playerid,COLOR_YELLOW,"Вы вышли из семьи.");return 1;
 }
 stock VX_BizList(playerid)
 {
     new q[128],body[1600],row[160],name[33],owner[25];
     format(q,sizeof q,"SELECT id,name,owner,price FROM vx_businesses ORDER BY id LIMIT 5");new DBResult:r=db_query(gDatabase,q);
-    strcat(body,"ID\tР‘РёР·РЅРµСЃ\tР’Р»Р°РґРµР»РµС†\tР¦РµРЅР°\n");gVXListCount[playerid]=0;
+    strcat(body,"ID\tБизнес\tВладелец\tЦена\n");gVXListCount[playerid]=0;
     if(r)for(new i=0;i<db_num_rows(r) && i<5;i++)
     {
         new id=db_get_field_int(r,0);db_get_field(r,1,name,sizeof name);db_get_field(r,2,owner,sizeof owner);
-        if (!strlen(owner)) format(owner,sizeof owner,"РџСЂРѕРґР°С‘С‚СЃСЏ");
+        if (!strlen(owner)) format(owner,sizeof owner,"Продаётся");
         gVXList[playerid][gVXListCount[playerid]++]=id;format(row,sizeof row,"%d\t%s\t%s\t%d\n",id,name,owner,db_get_field_int(r,3));strcat(body,row);db_next_row(r);
     }
-    if(r)db_free_result(r);return VX_Show(playerid,VX_BUSINESSES,DIALOG_STYLE_TABLIST_HEADERS,"VEXORIUM | Р‘РёР·РЅРµСЃС‹",body,"РћС‚РєСЂС‹С‚СЊ","Р—Р°РєСЂС‹С‚СЊ");
+    if(r)db_free_result(r);return VX_Show(playerid,VX_BUSINESSES,DIALOG_STYLE_TABLIST_HEADERS,"VEXORIUM | Бизнесы",body,"Открыть","Закрыть");
 }
 stock VX_ShowBiz(playerid,id)
 {
-    if(id<1 || id>5)return SendClientMessage(playerid,COLOR_YELLOW,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /biz [1-5] РёР»Рё /businesses"),1;
+    if(id<1 || id>5)return SendClientMessage(playerid,COLOR_YELLOW,"Использование: /biz [1-5] или /businesses"),1;
     new q[192],title[128],name[33],owner[25],body[700];format(q,sizeof q,"SELECT name,owner,price,till,stock,unitprice FROM vx_businesses WHERE id=%d",id);new DBResult:r=db_query(gDatabase,q);
     if(!r || !db_num_rows(r)){if(r)db_free_result(r);return VX_Error(playerid);}
     db_get_field(r,0,name,sizeof name);db_get_field(r,1,owner,sizeof owner);
-    if (!strlen(owner)) format(owner,sizeof owner,"РџСЂРѕРґР°С‘С‚СЃСЏ");
-    format(title,sizeof title,"%s | Р’Р»Р°РґРµР»РµС†: %s",name,owner);
-    format(body,sizeof body,"РљСѓРїРёС‚СЊ Р±РёР·РЅРµСЃ: %d\nРљСѓРїРёС‚СЊ С‚РѕРІР°СЂ / СѓСЃР»СѓРіСѓ: %d\nР—Р°Р±СЂР°С‚СЊ РІС‹СЂСѓС‡РєСѓ: %d\nР—Р°РєСѓРїРёС‚СЊ 50 РµРґРёРЅРёС†: 5000\nРџСЂРѕРґР°С‚СЊ Р±РёР·РЅРµСЃ Р·Р° 70% С†РµРЅС‹\nРР·РјРµРЅРёС‚СЊ С†РµРЅСѓ: /bizprice %d [100-10000]\nGPS Рє Р±РёР·РЅРµСЃСѓ | РўРѕРІР°СЂРѕРІ: %d",db_get_field_int(r,2),db_get_field_int(r,5),db_get_field_int(r,3),id,db_get_field_int(r,4));
+    if (!strlen(owner)) format(owner,sizeof owner,"Продаётся");
+    format(title,sizeof title,"%s | Владелец: %s",name,owner);
+    format(body,sizeof body,"Купить бизнес: %d\nКупить товар / услугу: %d\nЗабрать выручку: %d\nЗакупить 50 единиц: 5000\nПродать бизнес за 70% цены\nИзменить цену: /bizprice %d [100-10000]\nGPS к бизнесу | Товаров: %d",db_get_field_int(r,2),db_get_field_int(r,5),db_get_field_int(r,3),id,db_get_field_int(r,4));
     db_free_result(r);gVXSelectedBiz[playerid]=id;return VX_Show(playerid,VX_BIZ,DIALOG_STYLE_LIST,title,body);
 }
 stock VX_BizAction(playerid,id,action,priceInput=0)
 {
     if(id<1 || id>5)return 1;
-    if(GetPlayerVirtualWorld(playerid)!=0 || GetPlayerInterior(playerid)!=0 || !IsPlayerInRangeOfPoint(playerid,12.0,gVXBizPos[id-1][0],gVXBizPos[id-1][1],gVXBizPos[id-1][2]))return SendClientMessage(playerid,COLOR_RED,"РџРѕРґРѕР№РґРёС‚Рµ Рє Р±РёР·РЅРµСЃСѓ, РёСЃРїРѕР»СЊР·СѓСЏ /gps."),1;
+    if(GetPlayerVirtualWorld(playerid)!=0 || GetPlayerInterior(playerid)!=0 || !IsPlayerInRangeOfPoint(playerid,12.0,gVXBizPos[id-1][0],gVXBizPos[id-1][1],gVXBizPos[id-1][2]))return SendClientMessage(playerid,COLOR_RED,"Подойдите к бизнесу, используя /gps."),1;
     new q[400],owner[25];format(q,sizeof q,"SELECT owner,price,till,stock,unitprice FROM vx_businesses WHERE id=%d",id);new DBResult:r=db_query(gDatabase,q);
     if(!r || !db_num_rows(r)){if(r)db_free_result(r);return VX_Error(playerid);}
     db_get_field(r,0,owner,sizeof owner);new price=db_get_field_int(r,1),till=db_get_field_int(r,2),stockCount=db_get_field_int(r,3),unitprice=db_get_field_int(r,4);db_free_result(r);
     new cash=gMoney[playerid],delta=0,item=-1,oldItem=0;
-    if(action>=2 && strcmp(owner,gName[playerid],true))return SendClientMessage(playerid,COLOR_RED,"Р­С‚Рѕ РґРµР№СЃС‚РІРёРµ РґРѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ РІР»Р°РґРµР»СЊС†Сѓ Р±РёР·РЅРµСЃР°."),1;
+    if(action>=2 && strcmp(owner,gName[playerid],true))return SendClientMessage(playerid,COLOR_RED,"Это действие доступно только владельцу бизнеса."),1;
     if(action==0)
     {
-        if(strlen(owner) || cash<price)return SendClientMessage(playerid,COLOR_RED,"Р‘РёР·РЅРµСЃ Р·Р°РЅСЏС‚ РёР»Рё Сѓ РІР°СЃ РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі."),1;
+        if(strlen(owner) || cash<price)return SendClientMessage(playerid,COLOR_RED,"Бизнес занят или у вас недостаточно денег."),1;
         format(q,sizeof q,"SELECT id FROM vx_businesses WHERE owner='%q'",gName[playerid]);r=db_query(gDatabase,q);new owned=(r && db_num_rows(r)>0);if(r)db_free_result(r);
-        if(owned)return SendClientMessage(playerid,COLOR_RED,"РРіСЂРѕРє РјРѕР¶РµС‚ РІР»Р°РґРµС‚СЊ С‚РѕР»СЊРєРѕ РѕРґРЅРёРј Р±РёР·РЅРµСЃРѕРј."),1;
+        if(owned)return SendClientMessage(playerid,COLOR_RED,"Игрок может владеть только одним бизнесом."),1;
         cash-=price;format(owner,sizeof owner,"%s",gName[playerid]);
     }
     else if(action==1)
     {
-        if(cash<unitprice || stockCount<1 || till>MAX_MONEY-unitprice)return SendClientMessage(playerid,COLOR_RED,"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі, РЅРµС‚ С‚РѕРІР°СЂР° РёР»Рё РєР°СЃСЃР° РїРµСЂРµРїРѕР»РЅРµРЅР°."),1;
+        if(cash<unitprice || stockCount<1 || till>MAX_MONEY-unitprice)return SendClientMessage(playerid,COLOR_RED,"Недостаточно денег, нет товара или касса переполнена."),1;
         if(id==1 || id==4)item=1;else if(id==2 || id==5)item=2;
-        if(item>=0 && !VX_CanCarry(playerid,item,1))return SendClientMessage(playerid,COLOR_RED,"РРЅРІРµРЅС‚Р°СЂСЊ Р·Р°РїРѕР»РЅРµРЅ."),1;
-        if(id==3 && (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid)!=PLAYER_STATE_DRIVER))return SendClientMessage(playerid,COLOR_RED,"Р”Р»СЏ СЂРµРјРѕРЅС‚Р° СЃСЏРґСЊС‚Рµ Р·Р° СЂСѓР»СЊ СЃРІРѕРµРіРѕ Р°РІС‚РѕРјРѕР±РёР»СЏ."),1;
+        if(item>=0 && !VX_CanCarry(playerid,item,1))return SendClientMessage(playerid,COLOR_RED,"Инвентарь заполнен."),1;
+        if(id==3 && (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid)!=PLAYER_STATE_DRIVER))return SendClientMessage(playerid,COLOR_RED,"Для ремонта сядьте за руль своего автомобиля."),1;
         cash-=unitprice;till+=unitprice;stockCount--;delta=1;
     }
-    else if(action==2){if(till<=0 || cash>MAX_MONEY-till)return SendClientMessage(playerid,COLOR_RED,"РљР°СЃСЃР° РїСѓСЃС‚Р° РёР»Рё РґРѕСЃС‚РёРіРЅСѓС‚ РґРµРЅРµР¶РЅС‹Р№ Р»РёРјРёС‚."),1;cash+=till;till=0;}
-    else if(action==3){if(cash<5000 || stockCount>950)return SendClientMessage(playerid,COLOR_RED,"РќСѓР¶РЅРѕ 5000 $. РњР°РєСЃРёРјР°Р»СЊРЅС‹Р№ Р·Р°РїР°СЃ вЂ” 1000 РµРґ."),1;cash-=5000;stockCount+=50;}
+    else if(action==2){if(till<=0 || cash>MAX_MONEY-till)return SendClientMessage(playerid,COLOR_RED,"Касса пуста или достигнут денежный лимит."),1;cash+=till;till=0;}
+    else if(action==3){if(cash<5000 || stockCount>950)return SendClientMessage(playerid,COLOR_RED,"Нужно 5000 $. Максимальный запас — 1000 ед."),1;cash-=5000;stockCount+=50;}
     else if(action==4)
     {
-        if(till>0)return SendClientMessage(playerid,COLOR_YELLOW,"РџРµСЂРµРґ РїСЂРѕРґР°Р¶РµР№ Р·Р°Р±РµСЂРёС‚Рµ РІС‹СЂСѓС‡РєСѓ РёР· РєР°СЃСЃС‹."),1;
+        if(till>0)return SendClientMessage(playerid,COLOR_YELLOW,"Перед продажей заберите выручку из кассы."),1;
         new refund=price/10*7;if(cash>MAX_MONEY-refund)return 1;cash+=refund;owner[0]='\0';
     }
-    else if(action==5){if(priceInput<100 || priceInput>10000)return SendClientMessage(playerid,COLOR_RED,"Р¦РµРЅР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РѕС‚ 100 РґРѕ 10000 $."),1;unitprice=priceInput;}
+    else if(action==5){if(priceInput<100 || priceInput>10000)return SendClientMessage(playerid,COLOR_RED,"Цена должна быть от 100 до 10000 $."),1;unitprice=priceInput;}
     else return 1;
     if(!VX_Begin())return VX_Error(playerid);
     format(q,sizeof q,"UPDATE vx_businesses SET owner='%q',till=%d,stock=%d,unitprice=%d WHERE id=%d",owner,till,stockCount,unitprice,id);VX_SQL(q);
@@ -9674,7 +9674,7 @@ stock VX_BizAction(playerid,id,action,priceInput=0)
     if(!VX_Commit()){if(item>=0 && delta)VX_SetItem(playerid,item,oldItem);return VX_Error(playerid);}
     VX_MoneySync(playerid,cash,gBankMoney[playerid]);
     if(id==3 && action==1){RepairVehicle(GetPlayerVehicleID(playerid));SetVehicleHealth(GetPlayerVehicleID(playerid),1000.0);}
-    SendClientMessage(playerid,COLOR_GREEN,"РћРїРµСЂР°С†РёСЏ СЃ Р±РёР·РЅРµСЃРѕРј СЃРѕС…СЂР°РЅРµРЅР°.");return VX_ShowBiz(playerid,id);
+    SendClientMessage(playerid,COLOR_GREEN,"Операция с бизнесом сохранена.");return VX_ShowBiz(playerid,id);
 }
 stock VX_Command(playerid,const cmdtext[])
 {
@@ -9688,7 +9688,7 @@ stock VX_Command(playerid,const cmdtext[])
         && strcmp(cmd,"/try",true) && strcmp(cmd,"/n",true) && strcmp(cmd,"/b",true))
     {
         if(strcmp(cmd,"/bed",true) && strcmp(cmd,"/report",true) && strcmp(cmd,"/phone",true) && strcmp(cmd,"/sms",true) && strcmp(cmd,"/call",true) && strcmp(cmd,"/answer",true) && strcmp(cmd,"/hangup",true) && strcmp(cmd,"/hospitexit",true) && strcmp(cmd,"/systems",true) && strcmp(cmd,"/help",true) && strcmp(cmd,"/hud",true) && strcmp(cmd,"/hudfont",true))
-            return SendClientMessage(playerid,COLOR_RED,"[Р‘Р¦Р Р‘] РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ Р»РµС‡РµРЅРёРµ. Р”РѕСЃС‚СѓРїРЅРѕ: /bed /phone /report."),1;
+            return SendClientMessage(playerid,COLOR_RED,"[БЦРБ] Сначала завершите лечение. Доступно: /bed /phone /report."),1;
     }
     if(!strcmp(cmd,"/medcert",true))return VX_MedCertificate(playerid);
     if(!strcmp(cmd,"/ward",true))return VX_EnterWard(playerid);
@@ -9697,29 +9697,29 @@ stock VX_Command(playerid,const cmdtext[])
     {
         new systemsText[1024];
         systemsText[0] = 0;
-        strcat(systemsText,"/inv - РёРЅРІРµРЅС‚Р°СЂСЊ; /giveitem ID СЃР»РѕС‚ РєРѕР»РёС‡РµСЃС‚РІРѕ; /dropitem СЃР»РѕС‚ РєРѕР»РёС‡РµСЃС‚РІРѕ\n",sizeof systemsText);
-        strcat(systemsText,"/bank - СЃС‡С‘С‚, РїРѕРїРѕР»РЅРµРЅРёРµ, СЃРЅСЏС‚РёРµ, РїРµСЂРµРІРѕРґС‹ Рё РёСЃС‚РѕСЂРёСЏ\n",sizeof systemsText);
-        strcat(systemsText,"/phone - Р·РІРѕРЅРєРё, SMS, РєРѕРЅС‚Р°РєС‚С‹; /contactadd РЅРѕРјРµСЂ РёРјСЏ\n",sizeof systemsText);
-        strcat(systemsText,"/family - СЃРµРјСЊСЏ, СЂР°РЅРіРё Рё РєР°Р·РЅР°; /fcreate РёРјСЏ\n",sizeof systemsText);
-        strcat(systemsText,"/businesses - Р±РёР·РЅРµСЃС‹, С‚РѕРІР°СЂС‹ Рё СѓРїСЂР°РІР»РµРЅРёРµ\n",sizeof systemsText);
-        strcat(systemsText,"/report С‚РµРєСЃС‚ - РѕР±СЂР°С‰РµРЅРёРµ Рє Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё\n",sizeof systemsText);
+        strcat(systemsText,"/inv - инвентарь; /giveitem ID слот количество; /dropitem слот количество\n",sizeof systemsText);
+        strcat(systemsText,"/bank - счёт, пополнение, снятие, переводы и история\n",sizeof systemsText);
+        strcat(systemsText,"/phone - звонки, SMS, контакты; /contactadd номер имя\n",sizeof systemsText);
+        strcat(systemsText,"/family - семья, ранги и казна; /fcreate имя\n",sizeof systemsText);
+        strcat(systemsText,"/businesses - бизнесы, товары и управление\n",sizeof systemsText);
+        strcat(systemsText,"/report текст - обращение к администрации\n",sizeof systemsText);
         strcat(systemsText,"/reports /rtake number /reply number text /rclose number\n",sizeof systemsText);
-        strcat(systemsText,"/spec ID /specoff - С‚РѕР»СЊРєРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёСЏ\n",sizeof systemsText);
+        strcat(systemsText,"/spec ID /specoff - только администрация\n",sizeof systemsText);
         strcat(systemsText,"/103 /mduty /mcalls /maccept ID /heal ID /hgarage\n",sizeof systemsText);
-        strcat(systemsText,"/taxi - РІС‹Р·РѕРІ; /taxiaccept ID - РїСЂРёРЅСЏС‚СЊ Р·Р°РєР°Р·; /taxidone - Р·Р°РІРµСЂС€РёС‚СЊ; /taxicancel - РѕС‚РјРµРЅРёС‚СЊ\n",sizeof systemsText);
+        strcat(systemsText,"/taxi - вызов; /taxiaccept ID - принять заказ; /taxidone - завершить; /taxicancel - отменить\n",sizeof systemsText);
         strcat(systemsText,"/mechonduty /mechoff /mechcall /mechaccept ID /mechfix\n",sizeof systemsText);
-        strcat(systemsText,"/busroute /busstop - РіРѕСЂРѕРґСЃРєРѕР№ Р°РІС‚РѕР±СѓСЃРЅС‹Р№ РјР°СЂС€СЂСѓС‚\n",sizeof systemsText);
-        strcat(systemsText,"/bizhire ID Р·Р°СЂРїР»Р°С‚Р° /bizfire ID /bizstaff /bizsalary ID СЃСѓРјРјР°\n",sizeof systemsText);
-        strcat(systemsText,"/bizclockin /bizclockout /bizquit - СЂР°Р±РѕС‚Р° РІ Р±РёР·РЅРµСЃРµ\n",sizeof systemsText);
-        strcat(systemsText,"/event /eventjoin /eventleave - РіРѕСЂРѕРґСЃРєРёРµ РјРµСЂРѕРїСЂРёСЏС‚РёСЏ\n",sizeof systemsText);
-        strcat(systemsText,"РђРґРјРёРЅР°Рј: /eventcreate РЅР°Р·РІР°РЅРёРµ /eventstart /eventend /eventreward ID СЃСѓРјРјР°\n",sizeof systemsText);
-        strcat(systemsText,"/bed - Р·Р°РЅСЏС‚СЊ РєРѕР№РєСѓ; /exit - РІС‹Р№С‚Рё РёР· Р‘Р¦Р Р‘\n",sizeof systemsText);
-        strcat(systemsText,"/tablet - РїР»Р°РЅС€РµС‚ РїРѕР»РёС†РёРё/FBI; /wanted ID 0-6\n",sizeof systemsText);
-        strcat(systemsText,"/wantedlist - Р±Р°Р·Р° РїСЂРµСЃС‚СѓРїРЅРёРєРѕРІ\n",sizeof systemsText);
-        strcat(systemsText,"/rphelp - РїРѕР»РёС†РёСЏ, Р‘Р¦Р Р‘, С‚СЂР°РЅСЃРїРѕСЂС‚, С‚СЋСЂСЊРјР° Рё Р°РґРІРѕРєР°С‚",sizeof systemsText);
-        return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | РЎРёСЃС‚РµРјС‹",systemsText,"OK","Р—Р°РєСЂС‹С‚СЊ");
+        strcat(systemsText,"/busroute /busstop - городской автобусный маршрут\n",sizeof systemsText);
+        strcat(systemsText,"/bizhire ID зарплата /bizfire ID /bizstaff /bizsalary ID сумма\n",sizeof systemsText);
+        strcat(systemsText,"/bizclockin /bizclockout /bizquit - работа в бизнесе\n",sizeof systemsText);
+        strcat(systemsText,"/event /eventjoin /eventleave - городские мероприятия\n",sizeof systemsText);
+        strcat(systemsText,"Админам: /eventcreate название /eventstart /eventend /eventreward ID сумма\n",sizeof systemsText);
+        strcat(systemsText,"/bed - занять койку; /exit - выйти из БЦРБ\n",sizeof systemsText);
+        strcat(systemsText,"/tablet - планшет полиции/FBI; /wanted ID 0-6\n",sizeof systemsText);
+        strcat(systemsText,"/wantedlist - база преступников\n",sizeof systemsText);
+        strcat(systemsText,"/rphelp - полиция, БЦРБ, транспорт, тюрьма и адвокат",sizeof systemsText);
+        return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | Системы",systemsText,"OK","Закрыть");
     }
-    if(!strcmp(cmd,"/inv",true) || !strcmp(cmd,"/inventory",true) || !strcmp(cmd,"/РёРЅРІРµРЅС‚Р°СЂСЊ",true))return VX_ShowInventory(playerid);
+    if(!strcmp(cmd,"/inv",true) || !strcmp(cmd,"/inventory",true) || !strcmp(cmd,"/инвентарь",true))return VX_ShowInventory(playerid);
     if(!strcmp(cmd,"/giveitem",true))return VX_GiveItem(playerid,n,n2-1,n3);
     if(!strcmp(cmd,"/dropitem",true))return VX_Drop(playerid,n-1,n2);
     if(!strcmp(cmd,"/pickup",true))return VX_PickupItem(playerid);
@@ -9777,14 +9777,14 @@ stock VX_Command(playerid,const cmdtext[])
             if(due>0 && gettime()>=due)stars=max(0,stars-1-(gettime()-due)/VX_WANTED_SECONDS);
             if(stars>0){format(row,sizeof row,"%s\t%d\n",name,stars);strcat(body,row);}db_next_row(r);
         }
-        if(r)db_free_result(r);return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"РџРѕР»РёС†РёСЏ / FBI | Р’СЃРµ Р·Р°РїРёСЃРё",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+        if(r)db_free_result(r);return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"Полиция / FBI | Все записи",body,"OK","Закрыть");
     }
     if(!strcmp(cmd,"/wanted",true))
     {
-        if(!VX_Officer(playerid) || gFactionRank[playerid]<3)return SendClientMessage(playerid,COLOR_RED,"РўСЂРµР±СѓРµС‚СЃСЏ 3-Р№ СЂР°РЅРі РџРѕР»РёС†РёРё РёР»Рё FBI."),1;
+        if(!VX_Officer(playerid) || gFactionRank[playerid]<3)return SendClientMessage(playerid,COLOR_RED,"Требуется 3-й ранг Полиции или FBI."),1;
         if(!VX_Valid(n) || n==playerid || n2<0 || n2>6)return SendClientMessage(playerid,COLOR_YELLOW,"Usage: /wanted [player ID] [0-6]"),1;
         VX_SetWanted(n,n2);new m[144];format(m,sizeof m,"[WANTED] %s set your wanted level to %d/6. One star is removed every 30 minutes.",gName[playerid],n2);SendClientMessage(n,COLOR_RED,m);
-        SendClientMessage(playerid,COLOR_GREEN,"Р—Р°РїРёСЃСЊ Рѕ СЂРѕР·С‹СЃРєРµ РѕР±РЅРѕРІР»РµРЅР°.");return 1;
+        SendClientMessage(playerid,COLOR_GREEN,"Запись о розыске обновлена.");return 1;
     }
     if(!strcmp(cmd,"/pursuit",true))return VX_Track(playerid,n);
     if(!strcmp(cmd,"/stoptrack",true))
@@ -9798,40 +9798,40 @@ stock VX_Command(playerid,const cmdtext[])
     if(!strcmp(cmd,"/hospitexit",true))return VX_HospitalExit(playerid);
     if(!strcmp(cmd,"/hgarage",true))
     {
-        if(!VX_Medic(playerid))return SendClientMessage(playerid,COLOR_RED,"Р‘Р¦Р Р‘ employees on duty only: /mduty"),1;
+        if(!VX_Medic(playerid))return SendClientMessage(playerid,COLOR_RED,"БЦРБ employees on duty only: /mduty"),1;
         return OnPlayerCommandText(playerid,"/garage");
     }
     if(!strcmp(cmd,"/mduty",true))
     {
-        if(gFaction[playerid]!=FACTION_HOSPITAL || gFactionRank[playerid]<1)return SendClientMessage(playerid,COLOR_RED,"Р”РѕСЃС‚СѓРїРЅРѕ С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј Р‘Р¦Р Р‘."),1;
-        if(GetPlayerVirtualWorld(playerid)!=VX_HOSPITAL_WORLD && !(GetPlayerVirtualWorld(playerid)==0 && GetPlayerInterior(playerid)==0 && IsPlayerInRangeOfPoint(playerid,30.0,1192.1529,-1335.5710,13.3984)))return SendClientMessage(playerid,COLOR_YELLOW,"Start/end duty in Р‘Р¦Р Р‘ or at its garage."),1;
+        if(gFaction[playerid]!=FACTION_HOSPITAL || gFactionRank[playerid]<1)return SendClientMessage(playerid,COLOR_RED,"Доступно только сотрудникам БЦРБ."),1;
+        if(GetPlayerVirtualWorld(playerid)!=VX_HOSPITAL_WORLD && !(GetPlayerVirtualWorld(playerid)==0 && GetPlayerInterior(playerid)==0 && IsPlayerInRangeOfPoint(playerid,30.0,1192.1529,-1335.5710,13.3984)))return SendClientMessage(playerid,COLOR_YELLOW,"Start/end duty in БЦРБ or at its garage."),1;
         gVXMedDuty[playerid]=!gVXMedDuty[playerid];
-        if(gVXMedDuty[playerid]){SetPlayerSkin(playerid,GetFactionSkin(FACTION_HOSPITAL,gFactionRank[playerid]));SendClientMessage(playerid,COLOR_GREEN,"Р‘Р¦Р Р‘ duty started. /mcalls /maccept ID /heal ID /hgarage");}
+        if(gVXMedDuty[playerid]){SetPlayerSkin(playerid,GetFactionSkin(FACTION_HOSPITAL,gFactionRank[playerid]));SendClientMessage(playerid,COLOR_GREEN,"БЦРБ duty started. /mcalls /maccept ID /heal ID /hgarage");}
         else
         {
             for(new i=0;i<MAX_PLAYERS;i++)if(gVXMedCall[i]==2 && gVXMedAssigned[i]==playerid){gVXMedCall[i]=1;gVXMedAssigned[i]=INVALID_PLAYER_ID;if(VX_Valid(i))SendClientMessage(i,COLOR_YELLOW,"Your doctor went off duty; your call is waiting again.");}
-            RemovePlayerMapIcon(playerid,57);DisablePlayerCheckpoint(playerid);SendClientMessage(playerid,COLOR_YELLOW,"Р‘Р¦Р Р‘ duty ended.");
+            RemovePlayerMapIcon(playerid,57);DisablePlayerCheckpoint(playerid);SendClientMessage(playerid,COLOR_YELLOW,"БЦРБ duty ended.");
         }
         return 1;
     }
     if(!strcmp(cmd,"/mcalls",true))
     {
-        if(!VX_Medic(playerid))return SendClientMessage(playerid,COLOR_RED,"Р‘Р¦Р Р‘ on-duty staff only."),1;
+        if(!VX_Medic(playerid))return SendClientMessage(playerid,COLOR_RED,"БЦРБ on-duty staff only."),1;
         new m[144],count=0,callStatus[16];
         for(new i=0;i<MAX_PLAYERS;i++) if(VX_Valid(i) && gVXMedCall[i])
         {
-            if (gVXMedCall[i]==1) format(callStatus,sizeof callStatus,"РћР¶РёРґР°РµС‚");
-            else format(callStatus,sizeof callStatus,"Р’ СЂР°Р±РѕС‚Рµ");
+            if (gVXMedCall[i]==1) format(callStatus,sizeof callStatus,"Ожидает");
+            else format(callStatus,sizeof callStatus,"В работе");
             format(m,sizeof m,"[103] %s [%d] | %s | /maccept %d",gName[i],i,callStatus,i);
             SendClientMessage(playerid,COLOR_BLUE,m);count++;
         }
-        if(!count)SendClientMessage(playerid,COLOR_GREEN,"РђРєС‚РёРІРЅС‹С… РјРµРґРёС†РёРЅСЃРєРёС… РІС‹Р·РѕРІРѕРІ РЅРµС‚.");return 1;
+        if(!count)SendClientMessage(playerid,COLOR_GREEN,"Активных медицинских вызовов нет.");return 1;
     }
     if(!strcmp(cmd,"/maccept",true))return VX_MedAccept(playerid,n);
     if(!strcmp(cmd,"/heal",true))return VX_Heal(playerid,n);
     if(!strcmp(cmd,"/mclose",true))
     {
-        if(!VX_Medic(playerid) || !VX_Valid(n) || gVXMedAssigned[n]!=playerid || !VX_Near(playerid,n,5.0))return SendClientMessage(playerid,COLOR_RED,"РџРѕРґРѕР№РґРёС‚Рµ Рє РїР°С†РёРµРЅС‚Сѓ РїСЂРёРЅСЏС‚РѕРіРѕ РІС‹Р·РѕРІР°."),1;
+        if(!VX_Medic(playerid) || !VX_Valid(n) || gVXMedAssigned[n]!=playerid || !VX_Near(playerid,n,5.0))return SendClientMessage(playerid,COLOR_RED,"Подойдите к пациенту принятого вызова."),1;
         return VX_MedCancel(n);
     }
     if(!strcmp(cmd,"/family",true))return VX_ShowFamily(playerid);
@@ -9859,7 +9859,7 @@ stock VX_Command(playerid,const cmdtext[])
         if(!VX_Begin())return VX_Error(playerid);
         format(q,sizeof q,"DELETE FROM vx_family_members WHERE family=%d",id);VX_SQL(q);format(q,sizeof q,"DELETE FROM vx_families WHERE id=%d",id);VX_SQL(q);
         if(!VX_Commit())return VX_Error(playerid);
-        for(new i=0;i<MAX_PLAYERS;i++)if(VX_Valid(i) && gVXFamily[i]==id){VX_LoadFamily(i);SendClientMessage(i,COLOR_YELLOW,"Р›РёРґРµСЂ СЂР°СЃРїСѓСЃС‚РёР» РІР°С€Сѓ СЃРµРјСЊСЋ.");}
+        for(new i=0;i<MAX_PLAYERS;i++)if(VX_Valid(i) && gVXFamily[i]==id){VX_LoadFamily(i);SendClientMessage(i,COLOR_YELLOW,"Лидер распустил вашу семью.");}
         return 1;
     }
     if(!strcmp(cmd,"/businesses",true))return VX_BizList(playerid);
@@ -9873,7 +9873,7 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
     if(!gLogged[playerid] || gVXExpectedDialog[playerid]!=dialogid)return 1;
     gVXExpectedDialog[playerid]=-1;
     if(!response)return 1;
-    if(gVXHospital[playerid] && dialogid!=VX_PHONE && dialogid!=VX_SMS_NUMBER && dialogid!=VX_SMS_BODY && dialogid!=VX_CALL_NUMBER && dialogid!=VX_CONTACTS && dialogid!=VX_LOG)return SendClientMessage(playerid,COLOR_RED,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ Р»РµС‡РµРЅРёРµ РІ Р‘Р¦Р Р‘."),1;
+    if(gVXHospital[playerid] && dialogid!=VX_PHONE && dialogid!=VX_SMS_NUMBER && dialogid!=VX_SMS_BODY && dialogid!=VX_CALL_NUMBER && dialogid!=VX_CONTACTS && dialogid!=VX_LOG)return SendClientMessage(playerid,COLOR_RED,"Сначала завершите лечение в БЦРБ."),1;
     new n=-1;if(!VX_Number(inputtext,n))n=-1;
     switch(dialogid)
     {
@@ -9882,7 +9882,7 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
             if(listitem>=0 && listitem<6)
             {
                 gVXSelectedItem[playerid]=listitem;
-                VX_Show(playerid,VX_ITEM,DIALOG_STYLE_LIST,gVXItemName[listitem],"РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ\nTransfer: /giveitem ID slot amount\nDrop: /dropitem slot amount");
+                VX_Show(playerid,VX_ITEM,DIALOG_STYLE_LIST,gVXItemName[listitem],"Использовать\nTransfer: /giveitem ID slot amount\nDrop: /dropitem slot amount");
             }
             else if(listitem==6)
             {
@@ -9906,9 +9906,9 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
             {
                 gVXBankAction[playerid]=listitem;
                 if (listitem==2)
-                    VX_Show(playerid,VX_BANK_INPUT,DIALOG_STYLE_INPUT,"Р‘Р°РЅРєРѕРІСЃРєР°СЏ РѕРїРµСЂР°С†РёСЏ","Р’РІРµРґРёС‚Рµ ID РїРѕР»СѓС‡Р°С‚РµР»СЏ Рё СЃСѓРјРјСѓ С‡РµСЂРµР· РїСЂРѕР±РµР»:","РџРѕРґС‚РІРµСЂРґРёС‚СЊ","РћС‚РјРµРЅР°");
+                    VX_Show(playerid,VX_BANK_INPUT,DIALOG_STYLE_INPUT,"Банковская операция","Введите ID получателя и сумму через пробел:","Подтвердить","Отмена");
                 else
-                    VX_Show(playerid,VX_BANK_INPUT,DIALOG_STYLE_INPUT,"Р‘Р°РЅРєРѕРІСЃРєР°СЏ РѕРїРµСЂР°С†РёСЏ","Р’РІРµРґРёС‚Рµ РїРѕР»РѕР¶РёС‚РµР»СЊРЅСѓСЋ СЃСѓРјРјСѓ:","РџРѕРґС‚РІРµСЂРґРёС‚СЊ","РћС‚РјРµРЅР°");
+                    VX_Show(playerid,VX_BANK_INPUT,DIALOG_STYLE_INPUT,"Банковская операция","Введите положительную сумму:","Подтвердить","Отмена");
             }
             else if(listitem==3)VX_BankHistory(playerid);
         }
@@ -9917,7 +9917,7 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
             if(gVXBankAction[playerid]==2)
             {
                 new a[24],b[24],target=-1,amount=-1;GetToken(inputtext,0,a,sizeof a);GetToken(inputtext,1,b,sizeof b);
-                if(!VX_Number(a,target) || !VX_Number(b,amount))return SendClientMessage(playerid,COLOR_RED,"Р’РІРµРґРёС‚Рµ ID РёРіСЂРѕРєР° Рё СЃСѓРјРјСѓ С‡РµСЂРµР· РїСЂРѕР±РµР»."),1;
+                if(!VX_Number(a,target) || !VX_Number(b,amount))return SendClientMessage(playerid,COLOR_RED,"Введите ID игрока и сумму через пробел."),1;
                 VX_BankOperation(playerid,2,amount,target);
             }
             else VX_BankOperation(playerid,gVXBankAction[playerid],n);
@@ -9926,8 +9926,8 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
         {
             switch(listitem)
             {
-                case 0:VX_Show(playerid,VX_CALL_NUMBER,DIALOG_STYLE_INPUT,"РўРµР»РµС„РѕРЅ | Р—РІРѕРЅРѕРє","Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ Р°Р±РѕРЅРµРЅС‚Р°, 103 РёР»Рё 112:","РџРѕР·РІРѕРЅРёС‚СЊ","РћС‚РјРµРЅР°");
-                case 1:VX_Show(playerid,VX_SMS_NUMBER,DIALOG_STYLE_INPUT,"РўРµР»РµС„РѕРЅ | SMS","Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РїРѕР»СѓС‡Р°С‚РµР»СЏ, Р° РЅРµ ID РёРіСЂРѕРєР°:","Р”Р°Р»РµРµ","РћС‚РјРµРЅР°");
+                case 0:VX_Show(playerid,VX_CALL_NUMBER,DIALOG_STYLE_INPUT,"Телефон | Звонок","Введите номер абонента, 103 или 112:","Позвонить","Отмена");
+                case 1:VX_Show(playerid,VX_SMS_NUMBER,DIALOG_STYLE_INPUT,"Телефон | SMS","Введите номер телефона получателя, а не ID игрока:","Далее","Отмена");
                 case 2:VX_Inbox(playerid);
                 case 3:VX_Contacts(playerid);
                 case 4:VX_ShowBank(playerid);
@@ -9945,8 +9945,8 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
         }
         case VX_SMS_NUMBER:
         {
-            if(n<100000)return SendClientMessage(playerid,COLOR_RED,"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°."),1;
-            gVXNumberInput[playerid]=n;VX_Show(playerid,VX_SMS_BODY,DIALOG_STYLE_INPUT,"РўРµР»РµС„РѕРЅ | SMS","РўРµРєСЃС‚ СЃРѕРѕР±С‰РµРЅРёСЏ, РѕС‚ 1 РґРѕ 120 СЃРёРјРІРѕР»РѕРІ:","РћС‚РїСЂР°РІРёС‚СЊ","РћС‚РјРµРЅР°");
+            if(n<100000)return SendClientMessage(playerid,COLOR_RED,"Некорректный номер телефона."),1;
+            gVXNumberInput[playerid]=n;VX_Show(playerid,VX_SMS_BODY,DIALOG_STYLE_INPUT,"Телефон | SMS","Текст сообщения, от 1 до 120 символов:","Отправить","Отмена");
         }
         case VX_SMS_BODY:VX_SendSMS(playerid,gVXNumberInput[playerid],inputtext);
         case VX_CALL_NUMBER:VX_Call(playerid,n);
@@ -9956,7 +9956,7 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
         {
             if(listitem<0 || listitem>=gVXListCount[playerid])return 1;
             new target=gVXList[playerid][listitem];
-            if(!VX_Valid(target) || gVXListSession[playerid][listitem]!=gVXSession[target])return SendClientMessage(playerid,COLOR_RED,"РЎРїРёСЃРѕРє РёР·РјРµРЅРёР»СЃСЏ. РћС‚РєСЂРѕР№С‚Рµ /tablet Р·Р°РЅРѕРІРѕ."),1;
+            if(!VX_Valid(target) || gVXListSession[playerid][listitem]!=gVXSession[target])return SendClientMessage(playerid,COLOR_RED,"Список изменился. Откройте /tablet заново."),1;
             VX_Track(playerid,target);
         }
         case VX_BUSINESSES:{if(listitem>=0 && listitem<gVXListCount[playerid])VX_ShowBiz(playerid,gVXList[playerid][listitem]);}
@@ -10089,9 +10089,9 @@ public VX_Tick()
                     SetPlayerSpecialAction(p,SPECIAL_ACTION_NONE);
                     SetPlayerPos(p,VX_WARD_EXIT_X,VX_WARD_EXIT_Y+4.0,VX_WARD_Z);
                     SetPlayerFacingAngle(p,180.0); SetCameraBehindPlayer(p);
-                    SendClientMessage(p,COLOR_GREEN,"[Р‘Р¦Р Р‘] Р’С‹ РІС‹РїРёСЃР°РЅС‹. /lobby - С…РѕР»Р», /exit - СЃСЂР°Р·Сѓ РЅР° СѓР»РёС†Сѓ.");
+                    SendClientMessage(p,COLOR_GREEN,"[БЦРБ] Вы выписаны. /lobby - холл, /exit - сразу на улицу.");
                 }
-                else if(elapsed>0 && gVXTreatment[p]%30==0){new m[96];format(m,sizeof m,"[Р‘Р¦Р Р‘] РћСЃС‚Р°Р»РѕСЃСЊ Р»РµС‡РµРЅРёСЏ: %d СЃРµРє.",gVXTreatment[p]);SendClientMessage(p,COLOR_BLUE,m);}
+                else if(elapsed>0 && gVXTreatment[p]%30==0){new m[96];format(m,sizeof m,"[БЦРБ] Осталось лечения: %d сек.",gVXTreatment[p]);SendClientMessage(p,COLOR_BLUE,m);}
             }
         }
         if(gVXMedCall[p]==2)
@@ -10117,11 +10117,11 @@ public OnPlayerText(playerid,text[])
     if(gAdminMuteUntil[playerid]>gettime())
     {
         new left=(gAdminMuteUntil[playerid]-gettime()+59)/60,message[160];
-        format(message,sizeof message,"Р’С‹ РЅРµ РјРѕР¶РµС‚Рµ РїРёСЃР°С‚СЊ РІ С‡Р°С‚ РµС‰С‘ %d РјРёРЅ. РџСЂРёС‡РёРЅР°: %s",left,gAdminMuteReason[playerid]);
+        format(message,sizeof message,"Вы не можете писать в чат ещё %d мин. Причина: %s",left,gAdminMuteReason[playerid]);
         SendClientMessage(playerid,COLOR_RED,message);return 0;
     }
     if(gAdminMuteUntil[playerid]!=0 && gAdminMuteUntil[playerid]<=gettime())
-    { gAdminMuteUntil[playerid]=0;gAdminMuteReason[playerid][0]='\0';SendClientMessage(playerid,COLOR_GREEN,"РЎСЂРѕРє РјСѓС‚Р° РёСЃС‚С‘Рє."); }
+    { gAdminMuteUntil[playerid]=0;gAdminMuteReason[playerid][0]='\0';SendClientMessage(playerid,COLOR_GREEN,"Срок мута истёк."); }
     new t=gVXCall[playerid];
     if(gVXCallActive[playerid] && VX_Valid(t) && gVXCall[t]==playerid && gVXCallActive[t])
     {
@@ -10130,7 +10130,7 @@ public OnPlayerText(playerid,text[])
     }
     new clean[105],message[144];
     VX_CleanText(text,clean,sizeof clean);
-    format(message,sizeof message,"%s РіРѕРІРѕСЂРёС‚: %s",gName[playerid],clean);
+    format(message,sizeof message,"%s говорит: %s",gName[playerid],clean);
     SendLocalMessage(playerid,COLOR_WHITE,message,20.0);
     return 0;
 }
@@ -10275,7 +10275,7 @@ stock RP_CommandGuard(playerid,const cmdtext[])
         strcat(allowed," /jailinfo /acceptlawyer /declinelawyer /report /phone /sms /call /answer /hangup ");
         strcat(allowed,"/me /do /try /n /b /help /systems /rphelp /hud /hudfont /fines /payfine /health /medcard ");
         if(strfind(allowed,needle,true)==-1)
-            return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ Р·Р°РґРµСЂР¶Р°РЅРёРµ. Р”РѕСЃС‚СѓРїРЅС‹ /jailinfo, RP-С‡Р°С‚, С‚РµР»РµС„РѕРЅ Рё /report.");
+            return RP_Message(playerid,"Сначала завершите задержание. Доступны /jailinfo, RP-чат, телефон и /report.");
     }
     if(gVXHospital[playerid] || gRPStretcherBy[playerid]!=INVALID_PLAYER_ID)
     {
@@ -10283,7 +10283,7 @@ stock RP_CommandGuard(playerid,const cmdtext[])
         strcat(allowed," /bed /medrefuse /health /medcard /report /phone /sms /call /answer /hangup ");
         strcat(allowed,"/me /do /try /n /b /help /systems /rphelp /hud /hudfont /hospitexit /exit /hospitalinfo ");
         if(strfind(allowed,needle,true)==-1)
-            return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ Р»РµС‡РµРЅРёРµ. /health /bed /medrefuse /report.");
+            return RP_Message(playerid,"Сначала завершите лечение. /health /bed /medrefuse /report.");
     }
     return 0;
 }
@@ -10316,16 +10316,16 @@ stock RP_Map()
     CreateObject(19379,RP_PRISON_X+6.3,RP_PRISON_Y-4.8,RP_PRISON_Z,0.0,0.0,90.0,180.0);
     gRPPrisonIn=CreatePickup(1239,1,RP_PRISON_X,RP_PRISON_Y-6.5,RP_PRISON_Z,0);
     gRPPrisonOut=CreatePickup(1239,1,246.8,62.3,1003.64,RP_JAIL_WORLD);
-    Create3DTextLabel("{FFD700}VEXORIUM | РўСЋСЂСЊРјР°\n{FFFFFF}/prisonenter | /jailinfo",
+    Create3DTextLabel("{FFD700}VEXORIUM | Тюрьма\n{FFFFFF}/prisonenter | /jailinfo",
         COLOR_WHITE,RP_PRISON_X,RP_PRISON_Y-6.5,RP_PRISON_Z+1.2,25.0,0,1);
-    Create3DTextLabel("{FFD700}Р’С‹С…РѕРґ\n{FFFFFF}/prisonexit",
+    Create3DTextLabel("{FFD700}Выход\n{FFFFFF}/prisonexit",
         COLOR_WHITE,246.8,62.3,1004.5,12.0,RP_JAIL_WORLD,1);
-    Create3DTextLabel("{66CCFF}РљРѕРјРЅР°С‚Р° Р°РґРІРѕРєР°С‚Р°\n{FFFFFF}/clients | /defend ID",
+    Create3DTextLabel("{66CCFF}Комната адвоката\n{FFFFFF}/clients | /defend ID",
         COLOR_WHITE,246.8,67.0,1004.5,12.0,RP_JAIL_WORLD,1);
     for(new c=0;c<RP_CAMERA_COUNT;c++)
     {
         new label[96];
-        format(label,sizeof label,"{FFD700}РљР°РјРµСЂР° %d\n{FFFFFF}РћРіСЂР°РЅРёС‡РµРЅРёРµ: %d РєРј/С‡",c+1,gRPCameraLimit[c]);
+        format(label,sizeof label,"{FFD700}Камера %d\n{FFFFFF}Ограничение: %d км/ч",c+1,gRPCameraLimit[c]);
         Create3DTextLabel(label,COLOR_WHITE,gRPCameras[c][0],gRPCameras[c][1],
             gRPCameras[c][2]+3.0,35.0,0,1);
     }
@@ -10344,18 +10344,18 @@ stock RP_AtLawDesk(playerid)
 stock RP_PrisonEnter(playerid)
 {
     if(!RP_Free(playerid) || !RP_AtPrisonGate(playerid))
-        return RP_Message(playerid,"РџРѕРґРѕР№РґРёС‚Рµ Рє РІС…РѕРґСѓ С‚СЋСЂСЊРјС‹. РњР°СЂС€СЂСѓС‚: /prison.");
-    if(IsPlayerInAnyVehicle(playerid)) return RP_Message(playerid,"Р’С‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+        return RP_Message(playerid,"Подойдите к входу тюрьмы. Маршрут: /prison.");
+    if(IsPlayerInAnyVehicle(playerid)) return RP_Message(playerid,"Выйдите из транспорта.");
     SetPlayerInterior(playerid,6); SetPlayerVirtualWorld(playerid,RP_JAIL_WORLD);
     SetPlayerPos(playerid,246.8,67.0,1003.64); SetPlayerFacingAngle(playerid,0.0);
     SetCameraBehindPlayer(playerid); gLastPickupTick[playerid]=GetTickCount();
-    return RP_Message(playerid,"РџСЂРёС‘РјРЅР°СЏ С‚СЋСЂСЊРјС‹. РђРґРІРѕРєР°С‚С‹: /clients /defend ID. Р’С‹С…РѕРґ: /prisonexit.");
+    return RP_Message(playerid,"Приёмная тюрьмы. Адвокаты: /clients /defend ID. Выход: /prisonexit.");
 }
 stock RP_PrisonExit(playerid)
 {
-    if(gIsJailed[playerid]) return RP_Message(playerid,"Р’С‹ РЅРµ РјРѕР¶РµС‚Рµ РІС‹Р№С‚Рё РґРѕ РѕРєРѕРЅС‡Р°РЅРёСЏ СЃСЂРѕРєР°. /jailinfo.");
+    if(gIsJailed[playerid]) return RP_Message(playerid,"Вы не можете выйти до окончания срока. /jailinfo.");
     if(GetPlayerVirtualWorld(playerid)!=RP_JAIL_WORLD || GetPlayerInterior(playerid)!=6
-        || !IsPlayerInRangeOfPoint(playerid,4.0,246.8,62.3,1003.64)) return RP_Message(playerid,"РџРѕРґРѕР№РґРёС‚Рµ Рє РІС‹С…РѕРґСѓ.");
+        || !IsPlayerInRangeOfPoint(playerid,4.0,246.8,62.3,1003.64)) return RP_Message(playerid,"Подойдите к выходу.");
     SetPlayerInterior(playerid,0); SetPlayerVirtualWorld(playerid,0);
     SetPlayerPos(playerid,RP_PRISON_X,RP_PRISON_Y-10.0,RP_PRISON_Z);
     SetCameraBehindPlayer(playerid); gLastPickupTick[playerid]=GetTickCount();
@@ -10436,28 +10436,28 @@ stock RP_CancelActivities(playerid)
 stock RP_StartJail(actorid,targetid,seconds,const rawReason[],source)
 {
     if(!VX_Valid(targetid) || !gRPLoaded[targetid] || actorid==targetid)
-        return RP_Message(actorid,"РЈРєР°Р¶РёС‚Рµ ID РґСЂСѓРіРѕРіРѕ Р°РІС‚РѕСЂРёР·РѕРІР°РЅРЅРѕРіРѕ РёРіСЂРѕРєР°.");
-    if(gIsJailed[targetid]) return RP_Message(actorid,"РРіСЂРѕРє СѓР¶Рµ РѕС‚Р±С‹РІР°РµС‚ СЃСЂРѕРє.");
-    if(seconds<60 || seconds>RP_JAIL_MAX) return RP_Message(actorid,"РЎСЂРѕРє: РѕС‚ 60 РґРѕ 7200 СЃРµРєСѓРЅРґ.");
+        return RP_Message(actorid,"Укажите ID другого авторизованного игрока.");
+    if(gIsJailed[targetid]) return RP_Message(actorid,"Игрок уже отбывает срок.");
+    if(seconds<60 || seconds>RP_JAIL_MAX) return RP_Message(actorid,"Срок: от 60 до 7200 секунд.");
     new reason[97],q[512],detail[144];
     VX_CleanText(rawReason,reason,sizeof reason);
-    if(strlen(reason)<3) return RP_Message(actorid,"РЈРєР°Р¶РёС‚Рµ РїРѕРЅСЏС‚РЅСѓСЋ РїСЂРёС‡РёРЅСѓ (3-96 СЃРёРјРІРѕР»РѕРІ).");
+    if(strlen(reason)<3) return RP_Message(actorid,"Укажите понятную причину (3-96 символов).");
     if(source==1)
     {
-        if(!VX_Admin(actorid)) return RP_Message(actorid,"РљРѕРјР°РЅРґР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+        if(!VX_Admin(actorid)) return RP_Message(actorid,"Команда доступна только администрации.");
         if(gAdmin[targetid]>gAdmin[actorid] && !IsPlayerAdmin(actorid))
-            return RP_Message(actorid,"РќРµР»СЊР·СЏ Р·Р°РєР»СЋС‡РёС‚СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° Р±РѕР»РµРµ РІС‹СЃРѕРєРѕРіРѕ СѓСЂРѕРІРЅСЏ.");
+            return RP_Message(actorid,"Нельзя заключить администратора более высокого уровня.");
     }
     else
     {
         if(!RP_Free(actorid) || !VX_Officer(actorid) || gFactionRank[actorid]<2)
-            return RP_Message(actorid,"РђСЂРµСЃС‚ РґРѕСЃС‚СѓРїРµРЅ РџРѕР»РёС†РёРё/FBI СЃРѕ 2 СЂР°РЅРіР°.");
+            return RP_Message(actorid,"Арест доступен Полиции/FBI со 2 ранга.");
         if(seconds>1800 || !gHandcuffed[targetid] || gWantedLevel[targetid]<1
             || !VX_Near(actorid,targetid,6.0))
-            return RP_Message(actorid,"РќСѓР¶РЅС‹ СЂРѕР·С‹СЃРє, РЅР°СЂСѓС‡РЅРёРєРё Рё РґРёСЃС‚Р°РЅС†РёСЏ РґРѕ 6 Рј. РЎСЂРѕРє РїРѕР»РёС†РёРё: РґРѕ 1800 СЃРµРєСѓРЅРґ.");
+            return RP_Message(actorid,"Нужны розыск, наручники и дистанция до 6 м. Срок полиции: до 1800 секунд.");
         if(!RP_AtPrisonGate(actorid) && !IsNearPoliceEntrance(actorid)
             && !(GetPlayerInterior(actorid)==6 && GetPlayerVirtualWorld(actorid)==0))
-            return RP_Message(actorid,"Р”РѕСЃС‚Р°РІСЊС‚Рµ Р·Р°РґРµСЂР¶Р°РЅРЅРѕРіРѕ РІ СѓС‡Р°СЃС‚РѕРє РёР»Рё РєРѕ РІС…РѕРґСѓ С‚СЋСЂСЊРјС‹.");
+            return RP_Message(actorid,"Доставьте задержанного в участок или ко входу тюрьмы.");
     }
     if(!VX_Begin()) return VX_Error(actorid);
     format(q,sizeof q,
@@ -10478,11 +10478,11 @@ stock RP_StartJail(actorid,targetid,seconds,const rawReason[],source)
     VX_SetWanted(targetid,0);
     if(GetPlayerState(targetid)==PLAYER_STATE_WASTED) SpawnPlayer(targetid);
     RP_JailPosition(targetid); SavePlayer(targetid);
-    format(detail,sizeof detail,"[РўР®Р Р¬РњРђ] %s Р·Р°РєР»СЋС‡С‘РЅ РЅР° %d РјРёРЅ. РџСЂРёС‡РёРЅР°: %s",
+    format(detail,sizeof detail,"[ТЮРЬМА] %s заключён на %d мин. Причина: %s",
         gName[targetid],(seconds+59)/60,reason);
     SendClientMessage(actorid,COLOR_GREEN,detail);
     SendClientMessage(targetid,COLOR_RED,detail);
-    return RP_Message(targetid,"РЎСЂРѕРє РёРґС‘С‚ С‚РѕР»СЊРєРѕ РІ РёРіСЂРµ. /jailinfo. РђРґРІРѕРєР°С‚ РјРѕР¶РµС‚ РѕРґРёРЅ СЂР°Р· СЃРѕРєСЂР°С‚РёС‚СЊ РµРіРѕ РЅР° 20%.");
+    return RP_Message(targetid,"Срок идёт только в игре. /jailinfo. Адвокат может один раз сократить его на 20%.");
 }
 stock RP_Release(playerid,actorid,const reason[])
 {
@@ -10501,53 +10501,53 @@ stock RP_Release(playerid,actorid,const reason[])
     SetPlayerSpecialAction(playerid,SPECIAL_ACTION_NONE);
     ClearAnimations(playerid); TogglePlayerControllable(playerid,true);
     SetCameraBehindPlayer(playerid);
-    RP_Message(playerid,"Р’С‹ РѕСЃРІРѕР±РѕР¶РґРµРЅС‹ РёР· С‚СЋСЂСЊРјС‹. Р’РѕР·РІСЂР°С‰Р°Р№С‚РµСЃСЊ Рє Р·Р°РєРѕРЅРЅРѕР№ Р¶РёР·РЅРё.");
+    RP_Message(playerid,"Вы освобождены из тюрьмы. Возвращайтесь к законной жизни.");
     SavePlayer(playerid);
     return 1;
 }
 stock RP_JailInfo(playerid)
 {
-    if(!gIsJailed[playerid]) return RP_Message(playerid,"Р’С‹ РЅРµ РѕС‚Р±С‹РІР°РµС‚Рµ СЃСЂРѕРє. /prison вЂ” РјР°СЂС€СЂСѓС‚ Рє С‚СЋСЂСЊРјРµ.");
+    if(!gIsJailed[playerid]) return RP_Message(playerid,"Вы не отбываете срок. /prison — маршрут к тюрьме.");
     new body[512],help[96];
-    if(gRPJailReduced[playerid]) format(help,sizeof help,"РџРѕРјРѕС‰СЊ Р°РґРІРѕРєР°С‚Р° СѓР¶Рµ РёСЃРїРѕР»СЊР·РѕРІР°РЅР°.");
-    else format(help,sizeof help,"РђРґРІРѕРєР°С‚: РѕРґРёРЅ СЂР°Р· -20%% РїРµСЂРІРѕРЅР°С‡Р°Р»СЊРЅРѕРіРѕ СЃСЂРѕРєР°, РЅРµ Р±РѕР»РµРµ 10 РјРёРЅСѓС‚.");
+    if(gRPJailReduced[playerid]) format(help,sizeof help,"Помощь адвоката уже использована.");
+    else format(help,sizeof help,"Адвокат: один раз -20%% первоначального срока, не более 10 минут.");
     format(body,sizeof body,
-        "РћСЃС‚Р°Р»РѕСЃСЊ: %d РјРёРЅ. %d СЃРµРє.\nРџРµСЂРІРѕРЅР°С‡Р°Р»СЊРЅРѕ: %d РјРёРЅ.\nРџСЂРёС‡РёРЅР°: %s\n\n%s\nРЎСЂРѕРє РёРґС‘С‚ С‚РѕР»СЊРєРѕ РІ РёРіСЂРµ.",
+        "Осталось: %d мин. %d сек.\nПервоначально: %d мин.\nПричина: %s\n\n%s\nСрок идёт только в игре.",
         gRPJailLeft[playerid]/60,gRPJailLeft[playerid]%60,gRPJailOriginal[playerid]/60,
         gRPJailReason[playerid],help);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | Р—Р°РєР»СЋС‡РµРЅРёРµ",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | Заключение",body,"OK","Закрыть");
 }
 stock RP_Clients(playerid)
 {
     if((gJob[playerid]!=RP_LAWYER_JOB && !VX_Officer(playerid) && !VX_Admin(playerid)) || !RP_Free(playerid))
-        return RP_Message(playerid,"РЎРїРёСЃРѕРє РґРѕСЃС‚СѓРїРµРЅ Р°РґРІРѕРєР°С‚Р°Рј, РџРѕР»РёС†РёРё/FBI Рё Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+        return RP_Message(playerid,"Список доступен адвокатам, Полиции/FBI и администрации.");
     new body[3500],row[176],flag[16];
-    strcat(body,"ID\tР—Р°РєР»СЋС‡С‘РЅРЅС‹Р№\tРћСЃС‚Р°С‚РѕРє\tРђРґРІРѕРєР°С‚\n");
+    strcat(body,"ID\tЗаключённый\tОстаток\tАдвокат\n");
     for(new p=0;p<MAX_PLAYERS;p++) if(VX_Valid(p) && gIsJailed[p])
     {
-        if(gRPJailReduced[p]) format(flag,sizeof flag,"РСЃРїРѕР»СЊР·РѕРІР°РЅ");
-        else format(flag,sizeof flag,"Р”РѕСЃС‚СѓРїРµРЅ");
-        format(row,sizeof row,"%d\t%s\t%d РјРёРЅ.\t%s\n",p,gName[p],(gRPJailLeft[p]+59)/60,flag);
+        if(gRPJailReduced[p]) format(flag,sizeof flag,"Использован");
+        else format(flag,sizeof flag,"Доступен");
+        format(row,sizeof row,"%d\t%s\t%d мин.\t%s\n",p,gName[p],(gRPJailLeft[p]+59)/60,flag);
         if(strlen(body)+strlen(row)<sizeof body-1) strcat(body,row,sizeof body);
     }
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"РўСЋСЂСЊРјР° | Р—Р°РєР»СЋС‡С‘РЅРЅС‹Рµ РІ СЃРµС‚Рё",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"Тюрьма | Заключённые в сети",body,"OK","Закрыть");
 }
 stock RP_LawOffer(playerid,targetid)
 {
     if(!RP_Free(playerid) || gJob[playerid]!=RP_LAWYER_JOB || gFaction[playerid]!=FACTION_NONE || !RP_AtLawDesk(playerid))
-        return RP_Message(playerid,"РђРґРІРѕРєР°С‚ РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ Сѓ СЃС‚РѕР№РєРё РїСЂРёС‘РјРЅРѕР№ С‚СЋСЂСЊРјС‹.");
+        return RP_Message(playerid,"Адвокат должен находиться у стойки приёмной тюрьмы.");
     if(!VX_Valid(targetid) || targetid==playerid || !gIsJailed[targetid] || gRPJailReduced[targetid])
-        return RP_Message(playerid,"Р—Р°РєР»СЋС‡С‘РЅРЅС‹Р№ РЅРµРґРѕСЃС‚СѓРїРµРЅ РёР»Рё СѓР¶Рµ РёСЃРїРѕР»СЊР·РѕРІР°Р» РїРѕРјРѕС‰СЊ Р°РґРІРѕРєР°С‚Р°.");
-    if(gRPJailLeft[targetid]<=60) return RP_Message(playerid,"Р”Рѕ РѕСЃРІРѕР±РѕР¶РґРµРЅРёСЏ РѕСЃС‚Р°Р»РѕСЃСЊ РЅРµ Р±РѕР»СЊС€Рµ РјРёРЅСѓС‚С‹.");
+        return RP_Message(playerid,"Заключённый недоступен или уже использовал помощь адвоката.");
+    if(gRPJailLeft[targetid]<=60) return RP_Message(playerid,"До освобождения осталось не больше минуты.");
     if(gRPLawOffer[targetid]!=INVALID_PLAYER_ID && gettime()<gRPLawUntil[targetid])
-        return RP_Message(playerid,"Р—Р°РєР»СЋС‡С‘РЅРЅС‹Р№ СѓР¶Рµ СЂР°СЃСЃРјР°С‚СЂРёРІР°РµС‚ РїСЂРµРґР»РѕР¶РµРЅРёРµ Р°РґРІРѕРєР°С‚Р°.");
+        return RP_Message(playerid,"Заключённый уже рассматривает предложение адвоката.");
     gRPLawOffer[targetid]=playerid; gRPLawSession[targetid]=gVXSession[playerid];
     gRPLawSentence[targetid]=gRPSentence[targetid]; gRPLawUntil[targetid]=gettime()+60;
     new m[144];
-    format(m,sizeof m,"[РђР”Р’РћРљРђРў] %s РїСЂРµРґР»Р°РіР°РµС‚ СЃРѕРєСЂР°С‚РёС‚СЊ СЃСЂРѕРє Р·Р° %d СЂСѓР±. /acceptlawyer РёР»Рё /declinelawyer (60 СЃРµРє.)",
+    format(m,sizeof m,"[АДВОКАТ] %s предлагает сократить срок за %d руб. /acceptlawyer или /declinelawyer (60 сек.)",
         gName[playerid],RP_LAWYER_FEE);
     SendClientMessage(targetid,COLOR_BLUE,m);
-    return RP_Message(playerid,"РџСЂРµРґР»РѕР¶РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ. РћРїР»Р°С‚Р° Рё СЃРѕРєСЂР°С‰РµРЅРёРµ вЂ” С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ СЃРѕРіР»Р°СЃРёСЏ Р·Р°РєР»СЋС‡С‘РЅРЅРѕРіРѕ.");
+    return RP_Message(playerid,"Предложение отправлено. Оплата и сокращение — только после согласия заключённого.");
 }
 stock RP_LawAccept(playerid)
 {
@@ -10555,14 +10555,14 @@ stock RP_LawAccept(playerid)
     if(!gIsJailed[playerid] || gRPJailReduced[playerid] || !VX_Valid(lawyer)
         || gVXSession[lawyer]!=gRPLawSession[playerid] || gettime()>gRPLawUntil[playerid]
         || gRPLawSentence[playerid]!=gRPSentence[playerid])
-        return RP_Message(playerid,"РџСЂРµРґР»РѕР¶РµРЅРёРµ Р°РґРІРѕРєР°С‚Р° РЅРµРґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ.");
+        return RP_Message(playerid,"Предложение адвоката недействительно.");
     if(!RP_Free(lawyer) || gJob[lawyer]!=RP_LAWYER_JOB || gFaction[lawyer]!=FACTION_NONE || !RP_AtLawDesk(lawyer))
-        return RP_Message(playerid,"РђРґРІРѕРєР°С‚ РґРѕР»Р¶РµРЅ РѕСЃС‚Р°РІР°С‚СЊСЃСЏ РІ РїСЂРёС‘РјРЅРѕР№ С‚СЋСЂСЊРјС‹.");
+        return RP_Message(playerid,"Адвокат должен оставаться в приёмной тюрьмы.");
     if(gMoney[playerid]<RP_LAWYER_FEE || gMoney[lawyer]>MAX_MONEY-RP_LAWYER_FEE)
-        return RP_Message(playerid,"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С… РґР»СЏ РѕРїР»Р°С‚С‹ РёР»Рё РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РґРµРЅРµРі Р°РґРІРѕРєР°С‚Р°.");
+        return RP_Message(playerid,"Недостаточно наличных для оплаты или достигнут лимит денег адвоката.");
     new cut=min(gRPJailOriginal[playerid]*RP_LAWYER_PERCENT/100,RP_LAWYER_MAX_CUT);
     cut=min(cut,gRPJailLeft[playerid]-60);
-    if(cut<=0) return RP_Message(playerid,"Р”Рѕ РѕСЃРІРѕР±РѕР¶РґРµРЅРёСЏ РѕСЃС‚Р°Р»РѕСЃСЊ РЅРµ Р±РѕР»СЊС€Рµ РјРёРЅСѓС‚С‹.");
+    if(cut<=0) return RP_Message(playerid,"До освобождения осталось не больше минуты.");
     new q[256],m[144],left=gRPJailLeft[playerid]-cut;
     if(!VX_Begin()) return VX_Error(playerid);
     VX_MoneySQL(playerid,gMoney[playerid]-RP_LAWYER_FEE,gBankMoney[playerid]);
@@ -10576,7 +10576,7 @@ stock RP_LawAccept(playerid)
     VX_MoneySync(lawyer,gMoney[lawyer]+RP_LAWYER_FEE,gBankMoney[lawyer]);
     gRPJailLeft[playerid]=left; gRPJailReduced[playerid]=true;
     gRPLawOffer[playerid]=INVALID_PLAYER_ID;
-    format(m,sizeof m,"[РђР”Р’РћРљРђРў] РЎСЂРѕРє СЃРѕРєСЂР°С‰С‘РЅ РЅР° %d СЃРµРє. РћСЃС‚Р°Р»РѕСЃСЊ: %d РјРёРЅ. %d СЃРµРє.",cut,left/60,left%60);
+    format(m,sizeof m,"[АДВОКАТ] Срок сокращён на %d сек. Осталось: %d мин. %d сек.",cut,left/60,left%60);
     SendClientMessage(playerid,COLOR_GREEN,m); SendClientMessage(lawyer,COLOR_GREEN,m);
     return 1;
 }
@@ -10585,27 +10585,27 @@ stock RP_LawAccept(playerid)
 stock RP_Cuff(playerid,targetid,bool:remove)
 {
     if(!RP_Free(playerid) || !VX_Officer(playerid) || gFactionRank[playerid]<2)
-        return RP_Message(playerid,"РќР°СЂСѓС‡РЅРёРєРё РґРѕСЃС‚СѓРїРЅС‹ РџРѕР»РёС†РёРё/FBI СЃРѕ 2 СЂР°РЅРіР°.");
+        return RP_Message(playerid,"Наручники доступны Полиции/FBI со 2 ранга.");
     if(!RP_Living(targetid) || targetid==playerid || !VX_Near(playerid,targetid,3.0)
         || gIsJailed[targetid] || gVXHospital[targetid] || gPvpActive[targetid])
-        return RP_Message(playerid,"РќСѓР¶РµРЅ Р¶РёРІРѕР№ РёРіСЂРѕРє СЂСЏРґРѕРј, РЅРµ РІ Р±РѕР»СЊРЅРёС†Рµ, С‚СЋСЂСЊРјРµ РёР»Рё PvP.");
-    if(IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"РРіСЂРѕРє РґРѕР»Р¶РµРЅ РІС‹Р№С‚Рё РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+        return RP_Message(playerid,"Нужен живой игрок рядом, не в больнице, тюрьме или PvP.");
+    if(IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"Игрок должен выйти из транспорта.");
     if(remove)
     {
-        if(!gHandcuffed[targetid]) return RP_Message(playerid,"РќР° РёРіСЂРѕРєРµ РЅРµС‚ РЅР°СЂСѓС‡РЅРёРєРѕРІ.");
+        if(!gHandcuffed[targetid]) return RP_Message(playerid,"На игроке нет наручников.");
         ApplyAnimation(playerid, "POLICE", "CopTraf_Away", 4.1, 0, 0, 0, 0, 900, 1);
         gHandcuffed[targetid]=false;
         gCuffOfficer[targetid]=INVALID_PLAYER_ID;
         if(!gTaserStunned[targetid]) TogglePlayerControllable(targetid,true);
         ClearAnimations(targetid); SetPlayerSpecialAction(targetid,SPECIAL_ACTION_NONE);
         RP_Audit(targetid,playerid,"UNCUFF","Handcuffs removed");
-        RP_Message(targetid,"РЎРѕС‚СЂСѓРґРЅРёРє СЃРЅСЏР» СЃ РІР°СЃ РЅР°СЂСѓС‡РЅРёРєРё.");
-        return RP_Message(playerid,"РќР°СЂСѓС‡РЅРёРєРё СЃРЅСЏС‚С‹.");
+        RP_Message(targetid,"Сотрудник снял с вас наручники.");
+        return RP_Message(playerid,"Наручники сняты.");
     }
-    if(gHandcuffed[targetid]) return RP_Message(playerid,"РРіСЂРѕРє СѓР¶Рµ РІ РЅР°СЂСѓС‡РЅРёРєР°С….");
+    if(gHandcuffed[targetid]) return RP_Message(playerid,"Игрок уже в наручниках.");
     if(!gWantedLevel[targetid] && !gTaserStunned[targetid]
         && GetPlayerSpecialAction(targetid)!=SPECIAL_ACTION_HANDSUP)
-        return RP_Message(playerid,"РќСѓР¶РЅС‹ РѕСЃРЅРѕРІР°РЅРёСЏ: СЂРѕР·С‹СЃРє, РѕРіР»СѓС€РµРЅРёРµ РёР»Рё РїРѕРґРЅСЏС‚С‹Рµ СЂСѓРєРё РёРіСЂРѕРєР° (/handsup).");
+        return RP_Message(playerid,"Нужны основания: розыск, оглушение или поднятые руки игрока (/handsup).");
     RP_DropStretcher(targetid);
     ApplyAnimation(playerid, "POLICE", "CopTraf_Stop", 4.1, 0, 0, 0, 0, 900, 1);
     gHandcuffed[targetid]=true;
@@ -10613,50 +10613,50 @@ stock RP_Cuff(playerid,targetid,bool:remove)
     ClearAnimations(targetid); SetPlayerSpecialAction(targetid,24);
     TogglePlayerControllable(targetid,false);
     RP_Audit(targetid,playerid,"CUFF","Handcuffs applied");
-    RP_Message(targetid,"РќР° РІР°СЃ РЅР°РґРµР»Рё РЅР°СЂСѓС‡РЅРёРєРё. /report РґРѕСЃС‚СѓРїРµРЅ РїСЂРё РЅР°СЂСѓС€РµРЅРёСЏС….");
-    return RP_Message(playerid,"РќР°СЂСѓС‡РЅРёРєРё РЅР°РґРµС‚С‹. /search ID, /putincar ID, /arrest ID СЃРµРєСѓРЅРґС‹ РїСЂРёС‡РёРЅР°.");
+    RP_Message(targetid,"На вас надели наручники. /report доступен при нарушениях.");
+    return RP_Message(playerid,"Наручники надеты. /search ID, /putincar ID, /arrest ID секунды причина.");
 }
 stock RP_Search(playerid,targetid)
 {
-    if(!RP_Free(playerid) || !VX_Officer(playerid)) return RP_Message(playerid,"Р”РѕСЃС‚СѓРїРЅРѕ РџРѕР»РёС†РёРё/FBI.");
+    if(!RP_Free(playerid) || !VX_Officer(playerid)) return RP_Message(playerid,"Доступно Полиции/FBI.");
     if(!RP_Living(targetid) || targetid==playerid || !VX_Near(playerid,targetid,3.0))
-        return RP_Message(playerid,"РРіСЂРѕРє РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј, РґРѕ 3 РјРµС‚СЂРѕРІ.");
+        return RP_Message(playerid,"Игрок должен находиться рядом, до 3 метров.");
     if(!gHandcuffed[targetid] && GetPlayerSpecialAction(targetid)!=SPECIAL_ACTION_HANDSUP)
-        return RP_Message(playerid,"Р”Р»СЏ РѕР±С‹СЃРєР° РЅСѓР¶РЅС‹ РЅР°СЂСѓС‡РЅРёРєРё РёР»Рё РґРѕР±СЂРѕРІРѕР»СЊРЅРѕ РїРѕРґРЅСЏС‚С‹Рµ СЂСѓРєРё.");
+        return RP_Message(playerid,"Для обыска нужны наручники или добровольно поднятые руки.");
     new body[1800],row[128],weapon,ammo,name[32];
-    format(body,sizeof body,"РћР±С‹СЃРє: %s [%d]\nРќР°Р»РёС‡РЅС‹Рµ: %d СЂСѓР±.\nР›РёС†РµРЅР·РёСЏ РЅР° РѕСЂСѓР¶РёРµ: %d\n\nРџСЂРµРґРјРµС‚С‹:\n",
+    format(body,sizeof body,"Обыск: %s [%d]\nНаличные: %d руб.\nЛицензия на оружие: %d\n\nПредметы:\n",
         gName[targetid],targetid,gMoney[targetid],gLicenseWeapon[targetid]);
     for(new i=0;i<6;i++)
     {
         format(row,sizeof row,"%s: %d\n",gVXItemName[i],VX_ItemCount(targetid,i));
         strcat(body,row,sizeof body);
     }
-    strcat(body,"\nРћСЂСѓР¶РёРµ:\n",sizeof body);
+    strcat(body,"\nОружие:\n",sizeof body);
     for(new slot=0;slot<13;slot++)
     {
         GetPlayerWeaponData(targetid,slot,weapon,ammo);
         if(weapon>0 && ammo>0)
         {
             GetWeaponName(weapon,name,sizeof name);
-            format(row,sizeof row,"%s (%d): %d РїР°С‚СЂРѕРЅРѕРІ\n",name,weapon,ammo);
+            format(row,sizeof row,"%s (%d): %d патронов\n",name,weapon,ammo);
             strcat(body,row,sizeof body);
         }
     }
     RP_Audit(targetid,playerid,"SEARCH","Inventory and weapons inspected");
-    RP_Message(targetid,"РЎРѕС‚СЂСѓРґРЅРёРє РїСЂРѕРІС‘Р» РѕР±С‹СЃРє. РЎР°Рј РѕР±С‹СЃРє РЅРµ СЃРїРёСЃС‹РІР°РµС‚ РґРµРЅСЊРіРё РёР»Рё РїСЂРµРґРјРµС‚С‹.");
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"РџРѕР»РёС†РёСЏ / FBI | РћР±С‹СЃРє",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    RP_Message(targetid,"Сотрудник провёл обыск. Сам обыск не списывает деньги или предметы.");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"Полиция / FBI | Обыск",body,"OK","Закрыть");
 }
 stock RP_Seize(playerid,targetid,const item[],const rawReason[])
 {
     if(!RP_Free(playerid) || !VX_Officer(playerid) || gFactionRank[playerid]<2)
-        return RP_Message(playerid,"РР·СЉСЏС‚РёРµ РґРѕСЃС‚СѓРїРЅРѕ РџРѕР»РёС†РёРё/FBI СЃРѕ 2 СЂР°РЅРіР°.");
+        return RP_Message(playerid,"Изъятие доступно Полиции/FBI со 2 ранга.");
     if(!RP_Living(targetid) || targetid==playerid || !VX_Near(playerid,targetid,3.0)
-        || !gHandcuffed[targetid]) return RP_Message(playerid,"Р—Р°РґРµСЂР¶Р°РЅРЅС‹Р№ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЂСЏРґРѕРј Рё РІ РЅР°СЂСѓС‡РЅРёРєР°С….");
+        || !gHandcuffed[targetid]) return RP_Message(playerid,"Задержанный должен быть рядом и в наручниках.");
     new reason[81],detail[256],row[28],weapon,ammo,old=gLockpicks[targetid];
     VX_CleanText(rawReason,reason,sizeof reason);
-    if(strlen(reason)<3) return RP_Message(playerid,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /seize ID weapons|lockpicks РїСЂРёС‡РёРЅР°.");
+    if(strlen(reason)<3) return RP_Message(playerid,"Использование: /seize ID weapons|lockpicks причина.");
     if(strcmp(item,"weapons",true) && strcmp(item,"lockpicks",true))
-        return RP_Message(playerid,"РњРѕР¶РЅРѕ РёР·СЉСЏС‚СЊ weapons (РѕСЂСѓР¶РёРµ) РёР»Рё lockpicks (РѕС‚РјС‹С‡РєРё).");
+        return RP_Message(playerid,"Можно изъять weapons (оружие) или lockpicks (отмычки).");
     format(detail,sizeof detail,"%s; %s; ",item,reason);
     if(!strcmp(item,"weapons",true))
     {
@@ -10670,11 +10670,11 @@ stock RP_Seize(playerid,targetid,const item[],const rawReason[])
                 if(strlen(detail)+strlen(row)<sizeof detail-1) strcat(detail,row,sizeof detail);
             }
         }
-        if(!count) return RP_Message(playerid,"РћСЂСѓР¶РёРµ РЅРµ РЅР°Р№РґРµРЅРѕ.");
+        if(!count) return RP_Message(playerid,"Оружие не найдено.");
     }
     else
     {
-        if(old<1) return RP_Message(playerid,"РћС‚РјС‹С‡РµРє РЅРµС‚.");
+        if(old<1) return RP_Message(playerid,"Отмычек нет.");
         format(row,sizeof row,"amount=%d",old); strcat(detail,row,sizeof detail);
     }
     if(!VX_Begin()) return VX_Error(playerid);
@@ -10682,52 +10682,52 @@ stock RP_Seize(playerid,targetid,const item[],const rawReason[])
     RP_Audit(targetid,playerid,"SEIZE",detail);
     if(!VX_Commit()) { gLockpicks[targetid]=old; return VX_Error(playerid); }
     if(!strcmp(item,"weapons",true)) ResetPlayerWeapons(targetid);
-    RP_Message(targetid,"РџСЂРµРґРјРµС‚С‹ РёР·СЉСЏС‚С‹ СЃ Р·Р°РїРёСЃСЊСЋ РѕСЃРЅРѕРІР°РЅРёСЏ РІ РґРµР»Рµ. /report вЂ” СЃРІСЏР·СЊ СЃ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРµР№.");
-    return RP_Message(playerid,"РР·СЉСЏС‚РёРµ Р·Р°РїРёСЃР°РЅРѕ РІ РґРµР»Рѕ. РџСЂРµРґРјРµС‚С‹ РЅРµ РІС‹РґР°СЋС‚СЃСЏ СЃРѕС‚СЂСѓРґРЅРёРєСѓ.");
+    RP_Message(targetid,"Предметы изъяты с записью основания в деле. /report — связь с администрацией.");
+    return RP_Message(playerid,"Изъятие записано в дело. Предметы не выдаются сотруднику.");
 }
 stock RP_Wanted(playerid,targetid,stars,const rawReason[])
 {
     if(!RP_Free(playerid) || !VX_Officer(playerid) || gFactionRank[playerid]<3)
-        return RP_Message(playerid,"Р РѕР·С‹СЃРє РёР·РјРµРЅСЏРµС‚ РџРѕР»РёС†РёСЏ/FBI СЃ 3 СЂР°РЅРіР°.");
+        return RP_Message(playerid,"Розыск изменяет Полиция/FBI с 3 ранга.");
     if(!VX_Valid(targetid) || targetid==playerid || stars<0 || stars>6 || gIsJailed[targetid])
-        return RP_Message(playerid,"РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /wanted ID 0-6 РїСЂРёС‡РёРЅР°. Р—Р°РєР»СЋС‡С‘РЅРЅС‹Р№ СѓР¶Рµ РѕС‚Р±С‹РІР°РµС‚ РЅР°РєР°Р·Р°РЅРёРµ.");
+        return RP_Message(playerid,"Использование: /wanted ID 0-6 причина. Заключённый уже отбывает наказание.");
     new reason[97];
     VX_CleanText(rawReason,reason,sizeof reason);
-    if(strlen(reason)<3) return RP_Message(playerid,"РЈРєР°Р¶РёС‚Рµ РѕСЃРЅРѕРІР°РЅРёРµ РёР·РјРµРЅРµРЅРёСЏ СЂРѕР·С‹СЃРєР°.");
+    if(strlen(reason)<3) return RP_Message(playerid,"Укажите основание изменения розыска.");
     if(!RP_Audit(targetid,playerid,"WANTED",reason)) return VX_Error(playerid);
     VX_SetWanted(targetid,stars);
-    new m[144]; format(m,sizeof m,"[Р РћР—Р«РЎРљ] %d/6. РћСЃРЅРѕРІР°РЅРёРµ: %s",stars,reason);
+    new m[144]; format(m,sizeof m,"[РОЗЫСК] %d/6. Основание: %s",stars,reason);
     SendClientMessage(targetid,COLOR_RED,m);
-    return RP_Message(playerid,"РћСЂРёРµРЅС‚РёСЂРѕРІРєР° Рё РїСЂРёС‡РёРЅР° Р·Р°РїРёСЃР°РЅС‹. /tablet /case ID.");
+    return RP_Message(playerid,"Ориентировка и причина записаны. /tablet /case ID.");
 }
 stock RP_Ticket(playerid,targetid,amount,const rawReason[])
 {
     if(!RP_Free(playerid) || !VX_Officer(playerid) || gFactionRank[playerid]<2)
-        return RP_Message(playerid,"РЁС‚СЂР°С„С‹ РґРѕСЃС‚СѓРїРЅС‹ РџРѕР»РёС†РёРё/FBI СЃРѕ 2 СЂР°РЅРіР°.");
+        return RP_Message(playerid,"Штрафы доступны Полиции/FBI со 2 ранга.");
     if(!RP_Living(targetid) || targetid==playerid || !VX_Near(playerid,targetid,5.0)
-        || amount<100 || amount>50000) return RP_Message(playerid,"/ticket ID СЃСѓРјРјР°(100-50000) РїСЂРёС‡РёРЅР°. РРіСЂРѕРє вЂ” СЂСЏРґРѕРј.");
+        || amount<100 || amount>50000) return RP_Message(playerid,"/ticket ID сумма(100-50000) причина. Игрок — рядом.");
     new reason[97],q[512],m[144];
     VX_CleanText(rawReason,reason,sizeof reason);
-    if(strlen(reason)<3) return RP_Message(playerid,"РЈРєР°Р¶РёС‚Рµ РѕСЃРЅРѕРІР°РЅРёРµ С€С‚СЂР°С„Р°.");
+    if(strlen(reason)<3) return RP_Message(playerid,"Укажите основание штрафа.");
     if(!VX_Begin()) return VX_Error(playerid);
     format(q,sizeof q,
         "INSERT INTO rp_fines(subject,officer,amount,reason,created) VALUES('%q','%q',%d,'%q',%d)",
         gName[targetid],gName[playerid],amount,reason,gettime());
     VX_SQL(q); RP_Audit(targetid,playerid,"FINE",reason);
     if(!VX_Commit()) return VX_Error(playerid);
-    format(m,sizeof m,"[РЁРўР РђР¤] %d СЂСѓР±. РћСЃРЅРѕРІР°РЅРёРµ: %s. /fines вЂ” СЃРїРёСЃРѕРє, /payfine РЅРѕРјРµСЂ вЂ” РѕРїР»Р°С‚Р°.",amount,reason);
+    format(m,sizeof m,"[ШТРАФ] %d руб. Основание: %s. /fines — список, /payfine номер — оплата.",amount,reason);
     SendClientMessage(targetid,COLOR_ORANGE,m);
-    return RP_Message(playerid,"РџСЂРѕС‚РѕРєРѕР» СЃРѕС…СЂР°РЅС‘РЅ. Р”РµРЅСЊРіРё РЅРµ РїРµСЂРµРґР°СЋС‚СЃСЏ СЃРѕС‚СЂСѓРґРЅРёРєСѓ.");
+    return RP_Message(playerid,"Протокол сохранён. Деньги не передаются сотруднику.");
 }
 stock RP_Fines(playerid,targetid)
 {
-    if(!VX_Valid(targetid)) return RP_Message(playerid,"РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ.");
+    if(!VX_Valid(targetid)) return RP_Message(playerid,"Игрок не найден.");
     if(playerid!=targetid && !VX_Officer(playerid) && !VX_Admin(playerid))
-        return RP_Message(playerid,"РџСЂРѕСЃРјРѕС‚СЂ С‡СѓР¶РёС… С€С‚СЂР°С„РѕРІ РґРѕСЃС‚СѓРїРµРЅ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј.");
+        return RP_Message(playerid,"Просмотр чужих штрафов доступен сотрудникам.");
     new q[256],body[3500],row[192],reason[97],officer[25],count=0;
     format(q,sizeof q,"SELECT id,amount,officer,reason FROM rp_fines WHERE subject='%q' AND paid=0 ORDER BY id DESC LIMIT 20",gName[targetid]);
     new DBResult:r=db_query(gDatabase,q);
-    strcat(body,"РќРѕРјРµСЂ\tРЎСѓРјРјР°\tРЎРѕС‚СЂСѓРґРЅРёРє\tРџСЂРёС‡РёРЅР°\n",sizeof body);
+    strcat(body,"Номер\tСумма\tСотрудник\tПричина\n",sizeof body);
     if(r) for(new i=0;i<db_num_rows(r);i++)
     {
         db_get_field(r,2,officer,sizeof officer); db_get_field(r,3,reason,sizeof reason);
@@ -10736,12 +10736,12 @@ stock RP_Fines(playerid,targetid)
         db_next_row(r);
     }
     if(r) db_free_result(r);
-    if(!count) return RP_Message(playerid,"РќРµРѕРїР»Р°С‡РµРЅРЅС‹С… С€С‚СЂР°С„РѕРІ РЅРµС‚.");
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"РЁС‚СЂР°С„С‹ | /payfine РЅРѕРјРµСЂ",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    if(!count) return RP_Message(playerid,"Неоплаченных штрафов нет.");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_TABLIST_HEADERS,"Штрафы | /payfine номер",body,"OK","Закрыть");
 }
 stock RP_PayFine(playerid,id)
 {
-    if(id<1) return RP_Message(playerid,"/payfine РЅРѕРјРµСЂ. РќРѕРјРµСЂ СѓРєР°Р·Р°РЅ РІ /fines.");
+    if(id<1) return RP_Message(playerid,"/payfine номер. Номер указан в /fines.");
     if(!VX_Begin()) return VX_Error(playerid);
     new q[256],amount=0;
     format(q,sizeof q,"SELECT amount FROM rp_fines WHERE id=%d AND subject='%q' AND paid=0",id,gName[playerid]);
@@ -10751,25 +10751,25 @@ stock RP_PayFine(playerid,id)
     if(amount<1 || gBankMoney[playerid]<amount)
     {
         VX_SQL("ROLLBACK");
-        return RP_Message(playerid,"РЁС‚СЂР°С„ РЅРµ РЅР°Р№РґРµРЅ, СѓР¶Рµ РѕРїР»Р°С‡РµРЅ РёР»Рё РЅРµ С…РІР°С‚Р°РµС‚ РґРµРЅРµРі РЅР° Р±Р°РЅРєРѕРІСЃРєРѕРј СЃС‡С‘С‚Рµ.");
+        return RP_Message(playerid,"Штраф не найден, уже оплачен или не хватает денег на банковском счёте.");
     }
     VX_MoneySQL(playerid,gMoney[playerid],gBankMoney[playerid]-amount);
     format(q,sizeof q,"UPDATE rp_fines SET paid=1 WHERE id=%d AND subject='%q'",id,gName[playerid]);
     VX_SQL(q); VX_BankLog(playerid,"fine",-amount);
     if(!VX_Commit()) return VX_Error(playerid);
     VX_MoneySync(playerid,gMoney[playerid],gBankMoney[playerid]-amount);
-    return RP_Message(playerid,"РЁС‚СЂР°С„ РѕРїР»Р°С‡РµРЅ СЃ Р±Р°РЅРєРѕРІСЃРєРѕРіРѕ СЃС‡С‘С‚Р°.");
+    return RP_Message(playerid,"Штраф оплачен с банковского счёта.");
 }
 stock RP_History(playerid,targetid,bool:medical)
 {
-    if(!VX_Valid(targetid)) return RP_Message(playerid,"РРіСЂРѕРє РЅРµ РЅР°Р№РґРµРЅ.");
+    if(!VX_Valid(targetid)) return RP_Message(playerid,"Игрок не найден.");
     if(medical)
     {
         if(playerid!=targetid && !VX_Medic(playerid) && !VX_Admin(playerid))
-            return RP_Message(playerid,"РњРµРґРєР°СЂС‚С‹ РґРѕСЃС‚СѓРїРЅС‹ РїР°С†РёРµРЅС‚Сѓ, РјРµРґРёРєР°Рј РЅР° СЃРјРµРЅРµ Рё Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+            return RP_Message(playerid,"Медкарты доступны пациенту, медикам на смене и администрации.");
     }
     else if(!VX_Officer(playerid) && !VX_Admin(playerid))
-        return RP_Message(playerid,"Р”РѕСЃСЊРµ РґРѕСЃС‚СѓРїРЅРѕ РџРѕР»РёС†РёРё/FBI Рё Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+        return RP_Message(playerid,"Досье доступно Полиции/FBI и администрации.");
     new q[320],body[3500],row[320],kind[24],detail[193],actor[25];
     if(medical) format(q,sizeof q,
         "SELECT kind,actor,detail,created FROM rp_audit WHERE subject='%q' AND kind LIKE 'MED_%%' ORDER BY id DESC LIMIT 12",
@@ -10778,53 +10778,53 @@ stock RP_History(playerid,targetid,bool:medical)
         "SELECT kind,actor,detail,created FROM rp_audit WHERE subject='%q' AND kind NOT LIKE 'MED_%%' ORDER BY id DESC LIMIT 12",
         gName[targetid]);
     new DBResult:r=db_query(gDatabase,q);
-    format(body,sizeof body,"РРіСЂРѕРє: %s [%d]\nРџРѕСЃР»РµРґРЅРёРµ Р·Р°РїРёСЃРё:\n\n",gName[targetid],targetid);
+    format(body,sizeof body,"Игрок: %s [%d]\nПоследние записи:\n\n",gName[targetid],targetid);
     if(r) for(new i=0;i<db_num_rows(r);i++)
     {
         db_get_field(r,0,kind,sizeof kind); db_get_field(r,1,actor,sizeof actor);
         db_get_field(r,2,detail,sizeof detail);
-        format(row,sizeof row,"[%s] %s | %d РјРёРЅ. РЅР°Р·Р°Рґ\n%s\n\n",
+        format(row,sizeof row,"[%s] %s | %d мин. назад\n%s\n\n",
             kind,actor,max(0,(gettime()-db_get_field_int(r,3))/60),detail);
         if(strlen(body)+strlen(row)<sizeof body-1) strcat(body,row,sizeof body);
         db_next_row(r);
     }
     if(r) db_free_result(r);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | РљР°СЂС‚РѕС‡РєР° РёРіСЂРѕРєР°",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | Карточка игрока",body,"OK","Закрыть");
 }
 stock RP_CameraLogs(playerid)
 {
-    if(!VX_Officer(playerid) && !VX_Admin(playerid)) return RP_Message(playerid,"Р”РѕСЃС‚СѓРїРЅРѕ РџРѕР»РёС†РёРё/FBI Рё Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+    if(!VX_Officer(playerid) && !VX_Admin(playerid)) return RP_Message(playerid,"Доступно Полиции/FBI и администрации.");
     new body[3500],row[240],name[25],detail[144];
     new DBResult:r=db_query(gDatabase,
         "SELECT subject,detail,created FROM rp_audit WHERE kind='CAMERA' ORDER BY id DESC LIMIT 15");
-    strcat(body,"РљР°РјРµСЂС‹ С„РёРєСЃРёСЂСѓСЋС‚ РїСЂРµРІС‹С€РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё. Р­С‚Рѕ Р¶СѓСЂРЅР°Р», РЅРµ РІРёРґРµРѕС‚СЂР°РЅСЃР»СЏС†РёСЏ.\n\n",sizeof body);
+    strcat(body,"Камеры фиксируют превышение скорости. Это журнал, не видеотрансляция.\n\n",sizeof body);
     if(r) for(new i=0;i<db_num_rows(r);i++)
     {
         db_get_field(r,0,name,sizeof name); db_get_field(r,1,detail,sizeof detail);
-        format(row,sizeof row,"%s | %d РјРёРЅ. РЅР°Р·Р°Рґ\n%s\n\n",name,max(0,(gettime()-db_get_field_int(r,2))/60),detail);
+        format(row,sizeof row,"%s | %d мин. назад\n%s\n\n",name,max(0,(gettime()-db_get_field_int(r,2))/60),detail);
         if(strlen(body)+strlen(row)<sizeof body-1) strcat(body,row,sizeof body);
         db_next_row(r);
     }
     if(r) db_free_result(r);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"РџР»Р°РЅС€РµС‚ | Р–СѓСЂРЅР°Р» РґРѕСЂРѕР¶РЅС‹С… РєР°РјРµСЂ",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"Планшет | Журнал дорожных камер",body,"OK","Закрыть");
 }
 
 // ================= BCRB: persistent injuries, treatment and patient transport =================
 stock RP_Diagnose(playerid,targetid)
 {
-    if(!RP_Living(targetid)) return RP_Message(playerid,"РџР°С†РёРµРЅС‚ РЅРµ РЅР°Р№РґРµРЅ.");
+    if(!RP_Living(targetid)) return RP_Message(playerid,"Пациент не найден.");
     if(playerid!=targetid && (!VX_Medic(playerid) || !RP_Free(playerid)
-        || !VX_Near(playerid,targetid,4.0))) return RP_Message(playerid,"РњРµРґРёРє РЅР° СЃРјРµРЅРµ РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј СЃ РїР°С†РёРµРЅС‚РѕРј.");
+        || !VX_Near(playerid,targetid,4.0))) return RP_Message(playerid,"Медик на смене должен находиться рядом с пациентом.");
     new body[512],bleed[24],fracture[24],Float:hp;
     GetPlayerHealth(targetid,hp);
-    if(gRPInjury[targetid] & RP_INJ_BLEED) format(bleed,sizeof bleed,"Р•СЃС‚СЊ");
-    else format(bleed,sizeof bleed,"РќРµС‚");
-    if(gRPInjury[targetid] & RP_INJ_FRACTURE) format(fracture,sizeof fracture,"Р•СЃС‚СЊ");
-    else format(fracture,sizeof fracture,"РќРµС‚");
+    if(gRPInjury[targetid] & RP_INJ_BLEED) format(bleed,sizeof bleed,"Есть");
+    else format(bleed,sizeof bleed,"Нет");
+    if(gRPInjury[targetid] & RP_INJ_FRACTURE) format(fracture,sizeof fracture,"Есть");
+    else format(fracture,sizeof fracture,"Нет");
     format(body,sizeof body,
-        "РџР°С†РёРµРЅС‚: %s\nР—РґРѕСЂРѕРІСЊРµ: %.0f\nРљСЂРѕРІРѕС‚РµС‡РµРЅРёРµ: %s\nРџРµСЂРµР»РѕРј: %s\n\nР‘Р¦Р Р‘: /103\nРњРµРґРёРє: /bandage ID, /splint ID, /heal ID\nРћРїРµСЂР°С†РёСЏ РЅР° РєРѕР№РєРµ: /operation ID\nРњРµРґРєР°СЂС‚Р°: /medcard ID",
+        "Пациент: %s\nЗдоровье: %.0f\nКровотечение: %s\nПерелом: %s\n\nБЦРБ: /103\nМедик: /bandage ID, /splint ID, /heal ID\nОперация на койке: /operation ID\nМедкарта: /medcard ID",
         gName[targetid],hp,bleed,fracture);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"Р‘Р¦Р Р‘ | РЎРѕСЃС‚РѕСЏРЅРёРµ РїР°С†РёРµРЅС‚Р°",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"БЦРБ | Состояние пациента",body,"OK","Закрыть");
 }
 stock RP_OnDamage(playerid,issuerid,Float:amount,weaponid,bodypart)
 {
@@ -10840,7 +10840,7 @@ stock RP_OnDamage(playerid,issuerid,Float:amount,weaponid,bodypart)
     {
         gRPBleedAt[playerid]=gettime()+15; RP_SaveState(playerid);
         RP_Audit(playerid,INVALID_PLAYER_ID,"MED_INJURY","New injury; see patient condition");
-        RP_Message(playerid,"Р’С‹ РїРѕР»СѓС‡РёР»Рё С‚СЂР°РІРјСѓ. /health вЂ” СЃРѕСЃС‚РѕСЏРЅРёРµ, /103 вЂ” СЃРєРѕСЂР°СЏ. РђРїС‚РµС‡РєР° РѕСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РєСЂРѕРІСЊ.");
+        RP_Message(playerid,"Вы получили травму. /health — состояние, /103 — скорая. Аптечка останавливает кровь.");
     }
     return 1;
 }
@@ -10867,47 +10867,47 @@ stock RP_MedFinish(doctor,patient,newInjury,const detail[])
     if(pay)
     {
         VX_MoneySync(doctor,gMoney[doctor],gBankMoney[doctor]+pay);
-        RP_Message(doctor,"Р’С‹РµР·РґРЅРѕР№ РІС‹Р·РѕРІ Р·Р°РІРµСЂС€С‘РЅ. Р’РѕР·РЅР°РіСЂР°Р¶РґРµРЅРёРµ 750 СЂСѓР±. Р·Р°С‡РёСЃР»РµРЅРѕ РІ Р±Р°РЅРє.");
+        RP_Message(doctor,"Выездной вызов завершён. Вознаграждение 750 руб. зачислено в банк.");
     }
     if(gVXMedAssigned[patient]==doctor) VX_MedCancel(patient);
     return 1;
 }
 stock RP_MedTreat(playerid,targetid,kind)
 {
-    if(!RP_Free(playerid) || !VX_Medic(playerid)) return RP_Message(playerid,"Р”РѕСЃС‚СѓРїРЅРѕ СЃРѕС‚СЂСѓРґРЅРёРєР°Рј Р‘Р¦Р Р‘ РЅР° СЃРјРµРЅРµ.");
+    if(!RP_Free(playerid) || !VX_Medic(playerid)) return RP_Message(playerid,"Доступно сотрудникам БЦРБ на смене.");
     if(!RP_Living(targetid) || targetid==playerid || !VX_Near(playerid,targetid,4.0)
         || gIsJailed[targetid] || gPvpActive[targetid] || gHandcuffed[targetid])
-        return RP_Message(playerid,"РќСѓР¶РµРЅ Р¶РёРІРѕР№ РїР°С†РёРµРЅС‚ СЂСЏРґРѕРј, РЅРµ РІ PvP Рё РЅРµ РїРѕРґ СЃС‚СЂР°Р¶РµР№.");
-    if(gVXHospital[targetid] && gVXBed[targetid]<0) return RP_Message(playerid,"РџР°С†РёРµРЅС‚ РґРѕР»Р¶РµРЅ Р·Р°РЅСЏС‚СЊ РєРѕР№РєСѓ: /bed.");
-    if(gRPOpDoctor[targetid]!=INVALID_PLAYER_ID) return RP_Message(playerid,"РџР°С†РёРµРЅС‚ СѓР¶Рµ РЅР° РѕРїРµСЂР°С†РёРё.");
-    if(gettime()-gVXLastHeal[playerid]<10) return RP_Message(playerid,"РњРµР¶РґСѓ РїСЂРѕС†РµРґСѓСЂР°РјРё РґРѕР»Р¶РЅРѕ РїСЂРѕР№С‚Рё 10 СЃРµРєСѓРЅРґ.");
-    if(gMedkits[playerid]<1) return RP_Message(playerid,"Р”Р»СЏ РїСЂРѕС†РµРґСѓСЂС‹ РЅСѓР¶РЅР° Р°РїС‚РµС‡РєР° РІ РёРЅРІРµРЅС‚Р°СЂРµ РјРµРґРёРєР°.");
+        return RP_Message(playerid,"Нужен живой пациент рядом, не в PvP и не под стражей.");
+    if(gVXHospital[targetid] && gVXBed[targetid]<0) return RP_Message(playerid,"Пациент должен занять койку: /bed.");
+    if(gRPOpDoctor[targetid]!=INVALID_PLAYER_ID) return RP_Message(playerid,"Пациент уже на операции.");
+    if(gettime()-gVXLastHeal[playerid]<10) return RP_Message(playerid,"Между процедурами должно пройти 10 секунд.");
+    if(gMedkits[playerid]<1) return RP_Message(playerid,"Для процедуры нужна аптечка в инвентаре медика.");
     new injury=gRPInjury[targetid],Float:hp,detail[96];
     GetPlayerHealth(targetid,hp);
     switch(kind)
     {
         case 0:
         {
-            if(!(injury & RP_INJ_BLEED)) return RP_Message(playerid,"РЈ РїР°С†РёРµРЅС‚Р° РЅРµС‚ РєСЂРѕРІРѕС‚РµС‡РµРЅРёСЏ.");
+            if(!(injury & RP_INJ_BLEED)) return RP_Message(playerid,"У пациента нет кровотечения.");
             injury &= ~RP_INJ_BLEED; format(detail,sizeof detail,"Bleeding stopped");
         }
         case 1:
         {
-            if(!(injury & RP_INJ_FRACTURE)) return RP_Message(playerid,"РџРµСЂРµР»РѕРј РЅРµ РѕР±РЅР°СЂСѓР¶РµРЅ.");
+            if(!(injury & RP_INJ_FRACTURE)) return RP_Message(playerid,"Перелом не обнаружен.");
             injury &= ~RP_INJ_FRACTURE; format(detail,sizeof detail,"Fracture treated");
         }
         case 2:
         {
-            if(injury & RP_INJ_FRACTURE) return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° РѕР±СЂР°Р±РѕС‚Р°Р№С‚Рµ РїРµСЂРµР»РѕРј: /splint ID, Р»РёР±Рѕ РѕРїРµСЂР°С†РёСЏ РІ Р‘Р¦Р Р‘.");
-            if(hp>=100.0 && !injury && !gVXHospital[targetid]) return RP_Message(playerid,"РџР°С†РёРµРЅС‚ Р·РґРѕСЂРѕРІ.");
+            if(injury & RP_INJ_FRACTURE) return RP_Message(playerid,"Сначала обработайте перелом: /splint ID, либо операция в БЦРБ.");
+            if(hp>=100.0 && !injury && !gVXHospital[targetid]) return RP_Message(playerid,"Пациент здоров.");
             injury=0; format(detail,sizeof detail,"Medical treatment");
         }
         case 3:
         {
             if(gFactionRank[playerid]<3 || !gVXHospital[targetid] || gVXBed[targetid]<0)
-                return RP_Message(playerid,"РћРїРµСЂР°С†РёСЏ: РјРµРґРёРє СЃ 3 СЂР°РЅРіР°, РїР°С†РёРµРЅС‚ РЅР° РєРѕР№РєРµ РІ Р‘Р¦Р Р‘.");
+                return RP_Message(playerid,"Операция: медик с 3 ранга, пациент на койке в БЦРБ.");
             for(new p=0;p<MAX_PLAYERS;p++) if(gRPOpDoctor[p]==playerid)
-                return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ С‚РµРєСѓС‰СѓСЋ РѕРїРµСЂР°С†РёСЋ.");
+                return RP_Message(playerid,"Сначала завершите текущую операцию.");
             format(detail,sizeof detail,"Operation started");
         }
         default: return 1;
@@ -10924,8 +10924,8 @@ stock RP_MedTreat(playerid,targetid,kind)
         gRPOpUntil[targetid]=gettime()+30;
         gVXTreatment[targetid]=max(gVXTreatment[targetid],45);
         VX_Save(targetid);
-        RP_Message(targetid,"РћРїРµСЂР°С†РёСЏ РЅР°С‡Р°Р»Р°СЃСЊ. РћСЃС‚Р°РІР°Р№С‚РµСЃСЊ РЅР° РєРѕР№РєРµ 30 СЃРµРєСѓРЅРґ.");
-        return RP_Message(playerid,"РћРїРµСЂР°С†РёСЏ РЅР°С‡Р°Р»Р°СЃСЊ. РћСЃС‚Р°РІР°Р№С‚РµСЃСЊ СЂСЏРґРѕРј СЃ РїР°С†РёРµРЅС‚РѕРј 30 СЃРµРєСѓРЅРґ.");
+        RP_Message(targetid,"Операция началась. Оставайтесь на койке 30 секунд.");
+        return RP_Message(playerid,"Операция началась. Оставайтесь рядом с пациентом 30 секунд.");
     }
     if(!RP_MedFinish(playerid,targetid,injury,detail)) return VX_Error(playerid);
     if(kind==2)
@@ -10935,8 +10935,8 @@ stock RP_MedTreat(playerid,targetid,kind)
     }
     else SetPlayerHealth(targetid,VX_FloatMin(100.0,hp+15.0));
     VX_Save(targetid);
-    RP_Message(targetid,"РњРµРґРёС†РёРЅСЃРєР°СЏ РїСЂРѕС†РµРґСѓСЂР° Р·Р°РІРµСЂС€РµРЅР°. РЎРѕСЃС‚РѕСЏРЅРёРµ: /health.");
-    return RP_Message(playerid,"РџСЂРѕС†РµРґСѓСЂР° Р·Р°РїРёСЃР°РЅР° РІ РјРµРґРєР°СЂС‚Сѓ.");
+    RP_Message(targetid,"Медицинская процедура завершена. Состояние: /health.");
+    return RP_Message(playerid,"Процедура записана в медкарту.");
 }
 stock RP_DropStretcher(patient)
 {
@@ -10954,38 +10954,38 @@ stock RP_DropStretcher(patient)
 stock RP_Stretcher(playerid,targetid)
 {
     if(!RP_Free(playerid) || !VX_Medic(playerid) || IsPlayerInAnyVehicle(playerid))
-        return RP_Message(playerid,"РќРѕСЃРёР»РєРё РґРѕСЃС‚СѓРїРЅС‹ РјРµРґРёРєСѓ РЅР° СЃРјРµРЅРµ, РІРЅРµ С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+        return RP_Message(playerid,"Носилки доступны медику на смене, вне транспорта.");
     if(!RP_Free(targetid) || targetid==playerid || !VX_Near(playerid,targetid,3.0)
-        || IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"РџР°С†РёРµРЅС‚ РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј Рё РІРЅРµ С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+        || IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"Пациент должен находиться рядом и вне транспорта.");
     new Float:hp; GetPlayerHealth(targetid,hp);
-    if(!gRPInjury[targetid] && hp>=50.0) return RP_Message(playerid,"РќРѕСЃРёР»РєРё РЅСѓР¶РЅС‹ С‚РѕР»СЊРєРѕ С‚СЂР°РІРјРёСЂРѕРІР°РЅРЅС‹Рј РёР»Рё С‚СЏР¶С‘Р»С‹Рј РїР°С†РёРµРЅС‚Р°Рј.");
+    if(!gRPInjury[targetid] && hp>=50.0) return RP_Message(playerid,"Носилки нужны только травмированным или тяжёлым пациентам.");
     for(new p=0;p<MAX_PLAYERS;p++) if(gRPStretcherBy[p]==playerid)
-        return RP_Message(playerid,"Р’С‹ СѓР¶Рµ РїРµСЂРµРІРѕР·РёС‚Рµ РїР°С†РёРµРЅС‚Р°. /unstretcher.");
+        return RP_Message(playerid,"Вы уже перевозите пациента. /unstretcher.");
     new Float:x,Float:y,Float:z; GetPlayerPos(targetid,x,y,z);
     new objectid=CreateObject(1997,x,y,z-1.0,0.0,0.0,0.0,50.0);
-    if(objectid==INVALID_OBJECT_ID) return RP_Message(playerid,"РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РЅРѕСЃРёР»РєРё: РґРѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РѕР±СЉРµРєС‚РѕРІ.");
+    if(objectid==INVALID_OBJECT_ID) return RP_Message(playerid,"Не удалось создать носилки: достигнут лимит объектов.");
     gRPStretcherObject[targetid]=objectid; gRPStretcherBy[targetid]=playerid;
     TogglePlayerControllable(targetid,false);
     ApplyAnimation(targetid,"CRACK","crckidle2",4.1,1,0,0,1,0,1);
-    RP_Message(targetid,"РњРµРґРёРє СѓР»РѕР¶РёР» РІР°СЃ РЅР° РЅРѕСЃРёР»РєРё. РћС‚РєР°Р· РѕС‚ РїРµСЂРµРЅРѕСЃРєРё: /medrefuse.");
-    return RP_Message(playerid,"РџРµСЂРµРЅРѕСЃРёС‚Рµ РїР°С†РёРµРЅС‚Р° РїРµС€РєРѕРј. /loadpatient ID вЂ” РІ СЃРєРѕСЂСѓСЋ, /unstretcher вЂ” СЃРЅСЏС‚СЊ СЃ РЅРѕСЃРёР»РѕРє.");
+    RP_Message(targetid,"Медик уложил вас на носилки. Отказ от переноски: /medrefuse.");
+    return RP_Message(playerid,"Переносите пациента пешком. /loadpatient ID — в скорую, /unstretcher — снять с носилок.");
 }
 stock RP_LoadPatient(playerid,targetid)
 {
     if(!RP_Free(playerid) || !VX_Medic(playerid) || !RP_Living(targetid) || targetid==playerid
         || !VX_Near(playerid,targetid,5.0) || gIsJailed[targetid] || gHandcuffed[targetid]
         || gVXHospital[targetid] || gPvpActive[targetid])
-        return RP_Message(playerid,"РќСѓР¶РЅС‹ СЃРјРµРЅР° Р‘Р¦Р Р‘ Рё РїР°С†РёРµРЅС‚ СЂСЏРґРѕРј, РЅРµ РїРѕРґ СЃС‚СЂР°Р¶РµР№.");
+        return RP_Message(playerid,"Нужны смена БЦРБ и пациент рядом, не под стражей.");
     new Float:hp; GetPlayerHealth(targetid,hp);
-    if(hp>=50.0 && !gRPInjury[targetid]) return RP_Message(playerid,"РџР°С†РёРµРЅС‚ РЅРµ РЅСѓР¶РґР°РµС‚СЃСЏ РІ РїСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕР№ РїРµСЂРµРІРѕР·РєРµ.");
-    if(IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"РџР°С†РёРµРЅС‚ СѓР¶Рµ РІ С‚СЂР°РЅСЃРїРѕСЂС‚Рµ.");
+    if(hp>=50.0 && !gRPInjury[targetid]) return RP_Message(playerid,"Пациент не нуждается в принудительной перевозке.");
+    if(IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"Пациент уже в транспорте.");
     new vehicleid=gFactionVehicle[playerid];
     if(vehicleid<=0 || vehicleid>=MAX_VEHICLES || GetVehicleModel(vehicleid)!=416
         || gVehicleFaction[vehicleid]!=FACTION_HOSPITAL || GetVehicleVirtualWorld(vehicleid)!=GetPlayerVirtualWorld(playerid))
-        return RP_Message(playerid,"Р’РѕР·СЊРјРёС‚Рµ Р»РёС‡РЅСѓСЋ СЃР»СѓР¶РµР±РЅСѓСЋ СЃРєРѕСЂСѓСЋ (Ambulance) РІ РіР°СЂР°Р¶Рµ Р‘Р¦Р Р‘.");
+        return RP_Message(playerid,"Возьмите личную служебную скорую (Ambulance) в гараже БЦРБ.");
     new Float:x,Float:y,Float:z;
     GetVehiclePos(vehicleid,x,y,z);
-    if(!IsPlayerInRangeOfPoint(playerid,6.0,x,y,z)) return RP_Message(playerid,"РџРѕРґРІРµРґРёС‚Рµ СЃРєРѕСЂСѓСЋ Р±Р»РёР¶Рµ.");
+    if(!IsPlayerInRangeOfPoint(playerid,6.0,x,y,z)) return RP_Message(playerid,"Подведите скорую ближе.");
     new seat=-1;
     for(new s=1;s<=3;s++)
     {
@@ -10994,28 +10994,28 @@ stock RP_LoadPatient(playerid,targetid)
             if(IsPlayerConnected(p) && IsPlayerInVehicle(p,vehicleid) && GetPlayerVehicleSeat(p)==s) occupied=1;
         if(!occupied) { seat=s; break; }
     }
-    if(seat==-1) return RP_Message(playerid,"Р’ СЃРєРѕСЂРѕР№ РЅРµС‚ СЃРІРѕР±РѕРґРЅС‹С… РјРµСЃС‚.");
+    if(seat==-1) return RP_Message(playerid,"В скорой нет свободных мест.");
     RP_DropStretcher(targetid);
     PutPlayerInVehicle(targetid,vehicleid,seat);
-    RP_Message(targetid,"Р’С‹ РїРѕРјРµС‰РµРЅС‹ РІ СЃРєРѕСЂСѓСЋ РїРѕРјРѕС‰СЊ. РњРµРґРёРє РґРѕСЃС‚Р°РІРёС‚ РІР°СЃ РІ Р‘Р¦Р Р‘.");
-    return RP_Message(playerid,"РЈ РІС…РѕРґР° Р‘Р¦Р Р‘ РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /hospitalize ID.");
+    RP_Message(targetid,"Вы помещены в скорую помощь. Медик доставит вас в БЦРБ.");
+    return RP_Message(playerid,"У входа БЦРБ используйте /hospitalize ID.");
 }
 stock RP_Hospitalize(playerid,targetid)
 {
     if(!RP_Free(playerid) || !VX_Medic(playerid) || !RP_Living(targetid) || targetid==playerid
         || !VX_Near(playerid,targetid,6.0) || gIsJailed[targetid] || gHandcuffed[targetid]
         || gVXHospital[targetid] || gPvpActive[targetid])
-        return RP_Message(playerid,"РќСѓР¶РЅС‹ СЃРјРµРЅР° Р‘Р¦Р Р‘ Рё РїР°С†РёРµРЅС‚ СЂСЏРґРѕРј, РЅРµ РїРѕРґ СЃС‚СЂР°Р¶РµР№.");
+        return RP_Message(playerid,"Нужны смена БЦРБ и пациент рядом, не под стражей.");
     if(GetPlayerInterior(playerid)!=0 || GetPlayerVirtualWorld(playerid)!=0
         || !IsPlayerInRangeOfPoint(playerid,25.0,1176.7,-1322.5,13.5))
-        return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° РґРѕСЃС‚Р°РІСЊС‚Рµ РїР°С†РёРµРЅС‚Р° РєРѕ РІС…РѕРґСѓ Р‘Р¦Р Р‘.");
+        return RP_Message(playerid,"Сначала доставьте пациента ко входу БЦРБ.");
     new Float:hp; GetPlayerHealth(targetid,hp);
-    if(!gRPInjury[targetid] && hp>=50.0) return RP_Message(playerid,"РќРµС‚ РѕСЃРЅРѕРІР°РЅРёР№ РґР»СЏ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕР№ РіРѕСЃРїРёС‚Р°Р»РёР·Р°С†РёРё.");
-    if(!RP_MedFinish(playerid,targetid,gRPInjury[targetid],"Р“РѕСЃРїРёС‚Р°Р»РёР·Р°С†РёСЏ")) return VX_Error(playerid);
+    if(!gRPInjury[targetid] && hp>=50.0) return RP_Message(playerid,"Нет оснований для обязательной госпитализации.");
+    if(!RP_MedFinish(playerid,targetid,gRPInjury[targetid],"Госпитализация")) return VX_Error(playerid);
     RP_CancelActivities(targetid);
     gVXHospital[targetid]=true; gVXTreatment[targetid]=VX_HOSPITAL_SECONDS;
     VX_Save(targetid); VX_EnterHospital(targetid);
-    return RP_Message(playerid,"РџР°С†РёРµРЅС‚ РїСЂРёРЅСЏС‚ РІ СЃС‚Р°С†РёРѕРЅР°СЂ. Р”Р»СЏ Р»РµС‡РµРЅРёСЏ РµРјСѓ РЅСѓР¶РЅРѕ Р·Р°РЅСЏС‚СЊ РєРѕР№РєСѓ.");
+    return RP_Message(playerid,"Пациент принят в стационар. Для лечения ему нужно занять койку.");
 }
 stock RP_Discharge(playerid)
 {
@@ -11144,56 +11144,56 @@ stock RP_RevokeDrivers(owner)
         if(RP_HasKeys(p,v)) continue;
         new e,l,a,d,b,t,o; GetVehicleParamsEx(v,e,l,a,d,b,t,o);
         SetVehicleParamsEx(v,0,l,a,d,b,t,o);
-        RemovePlayerFromVehicle(p); RP_Message(p,"РљР»СЋС‡Рё РѕС‚РѕР·РІР°РЅС‹ РІР»Р°РґРµР»СЊС†РµРј.");
+        RemovePlayerFromVehicle(p); RP_Message(p,"Ключи отозваны владельцем.");
     }
     return 1;
 }
 
 stock RP_Key(playerid,targetid,action)
 {
-    if(!RP_Free(playerid) || !gOwnedCarModel[playerid]) return RP_Message(playerid,"РЈ РІР°СЃ РЅРµС‚ Р»РёС‡РЅРѕРіРѕ Р°РІС‚РѕРјРѕР±РёР»СЏ.");
+    if(!RP_Free(playerid) || !gOwnedCarModel[playerid]) return RP_Message(playerid,"У вас нет личного автомобиля.");
     new q[256];
     if(action==2)
     {
         format(q,sizeof q,"DELETE FROM rp_keys WHERE owner='%q'",gName[playerid]);
         if(!VX_SQL(q)) return VX_Error(playerid);
         RP_RevokeDrivers(playerid);
-        return RP_Message(playerid,"Р’СЃРµ РІС‹РґР°РЅРЅС‹Рµ РєР»СЋС‡Рё РѕС‚РѕР·РІР°РЅС‹, РІРєР»СЋС‡Р°СЏ РєР»СЋС‡Рё РёРіСЂРѕРєРѕРІ РІРЅРµ СЃРµС‚Рё.");
+        return RP_Message(playerid,"Все выданные ключи отозваны, включая ключи игроков вне сети.");
     }
-    if(!VX_Valid(targetid) || targetid==playerid) return RP_Message(playerid,"РЈРєР°Р¶РёС‚Рµ ID РґСЂСѓРіРѕРіРѕ РёРіСЂРѕРєР°.");
-    if(action==0 && !VX_Near(playerid,targetid,3.0)) return RP_Message(playerid,"РџРµСЂРµРґР°Р№С‚Рµ РєР»СЋС‡Рё РёРіСЂРѕРєСѓ СЂСЏРґРѕРј СЃ РІР°РјРё.");
+    if(!VX_Valid(targetid) || targetid==playerid) return RP_Message(playerid,"Укажите ID другого игрока.");
+    if(action==0 && !VX_Near(playerid,targetid,3.0)) return RP_Message(playerid,"Передайте ключи игроку рядом с вами.");
     if(action==0) format(q,sizeof q,"INSERT OR IGNORE INTO rp_keys(owner,guest) VALUES('%q','%q')",
         gName[playerid],gName[targetid]);
     else format(q,sizeof q,"DELETE FROM rp_keys WHERE owner='%q' AND guest='%q'",gName[playerid],gName[targetid]);
     if(!VX_SQL(q)) return VX_Error(playerid);
-    if(action==0) RP_Message(targetid,"Р’Р°Рј РІС‹РґР°Р»Рё РєР»СЋС‡Рё РѕС‚ Р»РёС‡РЅРѕРіРѕ Р°РІС‚РѕРјРѕР±РёР»СЏ. РљР»СЋС‡Рё РїРѕР·РІРѕР»СЏСЋС‚ РѕС‚РєСЂС‹С‚СЊ РјР°С€РёРЅСѓ Рё Р·Р°РІРµСЃС‚Рё РґРІРёРіР°С‚РµР»СЊ.");
-    else { RP_RevokeDrivers(playerid); RP_Message(targetid,"Р’Р»Р°РґРµР»РµС† РѕС‚РѕР·РІР°Р» РІР°С€Рё РєР»СЋС‡Рё."); }
-    return RP_Message(playerid,"Р”РѕСЃС‚СѓРї Рє Р°РІС‚РѕРјРѕР±РёР»СЋ РѕР±РЅРѕРІР»С‘РЅ Рё СЃРѕС…СЂР°РЅС‘РЅ.");
+    if(action==0) RP_Message(targetid,"Вам выдали ключи от личного автомобиля. Ключи позволяют открыть машину и завести двигатель.");
+    else { RP_RevokeDrivers(playerid); RP_Message(targetid,"Владелец отозвал ваши ключи."); }
+    return RP_Message(playerid,"Доступ к автомобилю обновлён и сохранён.");
 }
 stock RP_Engine(playerid)
 {
     if(!RP_Free(playerid) || GetPlayerState(playerid)!=PLAYER_STATE_DRIVER)
-        return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° СЃСЏРґСЊС‚Рµ Р·Р° СЂСѓР»СЊ.");
+        return RP_Message(playerid,"Сначала сядьте за руль.");
     new v=GetPlayerVehicleID(playerid),e,l,a,d,b,t,o,Float:hp;
     if(v<=0 || v>=MAX_VEHICLES || !GetVehicleModel(v)) return 1;
     GetVehicleParamsEx(v,e,l,a,d,b,t,o);
     if(e==VEHICLE_PARAMS_ON)
     {
         SetVehicleParamsEx(v,0,l,a,d,b,t,o);
-        VX_Notify(playerid, "VEX DRIVE", "Р”РІРёРіР°С‚РµР»СЊ РІС‹РєР»СЋС‡РµРЅ", VEX_HUD_WARNING);
-        return RP_Message(playerid,"Р”РІРёРіР°С‚РµР»СЊ РІС‹РєР»СЋС‡РµРЅ.");
+        VX_Notify(playerid, "VEX DRIVE", "Двигатель выключен", VEX_HUD_WARNING);
+        return RP_Message(playerid,"Двигатель выключен.");
     }
-    if(!RP_HasKeys(playerid,v)) return RP_Message(playerid,"РЈ РІР°СЃ РЅРµС‚ РєР»СЋС‡РµР№ РѕС‚ СЌС‚РѕР№ РјР°С€РёРЅС‹.");
-    if(gVehicleFuel[v]<=0) return RP_Message(playerid,"РќРµС‚ С‚РѕРїР»РёРІР°. /fuel РЅР° РђР—РЎ.");
+    if(!RP_HasKeys(playerid,v)) return RP_Message(playerid,"У вас нет ключей от этой машины.");
+    if(gVehicleFuel[v]<=0) return RP_Message(playerid,"Нет топлива. /fuel на АЗС.");
     GetVehicleHealth(v,hp);
-    if(hp<350.0) return RP_Message(playerid,"Р”РІРёРіР°С‚РµР»СЊ СЃР»РёС€РєРѕРј РїРѕРІСЂРµР¶РґС‘РЅ. РќСѓР¶РµРЅ СЂРµРјРѕРЅС‚.");
+    if(hp<350.0) return RP_Message(playerid,"Двигатель слишком повреждён. Нужен ремонт.");
     SetVehicleParamsEx(v,1,l,a,d,b,t,o); UpdateVexHud(playerid);
-    VX_Notify(playerid, "VEX DRIVE", "Р”РІРёРіР°С‚РµР»СЊ Р·Р°РІРµРґС‘РЅ", VEX_HUD_ACCENT);
-    return RP_Message(playerid,"Р”РІРёРіР°С‚РµР»СЊ Р·Р°РІРµРґС‘РЅ.");
+    VX_Notify(playerid, "VEX DRIVE", "Двигатель заведён", VEX_HUD_ACCENT);
+    return RP_Message(playerid,"Двигатель заведён.");
 }
 stock RP_Lock(playerid)
 {
-    if(!RP_Free(playerid)) return RP_Message(playerid,"РЎРµР№С‡Р°СЃ РЅРµР»СЊР·СЏ РїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ РєР»СЋС‡Р°РјРё.");
+    if(!RP_Free(playerid)) return RP_Message(playerid,"Сейчас нельзя пользоваться ключами.");
     new v=GetPlayerVehicleID(playerid);
     if(!v)
     {
@@ -11206,34 +11206,34 @@ stock RP_Lock(playerid)
         }
     }
     if(v<=0 || v>=MAX_VEHICLES || !GetVehicleModel(v)
-        || GetVehicleVirtualWorld(v)!=GetPlayerVirtualWorld(playerid)) return RP_Message(playerid,"РњР°С€РёРЅР° РЅРµ РЅР°Р№РґРµРЅР° СЂСЏРґРѕРј.");
+        || GetVehicleVirtualWorld(v)!=GetPlayerVirtualWorld(playerid)) return RP_Message(playerid,"Машина не найдена рядом.");
     new Float:x,Float:y,Float:z; GetVehiclePos(v,x,y,z);
-    if(!IsPlayerInRangeOfPoint(playerid,6.0,x,y,z)) return RP_Message(playerid,"РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°С€РёРЅРµ РЅР° 6 РјРµС‚СЂРѕРІ.");
-    if(!RP_HasKeys(playerid,v)) return RP_Message(playerid,"РќРµС‚ РєР»СЋС‡РµР№. Р’Р»Р°РґРµР»РµС† РјРѕР¶РµС‚ РІС‹РґР°С‚СЊ РёС…: /givekey ID.");
+    if(!IsPlayerInRangeOfPoint(playerid,6.0,x,y,z)) return RP_Message(playerid,"Подойдите к машине на 6 метров.");
+    if(!RP_HasKeys(playerid,v)) return RP_Message(playerid,"Нет ключей. Владелец может выдать их: /givekey ID.");
     new e,l,a,d,b,t,o; GetVehicleParamsEx(v,e,l,a,d,b,t,o);
-    if(d==VEHICLE_PARAMS_ON) { SetVehicleParamsEx(v,e,l,a,0,b,t,o); RP_Message(playerid,"РњР°С€РёРЅР° РѕС‚РєСЂС‹С‚Р°."); }
-    else { SetVehicleParamsEx(v,e,l,a,1,b,t,o); RP_Message(playerid,"РњР°С€РёРЅР° Р·Р°РїРµСЂС‚Р°."); }
+    if(d==VEHICLE_PARAMS_ON) { SetVehicleParamsEx(v,e,l,a,0,b,t,o); RP_Message(playerid,"Машина открыта."); }
+    else { SetVehicleParamsEx(v,e,l,a,1,b,t,o); RP_Message(playerid,"Машина заперта."); }
     return 1;
 }
 stock RP_SpawnCar(playerid)
 {
-    if(!RP_Free(playerid) || !gOwnedCarModel[playerid]) return RP_Message(playerid,"РЈ РІР°СЃ РЅРµС‚ РґРѕСЃС‚СѓРїРЅРѕРіРѕ Р»РёС‡РЅРѕРіРѕ Р°РІС‚РѕРјРѕР±РёР»СЏ.");
+    if(!RP_Free(playerid) || !gOwnedCarModel[playerid]) return RP_Message(playerid,"У вас нет доступного личного автомобиля.");
     if(GetPlayerInterior(playerid)!=0 || GetPlayerVirtualWorld(playerid)!=0
         || !IsPlayerInRangeOfPoint(playerid,35.0,2131.0,-1150.0,24.1) || IsPlayerInAnyVehicle(playerid))
-        return RP_Message(playerid,"РџРѕРґРѕР№РґРёС‚Рµ РїРµС€РєРѕРј Рє Р°РІС‚РѕСЃР°Р»РѕРЅСѓ.");
-    if(RP_VehicleOwner(gOwnedCarVehicle[playerid])==playerid) return RP_Message(playerid,"Р’Р°С€Р° РјР°С€РёРЅР° СѓР¶Рµ РЅР°С…РѕРґРёС‚СЃСЏ РІ РјРёСЂРµ.");
+        return RP_Message(playerid,"Подойдите пешком к автосалону.");
+    if(RP_VehicleOwner(gOwnedCarVehicle[playerid])==playerid) return RP_Message(playerid,"Ваша машина уже находится в мире.");
     new fee=0;
     if(gRPCarBroken[playerid])
     {
         fee=RP_RECOVER_PRICE;
         if(gRPCarInsured[playerid]>gettime()) fee=RP_INSURED_RECOVER_PRICE;
     }
-    if(gMoney[playerid]<fee) return RP_Message(playerid,"Р”Р»СЏ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ РЅСѓР¶РЅРѕ 5000 СЂСѓР±. Р‘РµР·СѓСЃР»РѕРІРЅР°СЏ С„СЂР°РЅС€РёР·Р° РїРѕ СЃС‚СЂР°С…РѕРІРєРµ: 1000 СЂСѓР±.");
+    if(gMoney[playerid]<fee) return RP_Message(playerid,"Для восстановления нужно 5000 руб. Безусловная франшиза по страховке: 1000 руб.");
     new Float:spawnX, Float:spawnY, Float:spawnZ, Float:spawnA;
     if (!VX_FindDealerSpawn(playerid, spawnX, spawnY, spawnZ, spawnA))
-        return RP_Message(playerid,"РќРµС‚ СЃРІРѕР±РѕРґРЅРѕРіРѕ РјРµСЃС‚Р° РґР»СЏ СЃРїР°РІРЅР°. РџРѕРґРІРёРЅСЊС‚Рµ РјР°С€РёРЅС‹ Рё РїРѕРїСЂРѕР±СѓР№С‚С‚Рµ РµС‰С‘ СЂР°Р·.");
+        return RP_Message(playerid,"Нет свободного места для спавна. Подвиньте машины и попробуйтте ещё раз.");
     new v=CreateVehicle(gOwnedCarModel[playerid],spawnX,spawnY,spawnZ,spawnA,1,1,300);
-    if(v==INVALID_VEHICLE_ID || v==0) return RP_Message(playerid,"РќРµС‚ СЃРІРѕР±РѕРґРЅС‹С… СЃР»РѕС‚РѕРІ С‚СЂР°РЅСЃРїРѕСЂС‚Р°. РћРїР»Р°С‚Р° РЅРµ СЃРїРёСЃР°РЅР°.");
+    if(v==INVALID_VEHICLE_ID || v==0) return RP_Message(playerid,"Нет свободных слотов транспорта. Оплата не списана.");
     if(fee)
     {
         new Float:oldHealth=gRPCarHealth[playerid];
@@ -11251,20 +11251,20 @@ stock RP_SpawnCar(playerid)
     SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0);
     SetVehicleVirtualWorld(v, 0); LinkVehicleToInterior(v, 0);
     RP_ConfigCar(playerid,v); PutPlayerInVehicle(playerid,v,0);
-    return RP_Message(playerid,"РњР°С€РёРЅР° РІС‹РґР°РЅР°. /carinfo вЂ” РїСЂРѕР±РµРі, СЃРѕСЃС‚РѕСЏРЅРёРµ Рё РґРѕРєСѓРјРµРЅС‚С‹. /engine РёР»Рё N вЂ” РґРІРёРіР°С‚РµР»СЊ.");
+    return RP_Message(playerid,"Машина выдана. /carinfo — пробег, состояние и документы. /engine или N — двигатель.");
 }
 stock RP_BuyCar(playerid,model,price)
 {
     if(!RP_Free(playerid) || gMoney[playerid]<price || IsPlayerInAnyVehicle(playerid))
-        return RP_Message(playerid,"РџРѕРєСѓРїРєР° СЃРµР№С‡Р°СЃ РЅРµРґРѕСЃС‚СѓРїРЅР° РёР»Рё РЅРµ С…РІР°С‚Р°РµС‚ РґРµРЅРµРі.");
+        return RP_Message(playerid,"Покупка сейчас недоступна или не хватает денег.");
     new oldVehicle=gOwnedCarVehicle[playerid];
     if(RP_VehicleOwner(oldVehicle)==playerid && IsFleetVehicleOccupied(oldVehicle))
-        return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° РѕСЃРІРѕР±РѕРґРёС‚Рµ РїСЂРµРґС‹РґСѓС‰СѓСЋ РјР°С€РёРЅСѓ.");
+        return RP_Message(playerid,"Сначала освободите предыдущую машину.");
     new Float:spawnX, Float:spawnY, Float:spawnZ, Float:spawnA;
     if (!VX_FindDealerSpawn(playerid, spawnX, spawnY, spawnZ, spawnA))
-        return RP_Message(playerid,"РќРµС‚ СЃРІРѕР±РѕРґРЅРѕРіРѕ РјРµСЃС‚Р° РґР»СЏ СЃРїР°РІРЅР°. РџРѕРґРІРёРЅСЊС‚Рµ РјР°С€РёРЅС‹ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·.");
+        return RP_Message(playerid,"Нет свободного места для спавна. Подвиньте машины и попробуйте ещё раз.");
     new v=CreateVehicle(model,spawnX,spawnY,spawnZ,spawnA,1,1,300);
-    if(v==INVALID_VEHICLE_ID || v==0) return RP_Message(playerid,"РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РјР°С€РёРЅСѓ. Р”РµРЅСЊРіРё РЅРµ СЃРїРёСЃР°РЅС‹.");
+    if(v==INVALID_VEHICLE_ID || v==0) return RP_Message(playerid,"Не удалось создать машину. Деньги не списаны.");
     new q[320],plate[12];
     format(plate,sizeof plate,"VX%06d",gVXPhone[playerid]);
     if(!VX_Begin()) { DestroyVehicle(v); return VX_Error(playerid); }
@@ -11285,50 +11285,50 @@ stock RP_BuyCar(playerid,model,price)
     SetPlayerInterior(playerid, 0); SetPlayerVirtualWorld(playerid, 0);
     SetVehicleVirtualWorld(v, 0); LinkVehicleToInterior(v, 0);
     RP_ConfigCar(playerid,v); PutPlayerInVehicle(playerid,v,0);
-    return RP_Message(playerid,"РђРІС‚РѕРјРѕР±РёР»СЊ РєСѓРїР»РµРЅ. Р—Р°СЂРµРіРёСЃС‚СЂРёСЂСѓР№С‚Рµ РµРіРѕ РІ РјСЌСЂРёРё: /vreg. /carinfo вЂ” РґРѕРєСѓРјРµРЅС‚С‹.");
+    return RP_Message(playerid,"Автомобиль куплен. Зарегистрируйте его в мэрии: /vreg. /carinfo — документы.");
 }
 stock RP_CarInfo(playerid,owner)
 {
-    if(!VX_Valid(owner) || !gOwnedCarModel[owner]) return RP_Message(playerid,"Р›РёС‡РЅС‹Р№ Р°РІС‚РѕРјРѕР±РёР»СЊ РЅРµ РЅР°Р№РґРµРЅ.");
+    if(!VX_Valid(owner) || !gOwnedCarModel[owner]) return RP_Message(playerid,"Личный автомобиль не найден.");
     if(owner!=playerid && !VX_Officer(playerid) && !VX_Admin(playerid))
-        return RP_Message(playerid,"Р§СѓР¶РёРµ РґРѕРєСѓРјРµРЅС‚С‹ РґРѕСЃС‚СѓРїРЅС‹ РџРѕР»РёС†РёРё/FBI Рё Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+        return RP_Message(playerid,"Чужие документы доступны Полиции/FBI и администрации.");
     RP_SaveCar(owner);
     new body[640],plate[24],insured[40],inspected[40],status[48];
     if(gRPCarRegistered[owner]) format(plate,sizeof plate,"%s",gRPCarPlate[owner]);
-    else format(plate,sizeof plate,"РќРµ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ");
-    if(gRPCarInsured[owner]>gettime()) format(insured,sizeof insured,"Р•С‰С‘ %d С‡.",(gRPCarInsured[owner]-gettime()+3599)/3600);
-    else format(insured,sizeof insured,"РќРµС‚ / РёСЃС‚РµРєР»Р°");
-    if(gRPCarInspected[owner]>gettime()) format(inspected,sizeof inspected,"Р•С‰С‘ %d С‡.",(gRPCarInspected[owner]-gettime()+3599)/3600);
-    else format(inspected,sizeof inspected,"РќРµС‚ / РёСЃС‚С‘Рє");
-    if(gRPCarBroken[owner]) format(status,sizeof status,"РЈРЅРёС‡С‚РѕР¶РµРЅ: /mycar РґР»СЏ СЂРµРјРѕРЅС‚Р°");
-    else format(status,sizeof status,"Р’ СЌРєСЃРїР»СѓР°С‚Р°С†РёРё");
+    else format(plate,sizeof plate,"Не зарегистрирован");
+    if(gRPCarInsured[owner]>gettime()) format(insured,sizeof insured,"Ещё %d ч.",(gRPCarInsured[owner]-gettime()+3599)/3600);
+    else format(insured,sizeof insured,"Нет / истекла");
+    if(gRPCarInspected[owner]>gettime()) format(inspected,sizeof inspected,"Ещё %d ч.",(gRPCarInspected[owner]-gettime()+3599)/3600);
+    else format(inspected,sizeof inspected,"Нет / истёк");
+    if(gRPCarBroken[owner]) format(status,sizeof status,"Уничтожен: /mycar для ремонта");
+    else format(status,sizeof status,"В эксплуатации");
     format(body,sizeof body,
-        "Р’Р»Р°РґРµР»РµС†: %s\nРњРѕРґРµР»СЊ: %d\nРќРѕРјРµСЂ: %s\nРџСЂРѕР±РµРі: %.2f РєРј\nРЎРѕСЃС‚РѕСЏРЅРёРµ: %.0f / 1000\nРўРѕРїР»РёРІРѕ: %d Р».\nРЎС‚СЂР°С…РѕРІРєР°: %s\nРўРµС…РѕСЃРјРѕС‚СЂ: %s\nРЎС‚Р°С‚СѓСЃ: %s",
+        "Владелец: %s\nМодель: %d\nНомер: %s\nПробег: %.2f км\nСостояние: %.0f / 1000\nТопливо: %d л.\nСтраховка: %s\nТехосмотр: %s\nСтатус: %s",
         gName[owner],gOwnedCarModel[owner],plate,gRPCarKm[owner],gRPCarHealth[owner],
         gRPCarFuel[owner],insured,inspected,status);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | Р”РѕРєСѓРјРµРЅС‚С‹ Р°РІС‚РѕРјРѕР±РёР»СЏ",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | Документы автомобиля",body,"OK","Закрыть");
 }
 stock RP_CarDocument(playerid,action)
 {
     if(!RP_Free(playerid) || !gOwnedCarModel[playerid] || gRPCarBroken[playerid])
-        return RP_Message(playerid,"РќСѓР¶РµРЅ Р»РёС‡РЅС‹Р№ Р°РІС‚РѕРјРѕР±РёР»СЊ, РЅРµ СѓРЅРёС‡С‚РѕР¶РµРЅРЅС‹Р№.");
+        return RP_Message(playerid,"Нужен личный автомобиль, не уничтоженный.");
     new fee=0,oldIns=gRPCarInsured[playerid],oldCheck=gRPCarInspected[playerid];
     new bool:oldReg=gRPCarRegistered[playerid];
     if(action<2)
     {
         if(GetPlayerInterior(playerid)!=3 || GetPlayerVirtualWorld(playerid)!=101
             || !IsPlayerInRangeOfPoint(playerid,12.0,362.4587,174.0056,1008.3828))
-            return RP_Message(playerid,"Р”РѕРєСѓРјРµРЅС‚С‹ РѕС„РѕСЂРјР»СЏСЋС‚СЃСЏ Сѓ СЃС‚РѕР№РєРё Р»РёС†РµРЅР·РёР№ РІ РјСЌСЂРёРё.");
-        if(!gHasPassport[playerid]) return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° РїРѕР»СѓС‡РёС‚Рµ РїР°СЃРїРѕСЂС‚.");
+            return RP_Message(playerid,"Документы оформляются у стойки лицензий в мэрии.");
+        if(!gHasPassport[playerid]) return RP_Message(playerid,"Сначала получите паспорт.");
         if(action==0)
         {
-            if(gRPCarRegistered[playerid]) return RP_Message(playerid,"РђРІС‚РѕРјРѕР±РёР»СЊ СѓР¶Рµ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ.");
+            if(gRPCarRegistered[playerid]) return RP_Message(playerid,"Автомобиль уже зарегистрирован.");
             fee=RP_REGISTER_PRICE;
         }
         else
         {
-            if(!gRPCarRegistered[playerid]) return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° Р·Р°СЂРµРіРёСЃС‚СЂРёСЂСѓР№С‚Рµ Р°РІС‚РѕРјРѕР±РёР»СЊ: /vreg.");
-            if(gRPCarInsured[playerid]>gettime()) return RP_Message(playerid,"РЎС‚СЂР°С…РѕРІРєР° РµС‰С‘ РґРµР№СЃС‚РІСѓРµС‚.");
+            if(!gRPCarRegistered[playerid]) return RP_Message(playerid,"Сначала зарегистрируйте автомобиль: /vreg.");
+            if(gRPCarInsured[playerid]>gettime()) return RP_Message(playerid,"Страховка ещё действует.");
             fee=RP_INSURE_PRICE;
         }
     }
@@ -11338,13 +11338,13 @@ stock RP_CarDocument(playerid,action)
         if(!gRPCarRegistered[playerid] || RP_VehicleOwner(v)!=playerid || GetPlayerVehicleID(playerid)!=v
             || GetPlayerInterior(playerid)!=0 || GetPlayerVirtualWorld(playerid)!=0
             || !IsPlayerInRangeOfPoint(playerid,18.0,1940.0,-1772.0,13.4))
-            return RP_Message(playerid,"РџСЂРёРіРѕРЅРёС‚Рµ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅРЅСѓСЋ Р»РёС‡РЅСѓСЋ РјР°С€РёРЅСѓ Рє Р°РІС‚РѕСЃРµСЂРІРёСЃСѓ: /biz 3.");
+            return RP_Message(playerid,"Пригоните зарегистрированную личную машину к автосервису: /biz 3.");
         GetVehicleHealth(v,hp);
-        if(hp<900.0) return RP_Message(playerid,"Р”Р»СЏ С‚РµС…РѕСЃРјРѕС‚СЂР° РѕС‚СЂРµРјРѕРЅС‚РёСЂСѓР№С‚Рµ РјР°С€РёРЅСѓ РґРѕ СЃРѕСЃС‚РѕСЏРЅРёСЏ 900/1000.");
-        if(gRPCarInspected[playerid]>gettime()) return RP_Message(playerid,"РўРµС…РѕСЃРјРѕС‚СЂ РµС‰С‘ РґРµР№СЃС‚РІСѓРµС‚.");
+        if(hp<900.0) return RP_Message(playerid,"Для техосмотра отремонтируйте машину до состояния 900/1000.");
+        if(gRPCarInspected[playerid]>gettime()) return RP_Message(playerid,"Техосмотр ещё действует.");
         fee=RP_INSPECT_PRICE;
     }
-    if(gMoney[playerid]<fee) return RP_Message(playerid,"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С…. Р РµРіРёСЃС‚СЂР°С†РёСЏ 2500, СЃС‚СЂР°С…РѕРІРєР° 2000, С‚РµС…РѕСЃРјРѕС‚СЂ 1000 СЂСѓР±.");
+    if(gMoney[playerid]<fee) return RP_Message(playerid,"Недостаточно наличных. Регистрация 2500, страховка 2000, техосмотр 1000 руб.");
     if(!VX_Begin()) return VX_Error(playerid);
     if(action==0) gRPCarRegistered[playerid]=true;
     if(action==1) gRPCarInsured[playerid]=gettime()+RP_INSURE_DAYS*86400;
@@ -11359,7 +11359,7 @@ stock RP_CarDocument(playerid,action)
     VX_MoneySync(playerid,gMoney[playerid]-fee,gBankMoney[playerid]);
     if(action==0 && RP_VehicleOwner(gOwnedCarVehicle[playerid])==playerid)
         SetVehicleNumberPlate(gOwnedCarVehicle[playerid],gRPCarPlate[playerid]);
-    RP_Message(playerid,"Р”РѕРєСѓРјРµРЅС‚ РѕС„РѕСЂРјР»РµРЅ. РќРѕРјРµСЂ РЅР° РјРѕРґРµР»Рё РѕР±РЅРѕРІРёС‚СЃСЏ РїРѕСЃР»Рµ РїРѕРІС‚РѕСЂРЅРѕР№ Р·Р°РіСЂСѓР·РєРё РјР°С€РёРЅС‹ РІ РєР»РёРµРЅС‚Рµ.");
+    RP_Message(playerid,"Документ оформлен. Номер на модели обновится после повторной загрузки машины в клиенте.");
     return RP_CarInfo(playerid,playerid);
 }
 stock RP_OnCarDeath(vehicleid)
@@ -11372,7 +11372,7 @@ stock RP_OnCarDeath(vehicleid)
     gPersonalVehicleOwner[vehicleid]=INVALID_PLAYER_ID;
     gOwnedCarVehicle[owner]=INVALID_VEHICLE_ID; gRPCarPosKnown[owner]=false;
     DestroyVehicle(vehicleid);
-    RP_Message(owner,"РђРІС‚РѕРјРѕР±РёР»СЊ СѓРЅРёС‡С‚РѕР¶РµРЅ. /mycar Сѓ Р°РІС‚РѕСЃР°Р»РѕРЅР°: СЂРµРјРѕРЅС‚ 5000 СЂСѓР±., СЃРѕ СЃС‚СЂР°С…РѕРІРєРѕР№ 1000 СЂСѓР±.");
+    RP_Message(owner,"Автомобиль уничтожен. /mycar у автосалона: ремонт 5000 руб., со страховкой 1000 руб.");
     return 1;
 }
 public OnVehicleSpawn(vehicleid)
@@ -11386,15 +11386,15 @@ public OnVehicleSpawn(vehicleid)
 stock RP_PutInCar(playerid,targetid)
 {
     if(!RP_Free(playerid) || !VX_Officer(playerid) || gFactionRank[playerid]<2)
-        return RP_Message(playerid,"Р”РѕСЃС‚СѓРїРЅРѕ РџРѕР»РёС†РёРё/FBI СЃРѕ 2 СЂР°РЅРіР°.");
+        return RP_Message(playerid,"Доступно Полиции/FBI со 2 ранга.");
     if(!RP_Living(targetid) || !gHandcuffed[targetid] || !VX_Near(playerid,targetid,4.0)
-        || IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"Р—Р°РґРµСЂР¶Р°РЅРЅС‹Р№ РІ РЅР°СЂСѓС‡РЅРёРєР°С… РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЂСЏРґРѕРј Рё РІРЅРµ С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+        || IsPlayerInAnyVehicle(targetid)) return RP_Message(playerid,"Задержанный в наручниках должен быть рядом и вне транспорта.");
     new v=gFactionVehicle[playerid];
     if(v<=0 || v>=MAX_VEHICLES || !GetVehicleModel(v) || gFactionVehicleOwner[v]!=playerid
         || GetVehicleVirtualWorld(v)!=GetPlayerVirtualWorld(playerid))
-        return RP_Message(playerid,"Р’РѕР·СЊРјРёС‚Рµ СЃР»СѓР¶РµР±РЅС‹Р№ С‚СЂР°РЅСЃРїРѕСЂС‚ РІ СЃРІРѕС‘Рј РіР°СЂР°Р¶Рµ.");
+        return RP_Message(playerid,"Возьмите служебный транспорт в своём гараже.");
     new Float:x,Float:y,Float:z; GetVehiclePos(v,x,y,z);
-    if(!IsPlayerInRangeOfPoint(playerid,6.0,x,y,z)) return RP_Message(playerid,"РџРѕРґРіРѕРЅРёС‚Рµ СЃР»СѓР¶РµР±РЅС‹Р№ С‚СЂР°РЅСЃРїРѕСЂС‚ Р±Р»РёР¶Рµ.");
+    if(!IsPlayerInRangeOfPoint(playerid,6.0,x,y,z)) return RP_Message(playerid,"Подгоните служебный транспорт ближе.");
     new seats=1,model=GetVehicleModel(v),seat=-1;
     if(model==490 || (model>=596 && model<=599) || model==560 || model==445 || model==426) seats=3;
     for(new s=1;s<=seats;s++)
@@ -11404,26 +11404,26 @@ stock RP_PutInCar(playerid,targetid)
             if(IsPlayerConnected(p) && IsPlayerInVehicle(p,v) && GetPlayerVehicleSeat(p)==s) occupied=1;
         if(!occupied) { seat=s; break; }
     }
-    if(seat<0) return RP_Message(playerid,"РќРµС‚ СЃРІРѕР±РѕРґРЅРѕРіРѕ РїР°СЃСЃР°Р¶РёСЂСЃРєРѕРіРѕ РјРµСЃС‚Р°.");
+    if(seat<0) return RP_Message(playerid,"Нет свободного пассажирского места.");
     TogglePlayerControllable(targetid,true);
     if(!PutPlayerInVehicle(targetid,v,seat))
     {
         TogglePlayerControllable(targetid,false);
-        return RP_Message(playerid,"РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕСЃР°РґРёС‚СЊ Р·Р°РґРµСЂР¶Р°РЅРЅРѕРіРѕ.");
+        return RP_Message(playerid,"Не удалось посадить задержанного.");
     }
     TogglePlayerControllable(targetid,false);
     RP_Audit(targetid,playerid,"TRANSPORT","Suspect placed in service vehicle");
-    return RP_Message(playerid,"Р—Р°РґРµСЂР¶Р°РЅРЅС‹Р№ РІ СЃР»СѓР¶РµР±РЅРѕР№ РјР°С€РёРЅРµ. Р”РѕСЃС‚Р°РІСЊС‚Рµ РµРіРѕ Рє С‚СЋСЂСЊРјРµ РёР»Рё РІ СѓС‡Р°СЃС‚РѕРє.");
+    return RP_Message(playerid,"Задержанный в служебной машине. Доставьте его к тюрьме или в участок.");
 }
 
 stock RP_PullOut(playerid,targetid)
 {
     if(!RP_Free(playerid) || !VX_Officer(playerid) || gFactionRank[playerid]<2
         || IsPlayerInAnyVehicle(playerid))
-        return RP_Message(playerid,"Р’С‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р°. Р”РѕСЃС‚СѓРї: РџРѕР»РёС†РёСЏ/FBI СЃРѕ 2 СЂР°РЅРіР°.");
+        return RP_Message(playerid,"Выйдите из транспорта. Доступ: Полиция/FBI со 2 ранга.");
     if(!RP_Living(targetid) || !gHandcuffed[targetid] || !IsPlayerInAnyVehicle(targetid)
         || !VX_Near(playerid,targetid,6.0))
-        return RP_Message(playerid,"РќСѓР¶РµРЅ Р·Р°РґРµСЂР¶Р°РЅРЅС‹Р№ РІ РЅР°СЂСѓС‡РЅРёРєР°С… РІ РјР°С€РёРЅРµ СЂСЏРґРѕРј.");
+        return RP_Message(playerid,"Нужен задержанный в наручниках в машине рядом.");
     new Float:x,Float:y,Float:z;
     GetPlayerPos(playerid,x,y,z);
     TogglePlayerControllable(targetid,true);
@@ -11432,26 +11432,26 @@ stock RP_PullOut(playerid,targetid)
     ClearAnimations(targetid); SetPlayerSpecialAction(targetid,24);
     TogglePlayerControllable(targetid,false);
     RP_Audit(targetid,playerid,"TRANSPORT","Suspect removed from vehicle");
-    return RP_Message(playerid,"Р—Р°РґРµСЂР¶Р°РЅРЅС‹Р№ РІС‹РІРµРґРµРЅ РёР· РјР°С€РёРЅС‹. /uncuff ID - СЃРЅСЏС‚СЊ РЅР°СЂСѓС‡РЅРёРєРё.");
+    return RP_Message(playerid,"Задержанный выведен из машины. /uncuff ID - снять наручники.");
 }
 
 stock RP_Help(playerid)
 {
     new body[2400];
-    strcat(body,"Р‘Р¦Р Р‘: /medcert - РјРµРґСЃРїСЂР°РІРєР° (С…РѕР»Р»)\n/ward - РїР°Р»Р°С‚С‹ (С‚РѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєРё)\n/lobby - РЅР°Р·Р°Рґ РІ С…РѕР»Р»\n/bed - Р»РµС‡СЊ РЅР° РєРѕР№РєСѓ\n/exit - РІС‹С…РѕРґ РёР· Р±РѕР»СЊРЅРёС†С‹\n/hospitalinfo - Р»РµС‡РµРЅРёРµ\n\n",sizeof body);
-    strcat(body,"РџРћР›РР¦РРЇ / FBI\n",sizeof body);
+    strcat(body,"БЦРБ: /medcert - медсправка (холл)\n/ward - палаты (только сотрудники)\n/lobby - назад в холл\n/bed - лечь на койку\n/exit - выход из больницы\n/hospitalinfo - лечение\n\n",sizeof body);
+    strcat(body,"ПОЛИЦИЯ / FBI\n",sizeof body);
     strcat(body,"/tablet /case ID /camlogs /vcheck ID\n/cuff ID /uncuff ID /search ID\n",sizeof body);
-    strcat(body,"/seize ID weapons|lockpicks РїСЂРёС‡РёРЅР°\n/ticket ID СЃСѓРјРјР° РїСЂРёС‡РёРЅР° /fines /payfine РЅРѕРјРµСЂ\n",sizeof body);
-    strcat(body,"/wanted ID 0-6 РїСЂРёС‡РёРЅР° /putincar ID /pullout ID\n/arrest ID СЃРµРєСѓРЅРґС‹ РїСЂРёС‡РёРЅР° (60-1800)\n\n",sizeof body);
-    strcat(body,"Р‘Р¦Р Р‘\n/health /diagnose ID /medcard [ID]\n/bandage ID /splint ID /heal ID /operation ID\n",sizeof body);
-    strcat(body,"/stretcher ID /unstretcher /loadpatient ID /hospitalize ID\n/medrefuse вЂ” РѕС‚РєР°Р·Р°С‚СЊСЃСЏ РѕС‚ РЅРѕСЃРёР»РѕРє\n\n",sizeof body);
-    strcat(body,"РђР’РўРћРњРћР‘РР›Р\n/carinfo /mycar /engine /lock\n/givekey ID /revokekey ID /resetkeys\n",sizeof body);
-    strcat(body,"/vreg вЂ” 2500 СЂСѓР±., РјСЌСЂРёСЏ\n/insurance вЂ” 2000 СЂСѓР±., 7 РґРЅРµР№, РјСЌСЂРёСЏ\n/inspection вЂ” 1000 СЂСѓР±., 3 РґРЅСЏ, Р°РІС‚РѕСЃРµСЂРІРёСЃ\n\n",sizeof body);
-    strcat(body,"РўР®Р Р¬РњРђ Р РђР”Р’РћРљРђРў\n/prison вЂ” РјР°СЂС€СЂСѓС‚ /prisonenter /prisonexit\n/jailinfo /clients /defend ID\n",sizeof body);
-    strcat(body,"/acceptlawyer /declinelawyer\n/job вЂ” СЂР°Р±РѕС‚Р° Р°РґРІРѕРєР°С‚Р° (РїР°СЃРїРѕСЂС‚, 3 СѓСЂРѕРІРµРЅСЊ, Р±РµР· С„СЂР°РєС†РёРё)\n\n",sizeof body);
-    strcat(body,"РђР”РњРРќРРЎРўР РђР¦РРЇ\n/jail ID РїСЂРёС‡РёРЅР° вЂ” 30 РјРёРЅСѓС‚ RP-С‚СЋСЂСЊРјС‹\n/jailtime ID РјРёРЅСѓС‚С‹ РїСЂРёС‡РёРЅР° (1-120)\n/unjail ID\n",sizeof body);
-    strcat(body,"\nР§Р°С‚ СЂСЏРґРѕРј СЃ РїРµСЂСЃРѕРЅР°Р¶РµРј: 20 РјРµС‚СЂРѕРІ. /b вЂ” Р»РѕРєР°Р»СЊРЅС‹Р№ OOC.\n",sizeof body);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | RP-РґРѕРїРѕР»РЅРµРЅРёРµ",body,"OK","Р—Р°РєСЂС‹С‚СЊ");
+    strcat(body,"/seize ID weapons|lockpicks причина\n/ticket ID сумма причина /fines /payfine номер\n",sizeof body);
+    strcat(body,"/wanted ID 0-6 причина /putincar ID /pullout ID\n/arrest ID секунды причина (60-1800)\n\n",sizeof body);
+    strcat(body,"БЦРБ\n/health /diagnose ID /medcard [ID]\n/bandage ID /splint ID /heal ID /operation ID\n",sizeof body);
+    strcat(body,"/stretcher ID /unstretcher /loadpatient ID /hospitalize ID\n/medrefuse — отказаться от носилок\n\n",sizeof body);
+    strcat(body,"АВТОМОБИЛИ\n/carinfo /mycar /engine /lock\n/givekey ID /revokekey ID /resetkeys\n",sizeof body);
+    strcat(body,"/vreg — 2500 руб., мэрия\n/insurance — 2000 руб., 7 дней, мэрия\n/inspection — 1000 руб., 3 дня, автосервис\n\n",sizeof body);
+    strcat(body,"ТЮРЬМА И АДВОКАТ\n/prison — маршрут /prisonenter /prisonexit\n/jailinfo /clients /defend ID\n",sizeof body);
+    strcat(body,"/acceptlawyer /declinelawyer\n/job — работа адвоката (паспорт, 3 уровень, без фракции)\n\n",sizeof body);
+    strcat(body,"АДМИНИСТРАЦИЯ\n/jail ID причина — 30 минут RP-тюрьмы\n/jailtime ID минуты причина (1-120)\n/unjail ID\n",sizeof body);
+    strcat(body,"\nЧат рядом с персонажем: 20 метров. /b — локальный OOC.\n",sizeof body);
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"VEXORIUM | RP-дополнение",body,"OK","Закрыть");
 }
 stock RP_Command(playerid,const cmdtext[])
 {
@@ -11470,7 +11470,7 @@ stock RP_Command(playerid,const cmdtext[])
     if(!strcmp(cmd,"/stopanim",true))
     {
         if(gVXBed[playerid]>=0 || gRPStretcherBy[playerid]!=INVALID_PLAYER_ID || gHandcuffed[playerid] || gTaserStunned[playerid] || gIsJailed[playerid])
-            return RP_Message(playerid,"РЎРµР№С‡Р°СЃ РЅРµР»СЊР·СЏ РїСЂРµСЂС‹РІР°С‚СЊ Р°РЅРёРјР°С†РёСЋ.");
+            return RP_Message(playerid,"Сейчас нельзя прерывать анимацию.");
         ClearAnimations(playerid);
         SetPlayerSpecialAction(playerid,SPECIAL_ACTION_NONE);
         return 1;
@@ -11482,7 +11482,7 @@ stock RP_Command(playerid,const cmdtext[])
         if(gVXBed[playerid]>=0 || gVXHospital[playerid] || gIsJailed[playerid] || gHandcuffed[playerid]
             || gTaserStunned[playerid] || gRPStretcherBy[playerid]!=INVALID_PLAYER_ID
             || IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid)!=PLAYER_STATE_ONFOOT)
-            return RP_Message(playerid,"Р­С‚Р° Р°РЅРёРјР°С†РёСЏ СЃРµР№С‡Р°СЃ РЅРµРґРѕСЃС‚СѓРїРЅР°.");
+            return RP_Message(playerid,"Эта анимация сейчас недоступна.");
         ClearAnimations(playerid);
         if(!strcmp(cmd,"/sit",true)) ApplyAnimation(playerid,"PED","SEAT_down",4.1,0,0,0,1,0,1);
         else if(!strcmp(cmd,"/wave",true)) ApplyAnimation(playerid,"ON_LOOKERS","wave_loop",4.1,0,0,0,0,0,1);
@@ -11491,7 +11491,7 @@ stock RP_Command(playerid,const cmdtext[])
         else if(!strcmp(cmd,"/dance",true)) ApplyAnimation(playerid,"DANCING","dnce_M_a",4.1,1,0,0,0,0,1);
         else if(!strcmp(cmd,"/smoke",true)) ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",4.1,1,0,0,0,0,1);
         else ApplyAnimation(playerid,"PED","IDLE_CHAT",4.1,1,0,0,0,0,1);
-        SendClientMessage(playerid,COLOR_GREEN,"[RP] РђРЅРёРјР°С†РёСЏ РІРєР»СЋС‡РµРЅР°. РћСЃС‚Р°РЅРѕРІРёС‚СЊ: /stopanim.");
+        SendClientMessage(playerid,COLOR_GREEN,"[RP] Анимация включена. Остановить: /stopanim.");
         return 1;
     }
     if(!strcmp(cmd,"/hospitalinfo",true)) return VX_WardInfo(playerid);
@@ -11501,34 +11501,34 @@ stock RP_Command(playerid,const cmdtext[])
     if(!strcmp(cmd,"/rphelp",true)) return RP_Help(playerid);
     if(!strcmp(cmd,"/jail",true))
     {
-        if(gAdmin[playerid]<2) return RP_Message(playerid,"/jail РґРѕСЃС‚СѓРїРЅР° СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+        if(gAdmin[playerid]<2) return RP_Message(playerid,"/jail доступна со 2 уровня администрации.");
         return RP_StartJail(playerid,n,RP_JAIL_DEFAULT,tail,1);
     }
     if(!strcmp(cmd,"/jailtime",true))
     {
-        if(gAdmin[playerid]<2) return RP_Message(playerid,"/jailtime РґРѕСЃС‚СѓРїРЅР° СЃРѕ 2 СѓСЂРѕРІРЅСЏ Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
-        if(n2<1 || n2>120) return RP_Message(playerid,"/jailtime ID РјРёРЅСѓС‚С‹(1-120) РїСЂРёС‡РёРЅР°.");
+        if(gAdmin[playerid]<2) return RP_Message(playerid,"/jailtime доступна со 2 уровня администрации.");
+        if(n2<1 || n2>120) return RP_Message(playerid,"/jailtime ID минуты(1-120) причина.");
         return RP_StartJail(playerid,n,n2*60,reason,1);
     }
     if(!strcmp(cmd,"/arrest",true)) return RP_StartJail(playerid,n,n2,reason,2);
     if(!strcmp(cmd,"/unjail",true) || !strcmp(cmd,"/release",true))
     {
-        if(!VX_Valid(n) || !gIsJailed[n]) return RP_Message(playerid,"РРіСЂРѕРє РЅРµ РѕС‚Р±С‹РІР°РµС‚ СЃСЂРѕРє.");
+        if(!VX_Valid(n) || !gIsJailed[n]) return RP_Message(playerid,"Игрок не отбывает срок.");
         if(!VX_Admin(playerid))
         {
             if(!strcmp(cmd,"/unjail",true) || !RP_Free(playerid) || !VX_Officer(playerid)
                 || gFactionRank[playerid]<5 || gRPJailSource[n]==1)
-                return RP_Message(playerid,"РќСѓР¶РµРЅ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ. РЎРЅСЏС‚СЊ РїРѕР»РёС†РµР№СЃРєРёР№ Р°СЂРµСЃС‚ РјРѕР¶РµС‚ С‚Р°РєР¶Рµ РџРѕР»РёС†РёСЏ/FBI СЃ 5 СЂР°РЅРіР°.");
+                return RP_Message(playerid,"Нужен администратор. Снять полицейский арест может также Полиция/FBI с 5 ранга.");
         }
         if(!RP_Release(n,playerid,"Early release")) return VX_Error(playerid);
-        return RP_Message(playerid,"РРіСЂРѕРє РѕСЃРІРѕР±РѕР¶РґС‘РЅ; РґРµР№СЃС‚РІРёРµ Р·Р°РїРёСЃР°РЅРѕ РІ Р¶СѓСЂРЅР°Р».");
+        return RP_Message(playerid,"Игрок освобождён; действие записано в журнал.");
     }
     if(!strcmp(cmd,"/jailinfo",true)) return RP_JailInfo(playerid);
     if(!strcmp(cmd,"/prison",true))
     {
-        if(gWorkStage[playerid] || gDrivingTestStage[playerid]) return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ С‚РµРєСѓС‰РёР№ РјР°СЂС€СЂСѓС‚.");
+        if(gWorkStage[playerid] || gDrivingTestStage[playerid]) return RP_Message(playerid,"Сначала завершите текущий маршрут.");
         SetPlayerCheckpoint(playerid,RP_PRISON_X,RP_PRISON_Y-6.5,RP_PRISON_Z,4.0); gGpsActive[playerid]=true;
-        return RP_Message(playerid,"РўСЋСЂСЊРјР° РѕС‚РјРµС‡РµРЅР° РЅР° РєР°СЂС‚Рµ. Р’РЅСѓС‚СЂРё РЅР°С…РѕРґРёС‚СЃСЏ РїСЂРёС‘РјРЅР°СЏ Р°РґРІРѕРєР°С‚Р°.");
+        return RP_Message(playerid,"Тюрьма отмечена на карте. Внутри находится приёмная адвоката.");
     }
     if(!strcmp(cmd,"/prisonenter",true)) return RP_PrisonEnter(playerid);
     if(!strcmp(cmd,"/prisonexit",true)) return RP_PrisonExit(playerid);
@@ -11536,12 +11536,12 @@ stock RP_Command(playerid,const cmdtext[])
     if(!strcmp(cmd,"/defend",true)) return RP_LawOffer(playerid,n);
     if(!strcmp(cmd,"/acceptlawyer",true)) return RP_LawAccept(playerid);
     if(!strcmp(cmd,"/declinelawyer",true))
-    { gRPLawOffer[playerid]=INVALID_PLAYER_ID; return RP_Message(playerid,"РџСЂРµРґР»РѕР¶РµРЅРёРµ Р°РґРІРѕРєР°С‚Р° РѕС‚РєР»РѕРЅРµРЅРѕ."); }
-    if(!strcmp(cmd,"/lawyer",true) || ((!strcmp(cmd,"/work",true) || !strcmp(cmd,"/СЂР°Р±РѕС‚Р°С‚СЊ",true)) && gJob[playerid]==RP_LAWYER_JOB))
-        return RP_Message(playerid,"РђРґРІРѕРєР°С‚: /clients, РїСЂРёС‘РјРЅР°СЏ /prison, /defend ID. Р“РѕРЅРѕСЂР°СЂ 1000 СЂСѓР±.; СЃРѕРєСЂР°С‰РµРЅРёРµ РѕРґРёРЅ СЂР°Р· РЅР° 20%.");
+    { gRPLawOffer[playerid]=INVALID_PLAYER_ID; return RP_Message(playerid,"Предложение адвоката отклонено."); }
+    if(!strcmp(cmd,"/lawyer",true) || ((!strcmp(cmd,"/work",true) || !strcmp(cmd,"/работать",true)) && gJob[playerid]==RP_LAWYER_JOB))
+        return RP_Message(playerid,"Адвокат: /clients, приёмная /prison, /defend ID. Гонорар 1000 руб.; сокращение один раз на 20%.");
     if(!strcmp(cmd,"/handsup",true))
     {
-        if(!RP_Free(playerid) || IsPlayerInAnyVehicle(playerid)) return RP_Message(playerid,"РЎРЅР°С‡Р°Р»Р° РІС‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р°.");
+        if(!RP_Free(playerid) || IsPlayerInAnyVehicle(playerid)) return RP_Message(playerid,"Сначала выйдите из транспорта.");
         SetPlayerSpecialAction(playerid,SPECIAL_ACTION_HANDSUP); return 1;
     }
     if(!strcmp(cmd,"/handsdown",true))
@@ -11572,12 +11572,12 @@ stock RP_Command(playerid,const cmdtext[])
     if(!strcmp(cmd,"/unstretcher",true))
     {
         for(new p=0;p<MAX_PLAYERS;p++) if(gRPStretcherBy[p]==playerid) RP_DropStretcher(p);
-        return RP_Message(playerid,"РќРѕСЃРёР»РєРё СѓР±СЂР°РЅС‹.");
+        return RP_Message(playerid,"Носилки убраны.");
     }
     if(!strcmp(cmd,"/medrefuse",true))
     {
         RP_DropStretcher(playerid);
-        return RP_Message(playerid,"РџРµСЂРµРЅРѕСЃРєР° РїСЂРµРєСЂР°С‰РµРЅР°. РћР±СЏР·Р°С‚РµР»СЊРЅРѕРµ Р»РµС‡РµРЅРёРµ РїРѕСЃР»Рµ СЃРјРµСЂС‚Рё РЅРµ РѕС‚РјРµРЅСЏРµС‚СЃСЏ.");
+        return RP_Message(playerid,"Переноска прекращена. Обязательное лечение после смерти не отменяется.");
     }
     if(!strcmp(cmd,"/loadpatient",true)) return RP_LoadPatient(playerid,n);
     if(!strcmp(cmd,"/hospitalize",true)) return RP_Hospitalize(playerid,n);
@@ -11655,7 +11655,7 @@ stock RP_CameraTick(playerid,now)
         format(detail,sizeof detail,"Camera %d | %s | model %d | %d km/h, limit %d",
             c+1,plate,GetVehicleModel(v),speed,gRPCameraLimit[c]);
         if(RP_Audit(playerid,INVALID_PLAYER_ID,"CAMERA",detail))
-            RP_Message(playerid,"РљР°РјРµСЂР° Р·Р°С„РёРєСЃРёСЂРѕРІР°Р»Р° РїСЂРµРІС‹С€РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё. Р—Р°РїРёСЃСЊ РґРѕСЃС‚СѓРїРЅР° РџРѕР»РёС†РёРё/FBI.");
+            RP_Message(playerid,"Камера зафиксировала превышение скорости. Запись доступна Полиции/FBI.");
         gRPNextCamera[playerid][c]=now+120;
     }
     return 1;
@@ -11716,14 +11716,14 @@ stock RP_Tick(elapsed,now)
                 || !gVXHospital[p] || gVXBed[p]<0 || !VX_Near(doctor,p,4.0))
             {
                 gRPOpDoctor[p]=INVALID_PLAYER_ID; gRPOpUntil[p]=0;
-                RP_Message(p,"РћРїРµСЂР°С†РёСЏ РїСЂРµСЂРІР°РЅР°: РІСЂР°С‡ РѕС‚РѕС€С‘Р» РёР»Рё РїРµСЂРµСЃС‚Р°Р» Р±С‹С‚СЊ РґРѕСЃС‚СѓРїРµРЅ.");
+                RP_Message(p,"Операция прервана: врач отошёл или перестал быть доступен.");
             }
-            else if(now>=gRPOpUntil[p] && RP_MedFinish(doctor,p,0,"РћРїРµСЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°"))
+            else if(now>=gRPOpUntil[p] && RP_MedFinish(doctor,p,0,"Операция завершена"))
             {
                 gRPOpDoctor[p]=INVALID_PLAYER_ID; gRPOpUntil[p]=0;
                 gVXTreatment[p]=min(gVXTreatment[p],10); VX_Save(p);
-                RP_Message(doctor,"РћРїРµСЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР° Рё Р·Р°РїРёСЃР°РЅР° РІ РјРµРґРєР°СЂС‚Сѓ.");
-                RP_Message(p,"РћРїРµСЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°. Р”Рѕ РѕРєРѕРЅС‡Р°РЅРёСЏ РЅР°Р±Р»СЋРґРµРЅРёСЏ РѕСЃС‚Р°Р»РѕСЃСЊ РЅРµ Р±РѕР»СЊС€Рµ 10 СЃРµРєСѓРЅРґ.");
+                RP_Message(doctor,"Операция завершена и записана в медкарту.");
+                RP_Message(p,"Операция завершена. До окончания наблюдения осталось не больше 10 секунд.");
             }
         }
         RP_CarTick(p); RP_CameraTick(p,now);
@@ -11762,7 +11762,7 @@ stock VX_BuildWard()
         gVXBedOwner[bed]=INVALID_PLAYER_ID;
         gVXBedObject[bed]=CreateObject(1997,gVXBedPos[bed][0],gVXBedPos[bed][1],1000.0,0.0,0.0,0.0,80.0);
         gVXBedPickup[bed]=CreatePickup(1239,1,gVXBedPos[bed][0]+1.5,gVXBedPos[bed][1],1001.0,VX_HOSPITAL_WORLD);
-        gVXBedLabel[bed]=Create3DTextLabel("Р‘Р¦Р Р‘",COLOR_WHITE,gVXBedPos[bed][0],gVXBedPos[bed][1],1002.0,15.0,VX_HOSPITAL_WORLD,0);
+        gVXBedLabel[bed]=Create3DTextLabel("БЦРБ",COLOR_WHITE,gVXBedPos[bed][0],gVXBedPos[bed][1],1002.0,15.0,VX_HOSPITAL_WORLD,0);
         VX_UpdateBedLabel(bed);
         CreateObject(2146,gVXBedPos[bed][0]-1.5,gVXBedPos[bed][1],1000.0,0.0,0.0,0.0,80.0);
     }
@@ -11772,13 +11772,13 @@ stock VX_BuildWard()
     CreateObject(1720,2005.0,1995.5,1000.0,0.0,0.0,180.0,80.0);
     for(new c=0;c<4;c++) CreateObject(1720,2017.0,1994.0+c*1.5,1000.0,0.0,0.0,90.0,80.0);
     CreateObject(1808,2018.0,2002.0,1000.0,0.0,0.0,90.0,80.0);
-    Create3DTextLabel("{33CC66}Р’ РҐРћР›Р› Р‘Р¦Р Р‘\n{FFFFFF}/lobby РёР»Рё ALT Сѓ РґРІРµСЂРё",COLOR_GREEN,
+    Create3DTextLabel("{33CC66}В ХОЛЛ БЦРБ\n{FFFFFF}/lobby или ALT у двери",COLOR_GREEN,
         VX_WARD_LOBBY_X,VX_WARD_LOBBY_Y,1002.0,16.0,VX_HOSPITAL_WORLD,0);
-    Create3DTextLabel("{66CCFF}Р‘Р¦Р Р‘ | РЎРўРђР¦РРћРќРђР \n{FFFFFF}/bed - Р·Р°РЅСЏС‚СЊ РєРѕР№РєСѓ\n/exit - РІС‹С…РѕРґ РїРѕСЃР»Рµ Р»РµС‡РµРЅРёСЏ",COLOR_WHITE,
+    Create3DTextLabel("{66CCFF}БЦРБ | СТАЦИОНАР\n{FFFFFF}/bed - занять койку\n/exit - выход после лечения",COLOR_WHITE,
         VX_WARD_X,1998.5,1002.5,28.0,VX_HOSPITAL_WORLD,0);
-    Create3DTextLabel("{66CCFF}РџРћРЎРў РњР•Р”РЎР•РЎРўР Р«\n{FFFFFF}/hospitalinfo",COLOR_WHITE,
+    Create3DTextLabel("{66CCFF}ПОСТ МЕДСЕСТРЫ\n{FFFFFF}/hospitalinfo",COLOR_WHITE,
         2005.0,1994.0,1002.0,12.0,VX_HOSPITAL_WORLD,0);
-    Create3DTextLabel("{66CCFF}РџРѕСЃС‚ РјРµРґРїРµСЂСЃРѕРЅР°Р»Р°\n/mduty /mcalls /rphelp",COLOR_WHITE,
+    Create3DTextLabel("{66CCFF}Пост медперсонала\n/mduty /mcalls /rphelp",COLOR_WHITE,
         2005.0,1997.0,1002.2,12.0,VX_HOSPITAL_WORLD,0);
     // Separate modelled reception and waiting room, same hospital virtual world.
     // Each 19379 tile is 10.5 by 9.6 metres; no empty floor below the player.
@@ -11838,13 +11838,13 @@ stock VX_BuildWard()
     // The staff-only door is placed on the RIGHT side of the reception hall.
     CreateObject(1491,2069.0,1997.0,1000.0,0.0,0.0,90.0,80.0);
     CreateObject(1491,2054.0,1988.4,1000.0,0.0,0.0,0.0,80.0);
-    Create3DTextLabel("{33CC66}Р’Р«РҐРћР” РќРђ РЈР›РР¦РЈ\n{FFFFFF}/exit РёР»Рё ALT",COLOR_WHITE,
+    Create3DTextLabel("{33CC66}ВЫХОД НА УЛИЦУ\n{FFFFFF}/exit или ALT",COLOR_WHITE,
         VX_LOBBY_EXIT_X,VX_LOBBY_EXIT_Y,1002.0,16.0,VX_HOSPITAL_WORLD,0);
-    Create3DTextLabel("{66CCFF}Р‘Р¦Р Р‘ | Р Р•Р“РРЎРўР РђРўРЈР Рђ\n{FFFFFF}РњРµРґСЃРїСЂР°РІРєР° РЅР° 7 РґРЅРµР№: 1000 $\n/medcert РёР»Рё ALT",COLOR_WHITE,
+    Create3DTextLabel("{66CCFF}БЦРБ | РЕГИСТРАТУРА\n{FFFFFF}Медсправка на 7 дней: 1000 $\n/medcert или ALT",COLOR_WHITE,
         VX_LOBBY_CERT_X,VX_LOBBY_CERT_Y,1002.2,18.0,VX_HOSPITAL_WORLD,0);
-    Create3DTextLabel("{FF9900}РџРђР›РђРўР« | РЎР›РЈР–Р•Р‘РќР«Р™ Р’РҐРћР”\n{FFFFFF}РўРѕР»СЊРєРѕ СЃРѕС‚СЂСѓРґРЅРёРєРё Р‘Р¦Р Р‘\n/ward РёР»Рё ALT",COLOR_WHITE,
+    Create3DTextLabel("{FF9900}ПАЛАТЫ | СЛУЖЕБНЫЙ ВХОД\n{FFFFFF}Только сотрудники БЦРБ\n/ward или ALT",COLOR_WHITE,
         VX_LOBBY_WARD_X,VX_LOBBY_WARD_Y,1002.5,16.0,VX_HOSPITAL_WORLD,0);
-    Create3DTextLabel("{66CCFF}Р‘Р¦Р Р‘ | РџР РРЃРњРќР«Р™ РҐРћР›Р›\n{FFFFFF}Р’РїРµСЂРµРґРё СЂРµРіРёСЃС‚СЂР°С‚СѓСЂР°, СЃРїСЂР°РІР° РґРІРµСЂСЊ РІ РїР°Р»Р°С‚С‹",COLOR_WHITE,
+    Create3DTextLabel("{66CCFF}БЦРБ | ПРИЁМНЫЙ ХОЛЛ\n{FFFFFF}Впереди регистратура, справа дверь в палаты",COLOR_WHITE,
         VX_LOBBY_X,VX_LOBBY_Y,1002.5,14.0,VX_HOSPITAL_WORLD,0);
     return 1;
 }
@@ -11853,8 +11853,8 @@ stock VX_UpdateBedLabel(bed)
     if(bed<0 || bed>=VX_BEDS) return 0;
     new text[144],owner=gVXBedOwner[bed];
     if(owner>=0 && owner<MAX_PLAYERS && VX_Valid(owner))
-        format(text,sizeof text,"{FF9900}РљРѕР№РєР° %d | Р—РђРќРЇРўРђ\n{FFFFFF}%s",bed+1,gName[owner]);
-    else format(text,sizeof text,"{33CC66}РљРѕР№РєР° %d | РЎР’РћР‘РћР”РќРђ\n{FFFFFF}/bed РёР»Рё ALT",bed+1);
+        format(text,sizeof text,"{FF9900}Койка %d | ЗАНЯТА\n{FFFFFF}%s",bed+1,gName[owner]);
+    else format(text,sizeof text,"{33CC66}Койка %d | СВОБОДНА\n{FFFFFF}/bed или ALT",bed+1);
     Update3DTextLabelText(gVXBedLabel[bed],COLOR_WHITE,text);
     return 1;
 }
@@ -11896,22 +11896,22 @@ stock VX_WardSafety(playerid)
 stock VX_WardInfo(playerid)
 {
     if(GetPlayerVirtualWorld(playerid)!=VX_HOSPITAL_WORLD)
-        return RP_Message(playerid,"Р’С‹ РЅРµ РІ Р·РґР°РЅРёРё Р‘Р¦Р Р‘.");
+        return RP_Message(playerid,"Вы не в здании БЦРБ.");
     new freeBeds=0,left=0,status[128],body[700];
     for(new bed=0;bed<VX_BEDS;bed++) if(gVXBedOwner[bed]==INVALID_PLAYER_ID) freeBeds++;
     if(gVXHospital[playerid])
     {
         left=gVXTreatment[playerid];
-        format(status,sizeof status,"РќР°Р·РЅР°С‡РµРЅРѕ Р»РµС‡РµРЅРёРµ. РџРѕРґРѕР№РґРёС‚Рµ Рє РєРѕР№РєРµ: /bed РёР»Рё ALT.");
+        format(status,sizeof status,"Назначено лечение. Подойдите к койке: /bed или ALT.");
     }
-    else format(status,sizeof status,"РћР±СЏР·Р°С‚РµР»СЊРЅРѕРµ Р»РµС‡РµРЅРёРµ РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ. Р’С‹С…РѕРґ РѕС‚РєСЂС‹С‚.");
-    format(body,sizeof body,"%s\n\nРћСЃС‚Р°Р»РѕСЃСЊ: %d РјРёРЅ. %d СЃРµРє.\nРЎРІРѕР±РѕРґРЅС‹С… РєРѕРµРє: %d РёР· %d.\n\n/exit РёР»Рё /hospitexit - РІС‹С…РѕРґ РїРѕСЃР»Рµ РІС‹РїРёСЃРєРё.\n/hospitalinfo - СЌС‚Рѕ РѕРєРЅРѕ.",status,left/60,left%60,freeBeds,VX_BEDS);
-    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"Р‘Р¦Р Р‘ | РЎРўРђР¦РРћРќРђР ",body,"OK","");
+    else format(status,sizeof status,"Обязательное лечение не требуется. Выход открыт.");
+    format(body,sizeof body,"%s\n\nОсталось: %d мин. %d сек.\nСвободных коек: %d из %d.\n\n/exit или /hospitexit - выход после выписки.\n/hospitalinfo - это окно.",status,left/60,left%60,freeBeds,VX_BEDS);
+    return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"БЦРБ | СТАЦИОНАР",body,"OK","");
 }
 
 
 
-// ================ VEXORIUM RP 4.0: РіРѕСЂРѕРґСЃРєРёРµ СЃРµСЂРІРёСЃС‹ ================
+// ================ VEXORIUM RP 4.0: городские сервисы ================
 
 stock VX4_PlayerConnect(playerid)
 {
@@ -11943,24 +11943,24 @@ stock VX4_BusStop(playerid, bool:notify)
     gVX4BusStage[playerid] = -1;
     DisablePlayerCheckpoint(playerid);
     RemovePlayerMapIcon(playerid, 61);
-    if (notify) SendClientMessage(playerid, COLOR_YELLOW, "[РђР’РўРћР‘РЈРЎ] РњР°СЂС€СЂСѓС‚ РѕСЃС‚Р°РЅРѕРІР»РµРЅ.");
+    if (notify) SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Маршрут остановлен.");
     return 1;
 }
 
 stock VX4_BusStart(playerid)
 {
     if (gJob[playerid] != 3)
-        return SendClientMessage(playerid, COLOR_RED, "[РђР’РўРћР‘РЈРЎ] РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ СЂР°Р±РѕС‚Сѓ РІРѕРґРёС‚РµР»СЏ Р°РІС‚РѕР±СѓСЃР° С‡РµСЂРµР· /job."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Сначала выберите работу водителя автобуса через /job."), 1;
     if (gVX4BusStage[playerid] >= 0 || gWorkStage[playerid] > 0
         || gDrivingTestStage[playerid] > 0 || gPursuitTarget[playerid] != INVALID_PLAYER_ID)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РђР’РўРћР‘РЈРЎ] РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ С‚РµРєСѓС‰РёР№ РјР°СЂС€СЂСѓС‚."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Сначала завершите текущий маршрут."), 1;
     if (IsPlayerInAnyVehicle(playerid) || GetPlayerInterior(playerid) != 0
         || GetPlayerVirtualWorld(playerid) != 0
         || !IsPlayerInRangeOfPoint(playerid, 25.0, 1810.0, -1900.0, 13.4))
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РђР’РўРћР‘РЈРЎ] РќР°С‡РЅРёС‚Рµ РјР°СЂС€СЂСѓС‚ РЅР° Р°РІС‚РѕР±СѓСЃРЅРѕР№ СЃС‚Р°РЅС†РёРё Сѓ РґРёСЃРїРµС‚С‡РµСЂР°."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Начните маршрут на автобусной станции у диспетчера."), 1;
     new vehicle = CreateVehicle(431, 1817.0, -1897.0, 13.5, 90.0, 6, 6, -1);
     if (vehicle <= 0 || vehicle >= MAX_VEHICLES || GetVehicleModel(vehicle) == 0)
-        return SendClientMessage(playerid, COLOR_RED, "[РђР’РўРћР‘РЈРЎ] РќРµ СѓРґР°Р»РѕСЃСЊ РІС‹РґР°С‚СЊ Р°РІС‚РѕР±СѓСЃ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Не удалось выдать автобус. Попробуйте ещё раз."), 1;
     gVX4BusVehicle[playerid] = vehicle;
     gVX4BusStage[playerid] = 0;
     gVehicleFuel[vehicle] = 100;
@@ -11969,7 +11969,7 @@ stock VX4_BusStart(playerid)
         gVX4BusStops[0][1], gVX4BusStops[0][2], 7.0);
     SetPlayerMapIcon(playerid, 61, gVX4BusStops[0][0],
         gVX4BusStops[0][1], gVX4BusStops[0][2], 0, COLOR_YELLOW, MAPICON_LOCAL);
-    SendClientMessage(playerid, COLOR_GREEN, "[РђР’РўРћР‘РЈРЎ] Р“РѕСЂРѕРґСЃРєРѕР№ РјР°СЂС€СЂСѓС‚ РЅР°С‡Р°С‚. РџРѕСЃРµС‚РёС‚Рµ 6 РѕСЃС‚Р°РЅРѕРІРѕРє Рё РІРµСЂРЅРёС‚РµСЃСЊ РЅР° СЃС‚Р°РЅС†РёСЋ.");
+    SendClientMessage(playerid, COLOR_GREEN, "[АВТОБУС] Городской маршрут начат. Посетите 6 остановок и вернитесь на станцию.");
     return 1;
 }
 
@@ -11981,7 +11981,7 @@ stock VX4_BusCheckpoint(playerid)
         || GetPlayerVehicleID(playerid) != vehicle)
     {
         VX4_BusStop(playerid, false);
-        SendClientMessage(playerid, COLOR_RED, "[РђР’РўРћР‘РЈРЎ] РњР°СЂС€СЂСѓС‚ РѕС‚РјРµРЅС‘РЅ: РІС‹ РїРѕРєРёРЅСѓР»Рё РІС‹РґР°РЅРЅС‹Р№ Р°РІС‚РѕР±СѓСЃ.");
+        SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Маршрут отменён: вы покинули выданный автобус.");
         return 1;
     }
     if (gVX4BusStage[playerid] < 6)
@@ -11996,14 +11996,14 @@ stock VX4_BusCheckpoint(playerid)
                 gVX4BusStops[gVX4BusStage[playerid]][1],
                 gVX4BusStops[gVX4BusStage[playerid]][2], 0, COLOR_YELLOW, MAPICON_LOCAL);
             new msg[96];
-            format(msg, sizeof msg, "[РђР’РўРћР‘РЈРЎ] РћСЃС‚Р°РЅРѕРІРєР° %d РёР· 6 РїСЂРѕР№РґРµРЅР°.", gVX4BusStage[playerid]);
+            format(msg, sizeof msg, "[АВТОБУС] Остановка %d из 6 пройдена.", gVX4BusStage[playerid]);
             SendClientMessage(playerid, COLOR_GREEN, msg);
         }
         else
         {
             SetPlayerCheckpoint(playerid, 1810.0, -1900.0, 13.4, 8.0);
             SetPlayerMapIcon(playerid, 61, 1810.0, -1900.0, 13.4, 0, COLOR_YELLOW, MAPICON_LOCAL);
-            SendClientMessage(playerid, COLOR_YELLOW, "[РђР’РўРћР‘РЈРЎ] Р’СЃРµ РѕСЃС‚Р°РЅРѕРІРєРё РїСЂРѕР№РґРµРЅС‹. Р’РµСЂРЅРёС‚РµСЃСЊ РЅР° Р°РІС‚РѕР±СѓСЃРЅСѓСЋ СЃС‚Р°РЅС†РёСЋ.");
+            SendClientMessage(playerid, COLOR_YELLOW, "[АВТОБУС] Все остановки пройдены. Вернитесь на автобусную станцию.");
         }
         return 1;
     }
@@ -12011,11 +12011,11 @@ stock VX4_BusCheckpoint(playerid)
     if (GiveCash(playerid, reward))
     {
         new msg[112];
-        format(msg, sizeof msg, "[РђР’РўРћР‘РЈРЎ] РњР°СЂС€СЂСѓС‚ Р·Р°РІРµСЂС€С‘РЅ. Р’Р°С€Р° Р·Р°СЂРїР»Р°С‚Р°: %d СЂСѓР±.", reward);
+        format(msg, sizeof msg, "[АВТОБУС] Маршрут завершён. Ваша зарплата: %d руб.", reward);
         SendClientMessage(playerid, COLOR_GREEN, msg);
         SavePlayer(playerid);
     }
-    else SendClientMessage(playerid, COLOR_RED, "[РђР’РўРћР‘РЈРЎ] Р”РѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РЅР°Р»РёС‡РЅС‹С…. РћР±СЂР°С‚РёС‚РµСЃСЊ Рє Р°РґРјРёРЅРёСЃС‚СЂР°С†РёРё.");
+    else SendClientMessage(playerid, COLOR_RED, "[АВТОБУС] Достигнут лимит наличных. Обратитесь к администрации.");
     VX4_BusStop(playerid, false);
     return 1;
 }
@@ -12030,8 +12030,8 @@ stock VX4_Checkpoint(playerid)
             && gVX4MechRequested[customer])
         {
             DisablePlayerCheckpoint(playerid);
-            SendClientMessage(playerid, COLOR_GREEN, "[РњР•РҐРђРќРРљ] Р’С‹ РїСЂРёР±С‹Р»Рё Рє РєР»РёРµРЅС‚Сѓ. РСЃРїРѕР»СЊР·СѓР№С‚Рµ /mechfix.");
-            SendClientMessage(customer, COLOR_GREEN, "[РњР•РҐРђРќРРљ] РњРµС…Р°РЅРёРє РїСЂРёР±С‹Р» Рє РІР°С€РµР№ РјР°С€РёРЅРµ.");
+            SendClientMessage(playerid, COLOR_GREEN, "[МЕХАНИК] Вы прибыли к клиенту. Используйте /mechfix.");
+            SendClientMessage(customer, COLOR_GREEN, "[МЕХАНИК] Механик прибыл к вашей машине.");
             return 1;
         }
     }
@@ -12063,18 +12063,18 @@ stock VX4_MechDuty(playerid, bool:enabled)
     {
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0
             || !IsPlayerInRangeOfPoint(playerid, 15.0, 1940.0, -1772.0, 13.4))
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РџРѕРґРѕР№РґРёС‚Рµ Рє РјР°СЂРєРµСЂСѓ Р°РІС‚РѕСЃРµСЂРІРёСЃР°."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Подойдите к маркеру автосервиса."), 1;
         if (IsPlayerInAnyVehicle(playerid) || gFaction[playerid] != FACTION_NONE)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] Р’С‹Р№РґРёС‚Рµ РёР· РјР°С€РёРЅС‹ Рё РѕСЃРІРѕР±РѕРґРёС‚Рµ РіРѕСЃСѓРґР°СЂСЃС‚РІРµРЅРЅСѓСЋ РґРѕР»Р¶РЅРѕСЃС‚СЊ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Выйдите из машины и освободите государственную должность."), 1;
         gVX4MechDuty[playerid] = true;
-        SendClientMessage(playerid, COLOR_GREEN, "[РњР•РҐРђРќРРљ] Р’С‹ РІС‹С€Р»Рё РЅР° СЃРјРµРЅСѓ. РџСЂРёРЅРёРјР°Р№С‚Рµ РІС‹Р·РѕРІС‹: /mechaccept ID.");
+        SendClientMessage(playerid, COLOR_GREEN, "[МЕХАНИК] Вы вышли на смену. Принимайте вызовы: /mechaccept ID.");
     }
     else
     {
         if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
-            VX4_MechCancel(gVX4MechTargetOf[playerid], "[РњР•РҐРђРќРРљ] РњРµС…Р°РЅРёРє Р·Р°РІРµСЂС€РёР» СЃРјРµРЅСѓ.");
+            VX4_MechCancel(gVX4MechTargetOf[playerid], "[МЕХАНИК] Механик завершил смену.");
         gVX4MechDuty[playerid] = false;
-        SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] Р’С‹ Р·Р°РІРµСЂС€РёР»Рё СЃРјРµРЅСѓ.");
+        SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Вы завершили смену.");
     }
     return 1;
 }
@@ -12082,14 +12082,14 @@ stock VX4_MechDuty(playerid, bool:enabled)
 stock VX4_MechCall(playerid)
 {
     if (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РЎСЏРґСЊС‚Рµ Р·Р° СЂСѓР»СЊ РјР°С€РёРЅС‹, РєРѕС‚РѕСЂРѕР№ РЅСѓР¶РµРЅ СЂРµРјРѕРЅС‚."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Сядьте за руль машины, которой нужен ремонт."), 1;
     if (gVX4MechRequested[playerid])
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РЈ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ Р°РєС‚РёРІРЅС‹Р№ РІС‹Р·РѕРІ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] У вас уже есть активный вызов."), 1;
     new vehicle = GetPlayerVehicleID(playerid);
     new Float:health, Float:x, Float:y, Float:z;
     GetVehicleHealth(vehicle, health);
     if (health >= 990.0)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] Р’Р°С€ Р°РІС‚РѕРјРѕР±РёР»СЊ РЅРµ РЅСѓР¶РґР°РµС‚СЃСЏ РІ СЂРµРјРѕРЅС‚Рµ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Ваш автомобиль не нуждается в ремонте."), 1;
     GetVehiclePos(vehicle, x, y, z);
     gVX4MechRequested[playerid] = true;
     gVX4MechRequestedAt[playerid] = gettime();
@@ -12098,7 +12098,7 @@ stock VX4_MechCall(playerid)
     gVX4MechPos[playerid][1] = y;
     gVX4MechPos[playerid][2] = z;
     new msg[128], count = 0;
-    format(msg, sizeof msg, "[РњР•РҐРђРќРРљ] Р’С‹Р·РѕРІ РѕС‚ %s (ID %d). РџСЂРёРЅСЏС‚СЊ: /mechaccept %d", gName[playerid], playerid, playerid);
+    format(msg, sizeof msg, "[МЕХАНИК] Вызов от %s (ID %d). Принять: /mechaccept %d", gName[playerid], playerid, playerid);
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (VX_Valid(i) && gVX4MechDuty[i] && gVX4MechTargetOf[i] == INVALID_PLAYER_ID)
@@ -12108,23 +12108,23 @@ stock VX4_MechCall(playerid)
         }
     }
     if (!count)
-        SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РЎРµР№С‡Р°СЃ РЅРµС‚ РјРµС…Р°РЅРёРєРѕРІ РЅР° СЃРјРµРЅРµ. Р’С‹Р·РѕРІ Р±СѓРґРµС‚ Р°РєС‚РёРІРµРЅ 3 РјРёРЅСѓС‚С‹.");
-    else SendClientMessage(playerid, COLOR_GREEN, "[РњР•РҐРђРќРРљ] Р’С‹Р·РѕРІ РѕС‚РїСЂР°РІР»РµРЅ РјРµС…Р°РЅРёРєР°Рј.");
+        SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Сейчас нет механиков на смене. Вызов будет активен 3 минуты.");
+    else SendClientMessage(playerid, COLOR_GREEN, "[МЕХАНИК] Вызов отправлен механикам.");
     return 1;
 }
 
 stock VX4_MechAccept(mechanic, customer)
 {
     if (!gVX4MechDuty[mechanic])
-        return SendClientMessage(mechanic, COLOR_RED, "[РњР•РҐРђРќРРљ] РЎРЅР°С‡Р°Р»Р° РІС‹Р№РґРёС‚Рµ РЅР° СЃРјРµРЅСѓ Сѓ Р°РІС‚РѕСЃРµСЂРІРёСЃР°."), 1;
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Сначала выйдите на смену у автосервиса."), 1;
     if (gVX4MechTargetOf[mechanic] != INVALID_PLAYER_ID)
-        return SendClientMessage(mechanic, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ С‚РµРєСѓС‰РёР№ РІС‹Р·РѕРІ."), 1;
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] Сначала завершите текущий вызов."), 1;
     if (customer < 0 || customer >= MAX_PLAYERS || !VX_Valid(customer)
         || !gVX4MechRequested[customer] || gVX4MechAssignedTo[customer] != INVALID_PLAYER_ID)
-        return SendClientMessage(mechanic, COLOR_RED, "[РњР•РҐРђРќРРљ] Р­С‚РѕС‚ РІС‹Р·РѕРІ СѓР¶Рµ РЅРµРґРѕСЃС‚СѓРїРµРЅ."), 1;
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Этот вызов уже недоступен."), 1;
     if (gettime() - gVX4MechRequestedAt[customer] > 180)
     {
-        VX4_MechCancel(customer, "[РњР•РҐРђРќРРљ] Р’СЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ РјРµС…Р°РЅРёРєР° РёСЃС‚РµРєР»Рѕ.");
+        VX4_MechCancel(customer, "[МЕХАНИК] Время ожидания механика истекло.");
         return 1;
     }
     gVX4MechAssignedTo[customer] = mechanic;
@@ -12134,8 +12134,8 @@ stock VX4_MechAccept(mechanic, customer)
     SetPlayerMapIcon(mechanic, 60, gVX4MechPos[customer][0],
         gVX4MechPos[customer][1], gVX4MechPos[customer][2], 0,
         COLOR_YELLOW, MAPICON_LOCAL);
-    SendClientMessage(mechanic, COLOR_GREEN, "[РњР•РҐРђРќРРљ] РњРµСЃС‚Рѕ РєР»РёРµРЅС‚Р° РѕС‚РјРµС‡РµРЅРѕ РЅР° РєР°СЂС‚Рµ. РџСЂРёР±С‹РІ, РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /mechfix.");
-    SendClientMessage(customer, COLOR_GREEN, "[РњР•РҐРђРќРРљ] РњРµС…Р°РЅРёРє РїСЂРёРЅСЏР» РІС‹Р·РѕРІ Рё СѓР¶Рµ РµРґРµС‚ Рє РІР°Рј.");
+    SendClientMessage(mechanic, COLOR_GREEN, "[МЕХАНИК] Место клиента отмечено на карте. Прибыв, используйте /mechfix.");
+    SendClientMessage(customer, COLOR_GREEN, "[МЕХАНИК] Механик принял вызов и уже едет к вам.");
     return 1;
 }
 
@@ -12144,36 +12144,36 @@ stock VX4_MechFix(mechanic)
     new customer = gVX4MechTargetOf[mechanic];
     if (!gVX4MechDuty[mechanic] || customer < 0 || customer >= MAX_PLAYERS
         || !VX_Valid(customer) || !gVX4MechRequested[customer])
-        return SendClientMessage(mechanic, COLOR_RED, "[РњР•РҐРђРќРРљ] РЈ РІР°СЃ РЅРµС‚ Р°РєС‚РёРІРЅРѕРіРѕ РІС‹Р·РѕРІР°."), 1;
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] У вас нет активного вызова."), 1;
     if (IsPlayerInAnyVehicle(mechanic))
-        return SendClientMessage(mechanic, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] Р’С‹Р№РґРёС‚Рµ РёР· РјР°С€РёРЅС‹ РґР»СЏ СЂРµРјРѕРЅС‚Р°."), 1;
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] Выйдите из машины для ремонта."), 1;
     new vehicle = gVX4MechVehicle[customer];
     if (vehicle <= 0 || vehicle >= MAX_VEHICLES || GetVehicleModel(vehicle) == 0
         || GetPlayerVehicleID(customer) != vehicle || GetPlayerState(customer) != PLAYER_STATE_DRIVER)
-        return VX4_MechCancel(customer, "[РњР•РҐРђРќРРљ] РњР°С€РёРЅР° РєР»РёРµРЅС‚Р° Р±РѕР»СЊС€Рµ РЅРµРґРѕСЃС‚СѓРїРЅР°.");
+        return VX4_MechCancel(customer, "[МЕХАНИК] Машина клиента больше недоступна.");
     new Float:x, Float:y, Float:z;
     GetVehiclePos(vehicle, x, y, z);
     if (!IsPlayerInRangeOfPoint(mechanic, 8.0, x, y, z))
-        return SendClientMessage(mechanic, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РџРѕРґРѕР№РґРёС‚Рµ Р±Р»РёР¶Рµ Рє РјР°С€РёРЅРµ РєР»РёРµРЅС‚Р°."), 1;
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] Подойдите ближе к машине клиента."), 1;
     if (gMoney[customer] < 1500)
-        return SendClientMessage(mechanic, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РЈ РєР»РёРµРЅС‚Р° РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РЅР°Р»РёС‡РЅС‹С…: СЂРµРјРѕРЅС‚ СЃС‚РѕРёС‚ 1500 СЂСѓР±."), 1;
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[МЕХАНИК] У клиента недостаточно наличных: ремонт стоит 1500 руб."), 1;
     if (gMoney[mechanic] > MAX_MONEY - 1000)
-        return SendClientMessage(mechanic, COLOR_RED, "[РњР•РҐРђРќРРљ] РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ РЅР°Р»РёС‡РЅС‹С… РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РѕРїР»Р°С‚С‹."), 1;
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Слишком много наличных для получения оплаты."), 1;
     if (!TakeCash(customer, 1500))
-        return SendClientMessage(mechanic, COLOR_RED, "[РњР•РҐРђРќРРљ] РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РѕРїР»Р°С‚Сѓ."), 1;
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Не удалось получить оплату."), 1;
     if (!GiveCash(mechanic, 1000))
     {
         GiveCash(customer, 1500);
-        return SendClientMessage(mechanic, COLOR_RED, "[РњР•РҐРђРќРРљ] РћРїР»Р°С‚Р° РѕС‚РјРµРЅРµРЅР° Рё РІРѕР·РІСЂР°С‰РµРЅР° РєР»РёРµРЅС‚Сѓ."), 1;
+        return SendClientMessage(mechanic, COLOR_RED, "[МЕХАНИК] Оплата отменена и возвращена клиенту."), 1;
     }
     RepairVehicle(vehicle);
     SetVehicleHealth(vehicle, 1000.0);
     VX_SQL("UPDATE vx_businesses SET till=till+500 WHERE id=3");
     SavePlayer(customer);
     SavePlayer(mechanic);
-    SendClientMessage(customer, COLOR_GREEN, "[РњР•РҐРђРќРРљ] РђРІС‚РѕРјРѕР±РёР»СЊ РѕС‚СЂРµРјРѕРЅС‚РёСЂРѕРІР°РЅ. РћРїР»Р°С‚Р°: 1500 СЂСѓР±.");
-    SendClientMessage(mechanic, COLOR_GREEN, "[РњР•РҐРђРќРРљ] Р РµРјРѕРЅС‚ РІС‹РїРѕР»РЅРµРЅ. Р’Р°С€Р° РѕРїР»Р°С‚Р°: 1000 СЂСѓР±.");
-    VX4_MechCancel(customer, "[РњР•РҐРђРќРРљ] Р’С‹Р·РѕРІ Р·Р°РІРµСЂС€С‘РЅ.");
+    SendClientMessage(customer, COLOR_GREEN, "[МЕХАНИК] Автомобиль отремонтирован. Оплата: 1500 руб.");
+    SendClientMessage(mechanic, COLOR_GREEN, "[МЕХАНИК] Ремонт выполнен. Ваша оплата: 1000 руб.");
+    VX4_MechCancel(customer, "[МЕХАНИК] Вызов завершён.");
     return 1;
 }
 
@@ -12215,20 +12215,20 @@ stock VX4_BizHire(playerid, target, salary)
 {
     new business = VX4_BizOwned(playerid);
     if (!business || !VX4_BizNear(playerid, business, 15.0))
-        return SendClientMessage(playerid, COLOR_RED, "[Р‘РР—РќР•РЎ] Р’Р»Р°РґРµР»РµС† РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ Сѓ СЃРІРѕРµРіРѕ Р±РёР·РЅРµСЃР°."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Владелец должен находиться у своего бизнеса."), 1;
     if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target) || target == playerid)
-        return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /bizhire ID Р·Р°СЂРїР»Р°С‚Р°"), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /bizhire ID зарплата"), 1;
     if (salary < 100 || salary > 5000)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] Р—Р°СЂРїР»Р°С‚Р° Р·Р° СЃРјРµРЅСѓ: РѕС‚ 100 РґРѕ 5000 СЂСѓР±."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Зарплата за смену: от 100 до 5000 руб."), 1;
     if (!VX4_BizNear(target, business, 20.0))
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] РЎРѕС‚СЂСѓРґРЅРёРє РґРѕР»Р¶РµРЅ РЅР°С…РѕРґРёС‚СЊСЃСЏ СЂСЏРґРѕРј СЃ Р±РёР·РЅРµСЃРѕРј."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Сотрудник должен находиться рядом с бизнесом."), 1;
     new q[224];
     format(q, sizeof q, "SELECT business_id FROM vx4_biz_staff WHERE employee='%q'", gName[target]);
     new DBResult:r = db_query(gDatabase, q);
     if (r && db_num_rows(r))
     {
         db_free_result(r);
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] Р­С‚РѕС‚ РёРіСЂРѕРє СѓР¶Рµ СЂР°Р±РѕС‚Р°РµС‚ РІ РґСЂСѓРіРѕРј Р±РёР·РЅРµСЃРµ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Этот игрок уже работает в другом бизнесе."), 1;
     }
     if (r) db_free_result(r);
     format(q, sizeof q, "SELECT COUNT(*) FROM vx4_biz_staff WHERE business_id=%d", business);
@@ -12237,11 +12237,11 @@ stock VX4_BizHire(playerid, target, salary)
     if (r && db_num_rows(r)) count = db_get_field_int(r, 0);
     if (r) db_free_result(r);
     if (count >= 5)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] РњР°РєСЃРёРјСѓРј 5 СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Максимум 5 сотрудников."), 1;
     format(q, sizeof q, "INSERT INTO vx4_biz_staff(employee,business_id,salary) VALUES('%q',%d,%d)", gName[target], business, salary);
     if (!VX_SQL(q)) return VX_Error(playerid);
-    SendClientMessage(playerid, COLOR_GREEN, "[Р‘РР—РќР•РЎ] РЎРѕС‚СЂСѓРґРЅРёРє РЅР°РЅСЏС‚.");
-    SendClientMessage(target, COLOR_GREEN, "[Р‘РР—РќР•РЎ] Р’Р°СЃ РЅР°РЅСЏР»Рё. РџРѕСЃРјРѕС‚СЂРёС‚Рµ СЃРѕСЃС‚Р°РІ: /bizstaff, РЅР°С‡Р°Р»Рѕ СЃРјРµРЅС‹: /bizclockin.");
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Сотрудник нанят.");
+    SendClientMessage(target, COLOR_GREEN, "[БИЗНЕС] Вас наняли. Посмотрите состав: /bizstaff, начало смены: /bizclockin.");
     return 1;
 }
 
@@ -12249,16 +12249,16 @@ stock VX4_BizFire(playerid, target)
 {
     new business = VX4_BizOwned(playerid);
     if (!business || !VX4_BizNear(playerid, business, 15.0))
-        return SendClientMessage(playerid, COLOR_RED, "[Р‘РР—РќР•РЎ] Р’С‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ Сѓ СЃРІРѕРµРіРѕ Р±РёР·РЅРµСЃР°."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Вы должны быть у своего бизнеса."), 1;
     if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target))
-        return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /bizfire ID"), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /bizfire ID"), 1;
     new q[224];
     format(q, sizeof q, "DELETE FROM vx4_biz_staff WHERE business_id=%d AND employee='%q'", business, gName[target]);
     if (!VX_SQL(q)) return VX_Error(playerid);
     gVX4BizShiftActive[target] = 0;
     gVX4BizShiftBusiness[target] = 0;
-    SendClientMessage(playerid, COLOR_GREEN, "[Р‘РР—РќР•РЎ] РЎРѕС‚СЂСѓРґРЅРёРє СѓРІРѕР»РµРЅ.");
-    SendClientMessage(target, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] Р’Р°С€ С‚СЂСѓРґРѕРІРѕР№ РґРѕРіРѕРІРѕСЂ РїСЂРµРєСЂР°С‰С‘РЅ.");
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Сотрудник уволен.");
+    SendClientMessage(target, COLOR_YELLOW, "[БИЗНЕС] Ваш трудовой договор прекращён.");
     return 1;
 }
 
@@ -12267,10 +12267,10 @@ stock VX4_BizStaff(playerid)
     new business = VX4_BizOwned(playerid), salary = 0;
     if (!business) business = VX4_BizEmployee(playerid, salary);
     if (!business)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] РЈ РІР°СЃ РЅРµС‚ СЃРІРѕРµРіРѕ Р±РёР·РЅРµСЃР° РёР»Рё РјРµСЃС‚Р° СЂР°Р±РѕС‚С‹."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] У вас нет своего бизнеса или места работы."), 1;
     new q[192], body[1200], row[96], employee[25];
     body[0] = '\0';
-    strcat(body, "РЎРѕС‚СЂСѓРґРЅРёРє\tР—Р°СЂРїР»Р°С‚Р° Р·Р° СЃРјРµРЅСѓ\n", sizeof body);
+    strcat(body, "Сотрудник\tЗарплата за смену\n", sizeof body);
     format(q, sizeof q, "SELECT employee,salary FROM vx4_biz_staff WHERE business_id=%d ORDER BY employee LIMIT 5", business);
     new DBResult:r = db_query(gDatabase, q);
     if (r)
@@ -12278,29 +12278,29 @@ stock VX4_BizStaff(playerid)
         for (new i = 0; i < db_num_rows(r); i++)
         {
             db_get_field(r, 0, employee, sizeof employee);
-            format(row, sizeof row, "%s\t%d СЂСѓР±.\n", employee, db_get_field_int(r, 1));
+            format(row, sizeof row, "%s\t%d руб.\n", employee, db_get_field_int(r, 1));
             strcat(body, row, sizeof body);
             db_next_row(r);
         }
         db_free_result(r);
     }
     return VX_Show(playerid, VX_LOG, DIALOG_STYLE_TABLIST_HEADERS,
-        "VEXORIUM | РЎРѕС‚СЂСѓРґРЅРёРєРё", body);
+        "VEXORIUM | Сотрудники", body);
 }
 
 stock VX4_BizSalary(playerid, target, salary)
 {
     new business = VX4_BizOwned(playerid);
     if (!business || !VX4_BizNear(playerid, business, 15.0))
-        return SendClientMessage(playerid, COLOR_RED, "[Р‘РР—РќР•РЎ] Р’С‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ Сѓ СЃРІРѕРµРіРѕ Р±РёР·РЅРµСЃР°."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Вы должны быть у своего бизнеса."), 1;
     if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target)
         || salary < 100 || salary > 5000)
-        return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /bizsalary ID СЃСѓРјРјР° (100-5000)"), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /bizsalary ID сумма (100-5000)"), 1;
     new q[224];
     format(q, sizeof q, "UPDATE vx4_biz_staff SET salary=%d WHERE business_id=%d AND employee='%q'", salary, business, gName[target]);
     if (!VX_SQL(q)) return VX_Error(playerid);
-    SendClientMessage(playerid, COLOR_GREEN, "[Р‘РР—РќР•РЎ] Р—Р°СЂРїР»Р°С‚Р° РѕР±РЅРѕРІР»РµРЅР°.");
-    SendClientMessage(target, COLOR_GREEN, "[Р‘РР—РќР•РЎ] Р’Р°С€Р° Р·Р°СЂРїР»Р°С‚Р° Р·Р° СЃРјРµРЅСѓ РёР·РјРµРЅРµРЅР°.");
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Зарплата обновлена.");
+    SendClientMessage(target, COLOR_GREEN, "[БИЗНЕС] Ваша зарплата за смену изменена.");
     return 1;
 }
 
@@ -12308,15 +12308,15 @@ stock VX4_BizClockIn(playerid)
 {
     new salary = 0, business = VX4_BizEmployee(playerid, salary);
     if (!business)
-        return SendClientMessage(playerid, COLOR_RED, "[Р‘РР—РќР•РЎ] РЎРЅР°С‡Р°Р»Р° СѓСЃС‚СЂРѕР№С‚РµСЃСЊ Рє РІР»Р°РґРµР»СЊС†Сѓ Р±РёР·РЅРµСЃР°."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Сначала устройтесь к владельцу бизнеса."), 1;
     if (!VX4_BizNear(playerid, business, 12.0))
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] РџСЂРёРґРёС‚Рµ РЅР° СЂР°Р±РѕС‡РµРµ РјРµСЃС‚Рѕ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Придите на рабочее место."), 1;
     if (gVX4BizShiftActive[playerid])
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] Р’Р°С€Р° СЃРјРµРЅР° СѓР¶Рµ РЅР°С‡Р°С‚Р°."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Ваша смена уже начата."), 1;
     gVX4BizShiftActive[playerid] = 1;
     gVX4BizShiftBusiness[playerid] = business;
     gVX4BizShiftStarted[playerid] = gettime();
-    SendClientMessage(playerid, COLOR_GREEN, "[Р‘РР—РќР•РЎ] РЎРјРµРЅР° РЅР°С‡Р°С‚Р°. РњРёРЅРёРјСѓРј 60 СЃРµРєСѓРЅРґ, Р·Р°С‚РµРј /bizclockout.");
+    SendClientMessage(playerid, COLOR_GREEN, "[БИЗНЕС] Смена начата. Минимум 60 секунд, затем /bizclockout.");
     return 1;
 }
 
@@ -12325,20 +12325,20 @@ stock VX4_BizClockOut(playerid)
     new salary = 0, business = VX4_BizEmployee(playerid, salary);
     if (!gVX4BizShiftActive[playerid] || !business
         || business != gVX4BizShiftBusiness[playerid])
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] РЈ РІР°СЃ РЅРµС‚ Р°РєС‚РёРІРЅРѕР№ СЃРјРµРЅС‹."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] У вас нет активной смены."), 1;
     if (!VX4_BizNear(playerid, business, 15.0))
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] Р’РµСЂРЅРёС‚РµСЃСЊ РЅР° СЂР°Р±РѕС‡РµРµ РјРµСЃС‚Рѕ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Вернитесь на рабочее место."), 1;
     if (gettime() - gVX4BizShiftStarted[playerid] < 60)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] РЎРјРµРЅР° РґРѕР»Р¶РЅР° РґР»РёС‚СЊСЃСЏ РЅРµ РјРµРЅРµРµ 60 СЃРµРєСѓРЅРґ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Смена должна длиться не менее 60 секунд."), 1;
     if (gMoney[playerid] > MAX_MONEY - salary)
-        return SendClientMessage(playerid, COLOR_RED, "[Р‘РР—РќР•РЎ] Р”РѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РЅР°Р»РёС‡РЅС‹С…."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] Достигнут лимит наличных."), 1;
     new q[192], till = 0;
     format(q, sizeof q, "SELECT till FROM vx_businesses WHERE id=%d", business);
     new DBResult:r = db_query(gDatabase, q);
     if (r && db_num_rows(r)) till = db_get_field_int(r, 0);
     if (r) db_free_result(r);
     if (till < salary)
-        return SendClientMessage(playerid, COLOR_RED, "[Р‘РР—РќР•РЎ] Р’ РєР°СЃСЃРµ РЅРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґРµРЅРµРі РґР»СЏ РІР°С€РµР№ Р·Р°СЂРїР»Р°С‚С‹."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[БИЗНЕС] В кассе недостаточно денег для вашей зарплаты."), 1;
     if (!VX_Begin()) return VX_Error(playerid);
     format(q, sizeof q, "UPDATE vx_businesses SET till=till-%d WHERE id=%d AND till>=%d", salary, business, salary);
     if (!VX_SQL(q)) return VX_Error(playerid);
@@ -12349,7 +12349,7 @@ stock VX4_BizClockOut(playerid)
     gVX4BizShiftBusiness[playerid] = 0;
     gVX4BizShiftStarted[playerid] = 0;
     new msg[96];
-    format(msg, sizeof msg, "[Р‘РР—РќР•РЎ] РЎРјРµРЅР° Р·Р°РІРµСЂС€РµРЅР°. РџРѕР»СѓС‡РµРЅРѕ: %d СЂСѓР±.", salary);
+    format(msg, sizeof msg, "[БИЗНЕС] Смена завершена. Получено: %d руб.", salary);
     SendClientMessage(playerid, COLOR_GREEN, msg);
     return 1;
 }
@@ -12358,29 +12358,29 @@ stock VX4_EventInfo(playerid)
 {
     new body[512], title[96];
     if (!gVX4EventActive)
-        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "VEXORIUM | РњРµСЂРѕРїСЂРёСЏС‚РёСЏ",
-            "РЎРµР№С‡Р°СЃ РіРѕСЂРѕРґСЃРєРёС… РјРµСЂРѕРїСЂРёСЏС‚РёР№ РЅРµС‚. Р—Р°РіР»СЏРЅРёС‚Рµ РїРѕР·Р¶Рµ.", "РџРѕРЅСЏС‚РЅРѕ", "Р—Р°РєСЂС‹С‚СЊ");
+        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "VEXORIUM | Мероприятия",
+            "Сейчас городских мероприятий нет. Загляните позже.", "Понятно", "Закрыть");
     format(title, sizeof title, "VEXORIUM | %s", gVX4EventTitle);
     body[0] = '\0';
-    if (gVX4EventStarted) strcat(body, "РЎС‚Р°С‚СѓСЃ: РјРµСЂРѕРїСЂРёСЏС‚РёРµ СѓР¶Рµ РЅР°С‡Р°Р»РѕСЃСЊ.\n", sizeof body);
-    else strcat(body, "РЎС‚Р°С‚СѓСЃ: РёРґС‘С‚ СЂРµРіРёСЃС‚СЂР°С†РёСЏ СѓС‡Р°СЃС‚РЅРёРєРѕРІ.\n", sizeof body);
-    strcat(body, "Р’РѕР№С‚Рё: /eventjoin\nР’РµСЂРЅСѓС‚СЊСЃСЏ: /eventleave\n", sizeof body);
-    strcat(body, "РЎРѕР±С‹С‚РёРµ РїСЂРѕС…РѕРґРёС‚ РІ РјРµСЃС‚Рµ, РІС‹Р±СЂР°РЅРЅРѕРј РѕСЂРіР°РЅРёР·Р°С‚РѕСЂРѕРј.", sizeof body);
-    return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, title, body, "РџРѕРЅСЏС‚РЅРѕ", "Р—Р°РєСЂС‹С‚СЊ");
+    if (gVX4EventStarted) strcat(body, "Статус: мероприятие уже началось.\n", sizeof body);
+    else strcat(body, "Статус: идёт регистрация участников.\n", sizeof body);
+    strcat(body, "Войти: /eventjoin\nВернуться: /eventleave\n", sizeof body);
+    strcat(body, "Событие проходит в месте, выбранном организатором.", sizeof body);
+    return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, title, body, "Понятно", "Закрыть");
 }
 
 stock VX4_EventCreate(playerid, const rawTitle[])
 {
     if (gAdmin[playerid] < 3)
-        return SendClientMessage(playerid, COLOR_RED, "[РњР•Р РћРџР РРЇРўРР•] РЎРѕР·РґР°РІР°С‚СЊ СЃРѕР±С‹С‚РёСЏ РјРѕРіСѓС‚ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂС‹ 3 СѓСЂРѕРІРЅСЏ Рё РІС‹С€Рµ."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Создавать события могут администраторы 3 уровня и выше."), 1;
     if (gVX4EventActive)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] РЎРЅР°С‡Р°Р»Р° Р·Р°РІРµСЂС€РёС‚Рµ С‚РµРєСѓС‰РµРµ СЃРѕР±С‹С‚РёРµ: /eventend."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Сначала завершите текущее событие: /eventend."), 1;
     new title[48];
     VX_CleanText(rawTitle, title, sizeof title);
     if (strlen(title) < 3)
-        return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /eventcreate РЅР°Р·РІР°РЅРёРµ"), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /eventcreate название"), 1;
     if (IsPlayerInAnyVehicle(playerid))
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] Р’С‹Р№РґРёС‚Рµ РёР· РјР°С€РёРЅС‹, С‡С‚РѕР±С‹ СЃРѕР·РґР°С‚СЊ С‚РѕС‡РєСѓ СЃРѕР±С‹С‚РёСЏ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Выйдите из машины, чтобы создать точку события."), 1;
     format(gVX4EventTitle, sizeof gVX4EventTitle, "%s", title);
     GetPlayerPos(playerid, gVX4EventPos[0], gVX4EventPos[1], gVX4EventPos[2]);
     gVX4EventInterior = GetPlayerInterior(playerid);
@@ -12390,11 +12390,11 @@ stock VX4_EventCreate(playerid, const rawTitle[])
     gVX4EventStarted = false;
     gVX4EventPickup = CreatePickup(1239, 1, gVX4EventPos[0],
         gVX4EventPos[1], gVX4EventPos[2], gVX4EventWorld);
-    gVX4EventLabel = Create3DTextLabel("{FFD700}VEXORIUM | РњР•Р РћРџР РРЇРўРР•\n{FFFFFF}/eventjoin вЂ” СѓС‡Р°СЃС‚РІРѕРІР°С‚СЊ",
+    gVX4EventLabel = Create3DTextLabel("{FFD700}VEXORIUM | МЕРОПРИЯТИЕ\n{FFFFFF}/eventjoin — участвовать",
         COLOR_WHITE, gVX4EventPos[0], gVX4EventPos[1],
         gVX4EventPos[2] + 1.0, 20.0, gVX4EventWorld, 1);
     new msg[128];
-    format(msg, sizeof msg, "[РњР•Р РћРџР РРЇРўРР•] %s. РРЅС„РѕСЂРјР°С†РёСЏ Рё СЂРµРіРёСЃС‚СЂР°С†РёСЏ: /event", gVX4EventTitle);
+    format(msg, sizeof msg, "[МЕРОПРИЯТИЕ] %s. Информация и регистрация: /event", gVX4EventTitle);
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (VX_Valid(i))
@@ -12410,11 +12410,11 @@ stock VX4_EventCreate(playerid, const rawTitle[])
 stock VX4_EventJoin(playerid)
 {
     if (!gVX4EventActive || gVX4EventStarted)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] Р РµРіРёСЃС‚СЂР°С†РёСЏ Р·Р°РєСЂС‹С‚Р°."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Регистрация закрыта."), 1;
     if (gVX4EventJoined[playerid])
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] Р’С‹ СѓР¶Рµ СѓС‡Р°СЃС‚РІСѓРµС‚Рµ."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Вы уже участвуете."), 1;
     if (IsPlayerInAnyVehicle(playerid) || gVXHospital[playerid] || gIsJailed[playerid])
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] Р’С‹Р№РґРёС‚Рµ РёР· С‚СЂР°РЅСЃРїРѕСЂС‚Р° Рё РїРѕРєРёРЅСЊС‚Рµ СЃР»СѓР¶РµР±РЅС‹Рµ Р·РѕРЅС‹."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Выйдите из транспорта и покиньте служебные зоны."), 1;
     GetPlayerPos(playerid, gVX4EventReturnPos[playerid][0],
         gVX4EventReturnPos[playerid][1], gVX4EventReturnPos[playerid][2]);
     GetPlayerFacingAngle(playerid, gVX4EventReturnPos[playerid][3]);
@@ -12427,7 +12427,7 @@ stock VX4_EventJoin(playerid)
         gVX4EventPos[1] + float(random(7) - 3), gVX4EventPos[2]);
     SetPlayerFacingAngle(playerid, 0.0);
     SetCameraBehindPlayer(playerid);
-    SendClientMessage(playerid, COLOR_GREEN, "[РњР•Р РћРџР РРЇРўРР•] Р’С‹ РїСЂРёСЃРѕРµРґРёРЅРёР»РёСЃСЊ. Р”Р»СЏ РІРѕР·РІСЂР°С‚Р° РёСЃРїРѕР»СЊР·СѓР№С‚Рµ /eventleave.");
+    SendClientMessage(playerid, COLOR_GREEN, "[МЕРОПРИЯТИЕ] Вы присоединились. Для возврата используйте /eventleave.");
     return 1;
 }
 
@@ -12447,9 +12447,9 @@ stock VX4_EventRestore(playerid)
 stock VX4_EventEnd(playerid)
 {
     if (!gVX4EventActive)
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] РђРєС‚РёРІРЅРѕРіРѕ СЃРѕР±С‹С‚РёСЏ РЅРµС‚."), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Активного события нет."), 1;
     if (playerid != gVX4EventHost && gAdmin[playerid] < 3)
-        return SendClientMessage(playerid, COLOR_RED, "[РњР•Р РћРџР РРЇРўРР•] Р—Р°РІРµСЂС€РёС‚СЊ СЃРѕР±С‹С‚РёРµ РјРѕР¶РµС‚ РѕСЂРіР°РЅРёР·Р°С‚РѕСЂ РёР»Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Завершить событие может организатор или администратор."), 1;
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (VX_Valid(i) && gVX4EventJoined[i]) VX4_EventRestore(i);
@@ -12463,24 +12463,24 @@ stock VX4_EventEnd(playerid)
     gVX4EventStarted = false;
     gVX4EventHost = INVALID_PLAYER_ID;
     gVX4EventTitle[0] = '\0';
-    SendClientMessageToAll(COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] Р“РѕСЂРѕРґСЃРєРѕРµ СЃРѕР±С‹С‚РёРµ Р·Р°РІРµСЂС€РµРЅРѕ.");
+    SendClientMessageToAll(COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Городское событие завершено.");
     return 1;
 }
 
 stock VX4_EventReward(playerid, target, amount)
 {
     if (!gVX4EventActive || (playerid != gVX4EventHost && gAdmin[playerid] < 3))
-        return SendClientMessage(playerid, COLOR_RED, "[РњР•Р РћРџР РРЇРўРР•] РќР°РіСЂР°Р¶РґР°С‚СЊ РјРѕР¶РµС‚ РѕСЂРіР°РЅРёР·Р°С‚РѕСЂ РёР»Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Награждать может организатор или администратор."), 1;
     if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target)
         || !gVX4EventJoined[target] || amount < 1 || amount > 5000)
-        return SendClientMessage(playerid, COLOR_YELLOW, "РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ: /eventreward ID СЃСѓРјРјР° (1-5000)"), 1;
+        return SendClientMessage(playerid, COLOR_YELLOW, "Использование: /eventreward ID сумма (1-5000)"), 1;
     if (!GiveCash(target, amount))
-        return SendClientMessage(playerid, COLOR_RED, "[РњР•Р РћРџР РРЇРўРР•] РќРµ СѓРґР°Р»РѕСЃСЊ РЅР°С‡РёСЃР»РёС‚СЊ РїСЂРёР·: РґРµРЅРµР¶РЅС‹Р№ Р»РёРјРёС‚."), 1;
+        return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Не удалось начислить приз: денежный лимит."), 1;
     SavePlayer(target);
     new msg[96];
-    format(msg, sizeof msg, "[РњР•Р РћРџР РРЇРўРР•] Р’С‹ РїРѕР»СѓС‡РёР»Рё РїСЂРёР·: %d СЂСѓР±.", amount);
+    format(msg, sizeof msg, "[МЕРОПРИЯТИЕ] Вы получили приз: %d руб.", amount);
     SendClientMessage(target, COLOR_GREEN, msg);
-    SendClientMessage(playerid, COLOR_GREEN, "[РњР•Р РћРџР РРЇРўРР•] РџСЂРёР· РЅР°С‡РёСЃР»РµРЅ.");
+    SendClientMessage(playerid, COLOR_GREEN, "[МЕРОПРИЯТИЕ] Приз начислен.");
     return 1;
 }
 
@@ -12504,10 +12504,10 @@ stock VX4_Command(playerid, const cmdtext[])
     if (!strcmp(cmd, "/mechcancel", true))
     {
         if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
-            return VX4_MechCancel(gVX4MechTargetOf[playerid], "[РњР•РҐРђРќРРљ] РњРµС…Р°РЅРёРє РѕС‚РјРµРЅРёР» РІС‹Р·РѕРІ.");
+            return VX4_MechCancel(gVX4MechTargetOf[playerid], "[МЕХАНИК] Механик отменил вызов.");
         if (gVX4MechRequested[playerid])
-            return VX4_MechCancel(playerid, "[РњР•РҐРђРќРРљ] Р’С‹Р·РѕРІ РѕС‚РјРµРЅС‘РЅ.");
-        return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•РҐРђРќРРљ] РђРєС‚РёРІРЅРѕРіРѕ РІС‹Р·РѕРІР° РЅРµС‚."), 1;
+            return VX4_MechCancel(playerid, "[МЕХАНИК] Вызов отменён.");
+        return SendClientMessage(playerid, COLOR_YELLOW, "[МЕХАНИК] Активного вызова нет."), 1;
     }
     if (!strcmp(cmd, "/busroute", true)) return VX4_BusStart(playerid);
     if (!strcmp(cmd, "/busstop", true)) return VX4_BusStop(playerid, true);
@@ -12520,13 +12520,13 @@ stock VX4_Command(playerid, const cmdtext[])
     if (!strcmp(cmd, "/bizquit", true))
     {
         new salary = 0, business = VX4_BizEmployee(playerid, salary);
-        if (!business) return SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] Р’С‹ РЅРёРіРґРµ РЅРµ СЂР°Р±РѕС‚Р°РµС‚Рµ."), 1;
+        if (!business) return SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Вы нигде не работаете."), 1;
         new q[128];
         format(q, sizeof q, "DELETE FROM vx4_biz_staff WHERE employee='%q'", gName[playerid]);
         if (!VX_SQL(q)) return VX_Error(playerid);
         gVX4BizShiftActive[playerid] = 0;
         gVX4BizShiftBusiness[playerid] = 0;
-        SendClientMessage(playerid, COLOR_YELLOW, "[Р‘РР—РќР•РЎ] Р’С‹ СѓРІРѕР»РёР»РёСЃСЊ РїРѕ СЃРѕР±СЃС‚РІРµРЅРЅРѕРјСѓ Р¶РµР»Р°РЅРёСЋ.");
+        SendClientMessage(playerid, COLOR_YELLOW, "[БИЗНЕС] Вы уволились по собственному желанию.");
         return 1;
     }
     if (!strcmp(cmd, "/event", true) || !strcmp(cmd, "/eventinfo", true)) return VX4_EventInfo(playerid);
@@ -12535,19 +12535,19 @@ stock VX4_Command(playerid, const cmdtext[])
     if (!strcmp(cmd, "/eventleave", true))
     {
         if (!VX4_EventRestore(playerid))
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] Р’С‹ РЅРµ СѓС‡Р°СЃС‚РІСѓРµС‚Рµ."), 1;
-        return SendClientMessage(playerid, COLOR_GREEN, "[РњР•Р РћРџР РРЇРўРР•] Р’С‹ РІРµСЂРЅСѓР»РёСЃСЊ РЅР° РїСЂРµР¶РЅРµРµ РјРµСЃС‚Рѕ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Вы не участвуете."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "[МЕРОПРИЯТИЕ] Вы вернулись на прежнее место."), 1;
     }
     if (!strcmp(cmd, "/eventstart", true))
     {
         if (!gVX4EventActive || (playerid != gVX4EventHost && gAdmin[playerid] < 3))
-            return SendClientMessage(playerid, COLOR_RED, "[РњР•Р РћРџР РРЇРўРР•] РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ."), 1;
+            return SendClientMessage(playerid, COLOR_RED, "[МЕРОПРИЯТИЕ] Недостаточно прав."), 1;
         if (gVX4EventStarted)
-            return SendClientMessage(playerid, COLOR_YELLOW, "[РњР•Р РћРџР РРЇРўРР•] РЎРѕР±С‹С‚РёРµ СѓР¶Рµ РЅР°С‡Р°Р»РѕСЃСЊ."), 1;
+            return SendClientMessage(playerid, COLOR_YELLOW, "[МЕРОПРИЯТИЕ] Событие уже началось."), 1;
         gVX4EventStarted = true;
         for (new i = 0; i < MAX_PLAYERS; i++)
             if (VX_Valid(i) && gVX4EventJoined[i])
-                SendClientMessage(i, COLOR_ORANGE, "[РњР•Р РћРџР РРЇРўРР•] РЎРѕР±С‹С‚РёРµ РЅР°С‡Р°Р»РѕСЃСЊ!");
+                SendClientMessage(i, COLOR_ORANGE, "[МЕРОПРИЯТИЕ] Событие началось!");
         return 1;
     }
     if (!strcmp(cmd, "/eventend", true)) return VX4_EventEnd(playerid);
@@ -12564,11 +12564,11 @@ stock VX4_Tick()
         if (gTaxiRequestActive[p] && gVX4TaxiRequestAt[p] > 0
             && now - gVX4TaxiRequestAt[p] > 180)
         {
-            VX_TaxiCancelForPlayer(p, "[РўРђРљРЎР] Р’СЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ РёСЃС‚РµРєР»Рѕ. Р’С‹Р·РѕРІ РѕС‚РјРµРЅС‘РЅ.", true);
+            VX_TaxiCancelForPlayer(p, "[ТАКСИ] Время ожидания истекло. Вызов отменён.", true);
             gVX4TaxiRequestAt[p] = 0;
         }
         if (gVX4MechRequested[p] && now - gVX4MechRequestedAt[p] > 180)
-            VX4_MechCancel(p, "[РњР•РҐРђРќРРљ] Р’СЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ РёСЃС‚РµРєР»Рѕ. Р’С‹Р·РѕРІ РѕС‚РјРµРЅС‘РЅ.");
+            VX4_MechCancel(p, "[МЕХАНИК] Время ожидания истекло. Вызов отменён.");
     }
     return 1;
 }
@@ -12576,9 +12576,9 @@ stock VX4_Tick()
 stock VX4_PlayerDisconnect(playerid)
 {
     if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
-        VX4_MechCancel(gVX4MechTargetOf[playerid], "[РњР•РҐРђРќРРљ] РњРµС…Р°РЅРёРє РѕС‚РєР»СЋС‡РёР»СЃСЏ. Р’С‹Р·РѕРІ РѕС‚РјРµРЅС‘РЅ.");
+        VX4_MechCancel(gVX4MechTargetOf[playerid], "[МЕХАНИК] Механик отключился. Вызов отменён.");
     if (gVX4MechRequested[playerid])
-        VX4_MechCancel(playerid, "[РњР•РҐРђРќРРљ] РљР»РёРµРЅС‚ РѕС‚РєР»СЋС‡РёР»СЃСЏ. Р’С‹Р·РѕРІ РѕС‚РјРµРЅС‘РЅ.");
+        VX4_MechCancel(playerid, "[МЕХАНИК] Клиент отключился. Вызов отменён.");
     if (gVX4BusStage[playerid] >= 0) VX4_BusStop(playerid, false);
     gVX4MechDuty[playerid] = false;
     gVX4BizShiftActive[playerid] = 0;
@@ -12588,7 +12588,7 @@ stock VX4_PlayerDisconnect(playerid)
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (gVX4MechAssignedTo[i] == playerid)
-            VX4_MechCancel(i, "[РњР•РҐРђРќРРљ] РњРµС…Р°РЅРёРє РѕС‚РєР»СЋС‡РёР»СЃСЏ. Р’С‹Р·РѕРІ РѕС‚РјРµРЅС‘РЅ.");
+            VX4_MechCancel(i, "[МЕХАНИК] Механик отключился. Вызов отменён.");
     }
     return 1;
 }
