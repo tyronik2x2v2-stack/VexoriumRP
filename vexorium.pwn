@@ -2376,7 +2376,16 @@ stock IsInOwnOrgInterior(playerid)
 stock ShowOrgMenu(playerid)
 {
     SendClientMessage(playerid, COLOR_YELLOW, "Управление организацией: /orgmembers, /orginvite ID (ранг 8+), /orgrank ID РАНГ, /orgkick ID и /orgfund.");
-    if(gFaction[playerid]==FACTION_HOSPITAL) return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"БЦРБ | Сотрудник","/mduty - начать или закончить смену\n/mcalls - вызовы скорой\n/maccept ID - принять вызов\n/heal ID - вылечить пациента\n/hgarage - гараж скорой помощи\n/ward - войти в палаты\n/lobby - вернуться в холл\n/exit - выйти из больницы","ОК","Закрыть");
+    if (gFaction[playerid] == FACTION_HOSPITAL)
+    {
+        new hospitalBody[512];
+        hospitalBody[0] = '\0';
+        strcat(hospitalBody, "/mduty - начать или закончить смену\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/mcalls - вызовы скорой\n/maccept ID - принять вызов\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/heal ID - вылечить пациента\n/hgarage - гараж скорой помощи\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/ward - войти в палаты\n/lobby - вернуться в холл\n/exit - выйти из больницы", sizeof hospitalBody);
+        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "БЦРБ | Сотрудник", hospitalBody, "ОК", "Закрыть");
+    }
     new factionName[32], title[64];
     GetFactionName(gFaction[playerid], factionName, sizeof factionName);
     format(title, sizeof title, "%s | Штаб организации", factionName);
@@ -3558,10 +3567,25 @@ public OnPlayerConnect(playerid)
     new query[512];
     format(query, sizeof query, "SELECT name FROM accounts WHERE name='%q'", gName[playerid]);
     new DBResult:connectResult = db_query(gDatabase, query);
+    new loginText[512], registerText[768];
+    loginText[0] = '\0';
+    strcat(loginText, "================================\n             V E X O R I U M\n", sizeof loginText);
+    strcat(loginText, "          ГОРОД ЖДЁТ ТЕБЯ\n\n", sizeof loginText);
+    strcat(loginText, "Аккаунт найден. Введи свой пароль.\n", sizeof loginText);
+    strcat(loginText, "Пароль скрыт во время ввода.\n\nНажми ВОЙТИ для входа на сервер.", sizeof loginText);
+    registerText[0] = '\0';
+    strcat(registerText, "================================\n             V E X O R I U M\n", sizeof registerText);
+    strcat(registerText, "       ТВОЯ ИСТОРИЯ НАЧИНАЕТСЯ\n\n", sizeof registerText);
+    strcat(registerText, "Новый аккаунт не найден.\n", sizeof registerText);
+    strcat(registerText, "Придумай пароль от 4 до 64 символов.\n", sizeof registerText);
+    strcat(registerText, "Запомни его: он понадобится при следующем входе.\n\n", sizeof registerText);
+    strcat(registerText, "Нажми СОЗДАТЬ для регистрации.", sizeof registerText);
     if (connectResult && db_num_rows(connectResult))
-        ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "VEXORIUM | ДОБРО ПОЖАЛОВАТЬ", "================================\n             V E X O R I U M\n          ГОРОД ЖДЁТ ТЕБЯ\n\nАккаунт найден. Введи свой пароль.\nПароль скрыт во время ввода.\n\nНажми ВОЙТИ для входа на сервер.", "ВОЙТИ", "ВЫХОД");
+        ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD,
+            "VEXORIUM | ДОБРО ПОЖАЛОВАТЬ", loginText, "ВОЙТИ", "ВЫХОД");
     else
-        ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | СОЗДАНИЕ АККАУНТА", "================================\n             V E X O R I U M\n       ТВОЯ ИСТОРИЯ НАЧИНАЕТСЯ\n\nНовый аккаунт не найден.\nПридумай пароль от 4 до 64 символов.\nЗапомни его: он понадобится при следующем входе.\n\nНажми СОЗДАТЬ для регистрации.", "СОЗДАТЬ", "ВЫХОД");
+        ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD,
+            "VEXORIUM | СОЗДАНИЕ АККАУНТА", registerText, "СОЗДАТЬ", "ВЫХОД");
     if (connectResult) db_free_result(connectResult);
     return 1;
 }
@@ -3933,7 +3957,6 @@ public OnPlayerPickUpPickup(playerid, pickupid)
     if(gVXHospital[playerid]) return 1;
     if (pickupid == gVX4MechPickup) return VX4_MechDuty(playerid, true);
     if (pickupid == gVX4BusPickup) return VX4_BusStart(playerid);
-    if (gVX4EventActive && pickupid == gVX4EventPickup) return VX4_EventJoin(playerid);
     if (pickupid == gHospitalMarketPickup)
     {
         if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0 || !IsPlayerInRangeOfPoint(playerid, 3.0, 1180.2, -1322.5, 13.5)) return 1;
@@ -6228,7 +6251,14 @@ public OnPlayerCommandText(playerid, cmdtext[])
     }
     if (!strcmp(cmdtext, "/rules", true))
     {
-        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | Правила", "1. Соблюдайте правила RolePlay.\n2. Не используйте читы и сторонние программы.\n3. Не оскорбляйте игроков и администрацию.\n4. Не злоупотребляйте командами и багами.\n5. Слушайте администрацию и уважайте других игроков.", "Понятно", "");
+        new rulesText[512];
+        rulesText[0] = '\0';
+        strcat(rulesText, "1. Соблюдайте правила RolePlay.\n", sizeof rulesText);
+        strcat(rulesText, "2. Не используйте читы и сторонние программы.\n", sizeof rulesText);
+        strcat(rulesText, "3. Не оскорбляйте игроков и администрацию.\n", sizeof rulesText);
+        strcat(rulesText, "4. Не злоупотребляйте командами и багами.\n", sizeof rulesText);
+        strcat(rulesText, "5. Слушайте администрацию и уважайте других игроков.", sizeof rulesText);
+        ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_MSGBOX, "VEXORIUM RP | Правила", rulesText, "Понятно", "");
         return 1;
     }
     if (!strcmp(cmdtext, "/gang", true))
