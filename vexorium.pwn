@@ -119,7 +119,7 @@ new const Float:gVXClothesPos[VX_CLOTHES_LOCATIONS][3] =
 };
 new const gVXClothesModel[VX_CLOTHES_COUNT] = {7,14,20,23,46,48,56,60,93,188,193,240};
 new const gVXClothesPrice[VX_CLOTHES_COUNT] = {1500,1800,2100,2500,3200,3900,4500,5500,6500,8000,9500,12000};
-new const gVXClothesLabel[VX_CLOTHES_COUNT][32] =
+new const gVXClothesLabel[VX_CLOTHES_COUNT][64] =
 {
     "���������", "������������", "����������", "������������",
     "���������", "�������", "��������", "���������",
@@ -491,7 +491,7 @@ new gVXDropItem[VX_MAX_DROPS], gVXDropQty[VX_MAX_DROPS], gVXDropExpiry[VX_MAX_DR
 new gVXDropWorld[VX_MAX_DROPS], gVXDropInterior[VX_MAX_DROPS], gVXDropPickup[VX_MAX_DROPS];
 new Float:gVXDropPos[VX_MAX_DROPS][3];
 new Text3D:gVXDropLabel[VX_MAX_DROPS];
-new const gVXItemName[6][24] = {"�������", "���", "����", "�����������", "SIM-�����", "�������"};
+new const gVXItemName[6][48] = {"�������", "���", "����", "�����������", "SIM-�����", "�������"};
 new const gVXItemWeight[6] = {1000,500,500,2000,10,100};
 new const Float:gVXBedPos[VX_BEDS][3] = {
  {1987.0,1988.0,1001.0},{1992.0,1988.0,1001.0},{1997.0,1988.0,1001.0},
@@ -2027,7 +2027,21 @@ stock IsInOwnOrgInterior(playerid)
 
 stock ShowOrgMenu(playerid)
 {
-    if(gFaction[playerid]==FACTION_HOSPITAL) return VX_Show(playerid,VX_LOG,DIALOG_STYLE_MSGBOX,"���� | ���������","/mduty - ������ ��� ��������� �����\n/mcalls - ������ ������\n/maccept ID - ������� �����\n/heal ID - �������� ��������\n/hgarage - ����� ������ ������\n/ward - ����� � ������\n/lobby - ��������� � ����\n/exit - ����� �� ��������","��","�������");
+    if (gFaction[playerid] == FACTION_HOSPITAL)
+    {
+        new hospitalBody[512];
+        hospitalBody[0] = '\0';
+        strcat(hospitalBody, "Hospital department commands:\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/mduty - start or end medical duty\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/mcalls - view emergency calls\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/maccept ID - accept a call\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/heal ID - treat a patient\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/hgarage - open medical garage\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/ward - enter the ward\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/lobby - return to reception\n", sizeof hospitalBody);
+        strcat(hospitalBody, "/exit - leave the hospital", sizeof hospitalBody);
+        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "HOSPITAL | MENU", hospitalBody, "OK", "Back");
+    }
     new factionName[32], title[64];
     GetFactionName(gFaction[playerid], factionName, sizeof factionName);
     format(title, sizeof title, "%s | ���� �����������", factionName);
