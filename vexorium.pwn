@@ -3334,7 +3334,11 @@ stock VQ_ShowFarmMenu(playerid)
 stock VQ_ShowFarmStats(playerid)
 {
     new text[512];
-    format(text, sizeof text, "{FFD700}����� �������� �����\n{FFFFFF}����� ������ ������: {33CC66}%d\n{FFFFFF}������� ������: {33CC66}%d\n{FFFFFF}������ �� ������ ������: {33CC66}%d ���.\n{AAAAAA}������ ����� � ������� (�� 10 ������). ������ 3-� ������ ��� +1 ����.",
+    text[0] = '\0';
+    format(text, sizeof text, "{FFD700}����� �������� �����\n{FFFFFF}����� ������ ������: {33CC66}%d\n{FFFFFF}������� ������: {33CC66}%d\n", gVQRuns[playerid], gVQCrates[playerid]);
+    new farmStatsPart[256];
+    format(farmStatsPart, sizeof farmStatsPart, "{FFFFFF}������ �� ������ ������: {33CC66}%d ���.\n{AAAAAA}������ ����� � ������� (�� 10 ������). ������ 3-� ������ ��� +1 ����.", VQ_FarmPay(gLevel[playerid]));
+    strcat(text, farmStatsPart, sizeof text);
         gVQRuns[playerid], gVQCrates[playerid], VQ_FarmPay(gLevel[playerid]));
     ShowPlayerDialog(playerid, VQ_DLG_TEXT, DIALOG_STYLE_MSGBOX, "VEXORIUM | ���������� �������", text, "�������", "");
     return 1;
@@ -7303,7 +7307,15 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         }
         if (strlen(inputtext) < 4 || strlen(inputtext) > 64)
         {
-            ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | �������� ��������", "================================\n             V E X O R I U M\n\n������ ������ ��������� 4-64 �������.\n����� ������ ��� ���.\n��������� ������, ������� ������� ���������.", "�������", "�����");
+            new registerLengthErrorText[1024];
+            registerLengthErrorText[0] = '\0';
+            strcat(registerLengthErrorText, "================================\n", sizeof registerLengthErrorText);
+            strcat(registerLengthErrorText, "             V E X O R I U M\n", sizeof registerLengthErrorText);
+            strcat(registerLengthErrorText, "\n", sizeof registerLengthErrorText);
+            strcat(registerLengthErrorText, "������ ������ ��������� 4-64 �������.\n", sizeof registerLengthErrorText);
+            strcat(registerLengthErrorText, "����� ������ ��� ���.\n", sizeof registerLengthErrorText);
+            strcat(registerLengthErrorText, "��������� ������, ������� ������� ���������.", sizeof registerLengthErrorText);
+            ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "VEXORIUM | �������� ��������", registerLengthErrorText, "�������", "�����");
             return 1;
         }
         format(gPassword[playerid], 65, "%s", inputtext);
