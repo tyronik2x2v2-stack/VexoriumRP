@@ -502,6 +502,52 @@ new const Float:gVXBedPos[VX_BEDS][3] = {
 new const Float:gVXBizPos[5][3] = {{1833.0,-1842.0,13.3},{1457.0,-1137.0,23.9},{1940.0,-1772.0,13.4},{1315.3,-897.6,39.6},{2105.0,-1806.5,13.6}};
 new const gVXBizName[5][32] = {"������� 24/7", "���� Vexorium", "����������", "����-������", "��������"};
 
+
+// VEXORIUM EXPANSION 4.0 - taxi dispatch, mobile mechanic, bus routes,
+// business staff, city events and phone app shortcuts.
+new bool:gVX4TaxiRequested[MAX_PLAYERS];
+new gVX4TaxiStatus[MAX_PLAYERS]; // 0 none, 1 requested, 2 accepted, 3 passenger on board
+new gVX4TaxiRequestedAt[MAX_PLAYERS];
+new gVX4TaxiDriverOf[MAX_PLAYERS];
+new gVX4TaxiPassengerOf[MAX_PLAYERS];
+new Float:gVX4TaxiPickupPos[MAX_PLAYERS][3];
+
+new bool:gVX4MechDuty[MAX_PLAYERS];
+new bool:gVX4MechRequested[MAX_PLAYERS];
+new gVX4MechRequestedAt[MAX_PLAYERS];
+new gVX4MechAssignedTo[MAX_PLAYERS];
+new gVX4MechTargetOf[MAX_PLAYERS];
+new gVX4MechVehicle[MAX_PLAYERS];
+new Float:gVX4MechPos[MAX_PLAYERS][3];
+
+new gVX4BusVehicle[MAX_PLAYERS];
+new gVX4BusStage[MAX_PLAYERS];
+new const Float:gVX4BusStops[6][3] =
+{
+    {1090.0, -1750.0, 13.4},
+    {1182.0, -1323.0, 13.6},
+    {1479.0, -1739.0, 13.5},
+    {1685.0, -2333.0, 13.5},
+    {2195.0, -2254.0, 13.5},
+    {1810.0, -1900.0, 13.4}
+};
+
+new gVX4BizShiftActive[MAX_PLAYERS];
+new gVX4BizShiftBusiness[MAX_PLAYERS];
+new gVX4BizShiftStarted[MAX_PLAYERS];
+
+new bool:gVX4EventActive;
+new bool:gVX4EventStarted;
+new gVX4EventHost = INVALID_PLAYER_ID;
+new gVX4EventTitle[48];
+new Float:gVX4EventPos[3];
+new gVX4EventInterior;
+new gVX4EventWorld;
+new bool:gVX4EventJoined[MAX_PLAYERS];
+new Float:gVX4EventReturnPos[MAX_PLAYERS][4];
+new gVX4EventReturnInterior[MAX_PLAYERS];
+new gVX4EventReturnWorld[MAX_PLAYERS];
+
 // ================= VEXORIUM RP EXPANSION 1.0 =================
 // Legacy Pawn 3.2 syntax, native SA-MP + SQLite only.
 #define RP_JAIL_DEFAULT (30 * 60)
@@ -4998,6 +5044,7 @@ public OnPlayerEnterCheckpoint(playerid)
         || gRPStretcherBy[playerid]!=INVALID_PLAYER_ID) return 1;
     if (!gLogged[playerid]) return 1;
     if (VQ_Checkpoint(playerid)) return 1;
+    if (VX4_Checkpoint(playerid)) return 1;
     if (gDrivingTestStage[playerid] > 0)
     {
         if (!IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != gDrivingTestVehicle[playerid] || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
@@ -8198,11 +8245,14 @@ stock VX_PickupItem(playerid)
 }
 stock VX_ShowPhone(playerid)
 {
-    new title[96], phoneStatus[8];
-    if (gVXPhoneOn[playerid]) format(phoneStatus,sizeof phoneStatus,"���");
-    else format(phoneStatus,sizeof phoneStatus,"����");
-    format(title,sizeof title,"VEXORIUM | ������� %d | %s",gVXPhone[playerid],phoneStatus);
-    return VX_Show(playerid,VX_PHONE,DIALOG_STYLE_LIST,title,"��������� �� ������\n��������� SMS\n�������� SMS (��������� 15)\nContacts\nBank\nGPS\n������� ������: 103\n������� �������: 112\n�������� / ���������\n�������� / ��������� ������");
+    new title[96], phoneStatus[8], body[512];
+    if (gVXPhoneOn[playerid]) format(phoneStatus, sizeof phoneStatus, "ON");
+    else format(phoneStatus, sizeof phoneStatus, "OFF");
+    format(title, sizeof title, "VEXORIUM | Phone %d | %s", gVXPhone[playerid], phoneStatus);
+    body[0] = '\0';
+    strcat(body, "Call a number\nSend SMS\nInbox (last 15)\nContacts\nBank\nGPS\nMedical call: 103\nEmergency call: 112\nPhone power\nAnswer / hang up\n", sizeof body);
+    strcat(body, "Taxi dispatch\nRoadside mechanic\nBusiness directory\nCity events", sizeof body);
+    return VX_Show(playerid, VX_PHONE, DIALOG_STYLE_LIST, title, body);
 }
 stock VX_FindPhone(number)
 {
@@ -9171,6 +9221,10 @@ stock VX_Dialog(playerid,dialogid,response,listitem,const inputtext[])
                 case 7:VX_Call(playerid,112);
                 case 8:{gVXPhoneOn[playerid]=!gVXPhoneOn[playerid];if(!gVXPhoneOn[playerid])VX_Hangup(playerid);VX_Save(playerid);VX_ShowPhone(playerid);}
                 case 9:{if(gVXCallActive[playerid])VX_Hangup(playerid);else VX_Answer(playerid);}
+                case 10: VX4_TaxiCall(playerid);
+                case 11: VX4_MechCall(playerid);
+                case 12: VX_BizList(playerid);
+                case 13: VX4_EventInfo(playerid);
             }
         }
         case VX_SMS_NUMBER:
@@ -11075,6 +11129,8 @@ stock VX3_Init()
 {
     VX_SQL("CREATE TABLE IF NOT EXISTS vx3_items (name TEXT PRIMARY KEY, can10 INTEGER NOT NULL DEFAULT 0, can20 INTEGER NOT NULL DEFAULT 0, rod INTEGER NOT NULL DEFAULT 0, bait INTEGER NOT NULL DEFAULT 0, fish INTEGER NOT NULL DEFAULT 0)");
     VX_SQL("CREATE TABLE IF NOT EXISTS vx3_storage (owner TEXT NOT NULL, kind INTEGER NOT NULL, item INTEGER NOT NULL, amount INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(owner,kind,item))");
+    VX_SQL("CREATE TABLE IF NOT EXISTS vx4_biz_staff (employee TEXT PRIMARY KEY, business_id INTEGER NOT NULL, salary INTEGER NOT NULL DEFAULT 500)");
+    gVX4EventActive = false; gVX4EventStarted = false; gVX4EventHost = INVALID_PLAYER_ID;
     Create3DTextLabel("{66CCFF}SANTA MARIA PIER\n{FFFFFF}/fish | /fishbuy | /fishsell", COLOR_WHITE, 390.0, -2088.0, 8.5, 20.0, 0, 1);
     SetTimer("VX3_Tick", 1000, true);
     print("[VEXORIUM 3.0] Vehicle storage, canisters, fishing, delivery jobs and faction supplies initialized.");
@@ -11130,11 +11186,29 @@ stock VX3_PlayerConnect(playerid)
     gVX3CarOfferFrom[playerid] = INVALID_PLAYER_ID;
     gVX3CarOfferPrice[playerid] = 0;
     gVX3CarOfferUntil[playerid] = 0;
+    gVX4TaxiRequested[playerid] = false;
+    gVX4TaxiStatus[playerid] = 0;
+    gVX4TaxiRequestedAt[playerid] = 0;
+    gVX4TaxiDriverOf[playerid] = INVALID_PLAYER_ID;
+    gVX4TaxiPassengerOf[playerid] = INVALID_PLAYER_ID;
+    gVX4MechDuty[playerid] = false;
+    gVX4MechRequested[playerid] = false;
+    gVX4MechRequestedAt[playerid] = 0;
+    gVX4MechAssignedTo[playerid] = INVALID_PLAYER_ID;
+    gVX4MechTargetOf[playerid] = INVALID_PLAYER_ID;
+    gVX4MechVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX4BusVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX4BusStage[playerid] = -1;
+    gVX4BizShiftActive[playerid] = 0;
+    gVX4BizShiftBusiness[playerid] = 0;
+    gVX4BizShiftStarted[playerid] = 0;
+    gVX4EventJoined[playerid] = false;
     return VX3_LoadItems(playerid);
 }
 
 stock VX3_PlayerDisconnect(playerid)
 {
+    VX4_PlayerDisconnect(playerid);
     VX3_SaveItems(playerid);
     gVX3FishState[playerid] = 0;
     if (gVX3JobVehicle[playerid] != INVALID_VEHICLE_ID && GetVehicleModel(gVX3JobVehicle[playerid]))
@@ -11520,6 +11594,7 @@ stock VX3_Command(playerid, const cmdtext[])
     new cmd[32], params[160], a[32], b[32], c[32];
     GetToken(cmdtext, 0, cmd, sizeof cmd); GetParams(cmdtext, params, sizeof params);
     GetToken(params, 0, a, sizeof a); GetToken(params, 1, b, sizeof b); GetToken(params, 2, c, sizeof c);
+    if (VX4_Command(playerid, cmdtext)) return 1;
     if (!strcmp(cmd, "/vex3", true))
         return SendClientMessage(playerid, COLOR_YELLOW, "VEXORIUM 3.0: /trunk /glovebox /can /sellcar /acceptcar /fishbuy /fish /fishsell /pizzajob /pizzadeliver /cashjob /cashdeliver /supplystart /supplydeliver /m /jobstop"), 1;
     if (!strcmp(cmd, "/trunk", true) || !strcmp(cmd, "/glovebox", true))
@@ -11589,6 +11664,730 @@ public VX3_Tick()
                 SendClientMessage(p, COLOR_YELLOW, "[FISH] BITE! Press Y to pull the line or N to stop.");
             }
         }
+    }
+    return 1;
+    VX4_Tick();
+}
+
+
+// ============================================================================
+// VEXORIUM EXPANSION 4.0
+// Taxi dispatch, roadside mechanic, public bus route, business staff,
+// community events and phone app shortcuts.
+// ============================================================================
+
+stock VX4_TaxiCancel(passenger, const reason[])
+{
+    if (passenger < 0 || passenger >= MAX_PLAYERS) return 0;
+    new driver = gVX4TaxiDriverOf[passenger];
+    gVX4TaxiRequested[passenger] = false;
+    gVX4TaxiStatus[passenger] = 0;
+    gVX4TaxiRequestedAt[passenger] = 0;
+    gVX4TaxiDriverOf[passenger] = INVALID_PLAYER_ID;
+    if (driver >= 0 && driver < MAX_PLAYERS)
+    {
+        gVX4TaxiPassengerOf[driver] = INVALID_PLAYER_ID;
+        if (VX_Valid(driver)) SendClientMessage(driver, COLOR_YELLOW, reason);
+    }
+    if (VX_Valid(passenger)) SendClientMessage(passenger, COLOR_YELLOW, reason);
+    return 1;
+}
+
+stock VX4_TaxiCall(playerid)
+{
+    if (gVX4TaxiStatus[playerid] != 0 || gVX4TaxiPassengerOf[playerid] != INVALID_PLAYER_ID)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[TAXI] You already have an active taxi request or ride."), 1;
+    if (IsPlayerInAnyVehicle(playerid))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[TAXI] Exit your vehicle before requesting a taxi."), 1;
+    GetPlayerPos(playerid, gVX4TaxiPickupPos[playerid][0], gVX4TaxiPickupPos[playerid][1], gVX4TaxiPickupPos[playerid][2]);
+    gVX4TaxiRequested[playerid] = true;
+    gVX4TaxiStatus[playerid] = 1;
+    gVX4TaxiRequestedAt[playerid] = gettime();
+    new msg[144];
+    format(msg, sizeof msg, "[TAXI] New ride request: player ID %d. Use /taxiaccept %d.", playerid, playerid);
+    new drivers = 0;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (VX_Valid(i) && gJob[i] == 1 && gWorkStage[i] == 0
+            && gVX4TaxiPassengerOf[i] == INVALID_PLAYER_ID)
+        {
+            SendClientMessage(i, COLOR_YELLOW, msg);
+            drivers++;
+        }
+    }
+    if (!drivers) SendClientMessage(playerid, COLOR_YELLOW, "[TAXI] No taxi drivers are available right now. Your request stays open for 2 minutes.");
+    else SendClientMessage(playerid, COLOR_GREEN, "[TAXI] Request sent to taxi drivers. Wait at your current location.");
+    return 1;
+}
+
+stock VX4_TaxiAccept(driver, passenger)
+{
+    if (gJob[driver] != 1 || gWorkStage[driver] != 0)
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] You must be an available taxi driver. Finish your other route first."), 1;
+    if (GetPlayerState(driver) != PLAYER_STATE_DRIVER || !IsPlayerInAnyVehicle(driver))
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] Get into the taxi as the driver first."), 1;
+    new model = GetVehicleModel(GetPlayerVehicleID(driver));
+    if (model != 420 && model != 438)
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] Use a Taxi or Cabbie vehicle."), 1;
+    if (passenger < 0 || passenger >= MAX_PLAYERS || !VX_Valid(passenger) || gVX4TaxiStatus[passenger] != 1)
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] That ride request is not available."), 1;
+    if (gettime() - gVX4TaxiRequestedAt[passenger] > 120)
+    {
+        VX4_TaxiCancel(passenger, "[TAXI] The request expired.");
+        return 1;
+    }
+    if (gVX4TaxiPassengerOf[driver] != INVALID_PLAYER_ID)
+        return SendClientMessage(driver, COLOR_YELLOW, "[TAXI] Finish your current ride first."), 1;
+    gVX4TaxiStatus[passenger] = 2;
+    gVX4TaxiDriverOf[passenger] = driver;
+    gVX4TaxiPassengerOf[driver] = passenger;
+    SetPlayerCheckpoint(driver, gVX4TaxiPickupPos[passenger][0], gVX4TaxiPickupPos[passenger][1], gVX4TaxiPickupPos[passenger][2], 5.0);
+    new message[128];
+    format(message, sizeof message, "[TAXI] Driver %s accepted your request. ID: %d.", gName[driver], driver);
+    SendClientMessage(passenger, COLOR_GREEN, message);
+    SendClientMessage(driver, COLOR_GREEN, "[TAXI] Pickup checkpoint set. Reach the passenger and use /taxipickup.");
+    return 1;
+}
+
+stock VX4_TaxiPickup(driver)
+{
+    new passenger = gVX4TaxiPassengerOf[driver];
+    if (passenger < 0 || passenger >= MAX_PLAYERS || !VX_Valid(passenger) || gVX4TaxiStatus[passenger] != 2)
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] You have no passenger waiting for pickup."), 1;
+    if (GetPlayerState(driver) != PLAYER_STATE_DRIVER || !IsPlayerInAnyVehicle(driver))
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] Stay in the driver seat."), 1;
+    if (IsPlayerInAnyVehicle(passenger))
+        return SendClientMessage(driver, COLOR_YELLOW, "[TAXI] The passenger must be outside their vehicle."), 1;
+    if (!IsPlayerInRangeOfPoint(driver, 8.0, gVX4TaxiPickupPos[passenger][0], gVX4TaxiPickupPos[passenger][1], gVX4TaxiPickupPos[passenger][2]))
+        return SendClientMessage(driver, COLOR_YELLOW, "[TAXI] You are not at the passenger pickup point yet."), 1;
+    gVX4TaxiStatus[passenger] = 3;
+    DisablePlayerCheckpoint(driver);
+    SendClientMessage(driver, COLOR_GREEN, "[TAXI] Passenger pickup confirmed. Let them enter your taxi, then use /taxidone at the destination.");
+    SendClientMessage(passenger, COLOR_GREEN, "[TAXI] Your driver has arrived. Enter the taxi and tell the driver your destination.");
+    return 1;
+}
+
+stock VX4_TaxiDone(driver)
+{
+    new passenger = gVX4TaxiPassengerOf[driver];
+    if (passenger < 0 || passenger >= MAX_PLAYERS || !VX_Valid(passenger) || gVX4TaxiStatus[passenger] != 3)
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] No active passenger ride."), 1;
+    if (GetPlayerState(driver) != PLAYER_STATE_DRIVER || !IsPlayerInAnyVehicle(driver)
+        || GetPlayerVehicleID(passenger) != GetPlayerVehicleID(driver))
+        return SendClientMessage(driver, COLOR_YELLOW, "[TAXI] The passenger must be inside your taxi."), 1;
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(GetPlayerVehicleID(driver), x, y, z);
+    new Float:dx = x - gVX4TaxiPickupPos[passenger][0];
+    new Float:dy = y - gVX4TaxiPickupPos[passenger][1];
+    new fare = 250 + floatround(floatsqroot(dx * dx + dy * dy) / 100.0) * 50;
+    if (fare > 5000) fare = 5000;
+    if (gMoney[passenger] < fare)
+        return SendClientMessage(driver, COLOR_YELLOW, "[TAXI] Passenger does not have enough cash for the fare."), 1;
+    if (!TakeCash(passenger, fare))
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] Fare payment failed."), 1;
+    if (!GiveCash(driver, fare))
+    {
+        GiveCash(passenger, fare);
+        return SendClientMessage(driver, COLOR_RED, "[TAXI] Driver wallet is full. Fare refunded."), 1;
+    }
+    SavePlayer(passenger);
+    SavePlayer(driver);
+    new message[96];
+    format(message, sizeof message, "[TAXI] Ride completed. Fare paid: $%d.", fare);
+    SendClientMessage(passenger, COLOR_GREEN, message);
+    SendClientMessage(driver, COLOR_GREEN, message);
+    VX4_TaxiCancel(passenger, "[TAXI] Ride finished.");
+    return 1;
+}
+
+stock VX4_MechCancel(customer, const reason[])
+{
+    if (customer < 0 || customer >= MAX_PLAYERS) return 0;
+    new mechanic = gVX4MechAssignedTo[customer];
+    gVX4MechRequested[customer] = false;
+    gVX4MechRequestedAt[customer] = 0;
+    gVX4MechAssignedTo[customer] = INVALID_PLAYER_ID;
+    gVX4MechVehicle[customer] = INVALID_VEHICLE_ID;
+    if (mechanic >= 0 && mechanic < MAX_PLAYERS)
+    {
+        gVX4MechTargetOf[mechanic] = INVALID_PLAYER_ID;
+        DisablePlayerCheckpoint(mechanic);
+        if (VX_Valid(mechanic)) SendClientMessage(mechanic, COLOR_YELLOW, reason);
+    }
+    if (VX_Valid(customer)) SendClientMessage(customer, COLOR_YELLOW, reason);
+    return 1;
+}
+
+stock VX4_MechDuty(playerid, bool:enabled)
+{
+    if (enabled)
+    {
+        if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0
+            || !IsPlayerInRangeOfPoint(playerid, 15.0, gVXBizPos[2][0], gVXBizPos[2][1], gVXBizPos[2][2]))
+            return SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] Go to the Auto Service business to start duty."), 1;
+        if (IsPlayerInAnyVehicle(playerid))
+            return SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] Exit your vehicle before starting duty."), 1;
+        gVX4MechDuty[playerid] = true;
+        SendClientMessage(playerid, COLOR_GREEN, "[MECHANIC] You are on duty. Accept customer calls with /mechaccept ID.");
+    }
+    else
+    {
+        if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
+            VX4_MechCancel(gVX4MechTargetOf[playerid], "[MECHANIC] Mechanic went off duty.");
+        gVX4MechDuty[playerid] = false;
+        SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] You are off duty.");
+    }
+    return 1;
+}
+
+stock VX4_MechCall(playerid)
+{
+    if (!IsPlayerInAnyVehicle(playerid) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] Sit in the driver seat of the vehicle that needs service."), 1;
+    if (gVX4MechRequested[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] You already have an active service request."), 1;
+    new vehicle = GetPlayerVehicleID(playerid);
+    new Float:health;
+    GetVehicleHealth(vehicle, health);
+    if (health >= 990.0)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] Your vehicle does not need repairs."), 1;
+    gVX4MechRequested[playerid] = true;
+    gVX4MechRequestedAt[playerid] = gettime();
+    gVX4MechVehicle[playerid] = vehicle;
+    GetVehiclePos(vehicle, gVX4MechPos[playerid][0], gVX4MechPos[playerid][1], gVX4MechPos[playerid][2]);
+    new message[144], available = 0;
+    format(message, sizeof message, "[MECHANIC] Service request from %s (ID %d). Use /mechaccept %d.", gName[playerid], playerid, playerid);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (VX_Valid(i) && gVX4MechDuty[i] && gVX4MechTargetOf[i] == INVALID_PLAYER_ID)
+        {
+            SendClientMessage(i, COLOR_YELLOW, message);
+            available++;
+        }
+    }
+    if (!available) SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] No mechanics are on duty. The request is open for 3 minutes.");
+    else SendClientMessage(playerid, COLOR_GREEN, "[MECHANIC] Your roadside service request was sent.");
+    return 1;
+}
+
+stock VX4_MechAccept(mechanic, customer)
+{
+    if (!gVX4MechDuty[mechanic])
+        return SendClientMessage(mechanic, COLOR_RED, "[MECHANIC] Start your shift at Auto Service first: /mechonduty."), 1;
+    if (gVX4MechTargetOf[mechanic] != INVALID_PLAYER_ID)
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[MECHANIC] Finish your current call first."), 1;
+    if (customer < 0 || customer >= MAX_PLAYERS || !VX_Valid(customer) || !gVX4MechRequested[customer])
+        return SendClientMessage(mechanic, COLOR_RED, "[MECHANIC] That service request is unavailable."), 1;
+    if (gettime() - gVX4MechRequestedAt[customer] > 180)
+    {
+        VX4_MechCancel(customer, "[MECHANIC] The service request expired.");
+        return 1;
+    }
+    if (gVX4MechAssignedTo[customer] != INVALID_PLAYER_ID)
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[MECHANIC] Another mechanic has already accepted that request."), 1;
+    gVX4MechAssignedTo[customer] = mechanic;
+    gVX4MechTargetOf[mechanic] = customer;
+    SetPlayerCheckpoint(mechanic, gVX4MechPos[customer][0], gVX4MechPos[customer][1], gVX4MechPos[customer][2], 5.0);
+    SendClientMessage(mechanic, COLOR_GREEN, "[MECHANIC] Customer location marked. Arrive and use /mechfix.");
+    SendClientMessage(customer, COLOR_GREEN, "[MECHANIC] A mechanic accepted your request and is on the way.");
+    return 1;
+}
+
+stock VX4_MechFix(mechanic)
+{
+    new customer = gVX4MechTargetOf[mechanic];
+    if (!gVX4MechDuty[mechanic] || customer < 0 || customer >= MAX_PLAYERS
+        || !VX_Valid(customer) || !gVX4MechRequested[customer])
+        return SendClientMessage(mechanic, COLOR_RED, "[MECHANIC] You have no active service call."), 1;
+    if (IsPlayerInAnyVehicle(mechanic))
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[MECHANIC] Exit your vehicle to perform the repair."), 1;
+    new vehicle = gVX4MechVehicle[customer];
+    if (vehicle == INVALID_VEHICLE_ID || GetVehicleModel(vehicle) == 0
+        || GetPlayerVehicleID(customer) != vehicle || GetPlayerState(customer) != PLAYER_STATE_DRIVER)
+        return VX4_MechCancel(customer, "[MECHANIC] The customer's vehicle is no longer available.");
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(vehicle, x, y, z);
+    if (!IsPlayerInRangeOfPoint(mechanic, 8.0, x, y, z))
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[MECHANIC] Get closer to the customer's vehicle."), 1;
+    if (gMoney[customer] < 1500)
+        return SendClientMessage(mechanic, COLOR_YELLOW, "[MECHANIC] Customer needs $1500 for the repair."), 1;
+    if (!TakeCash(customer, 1500))
+        return SendClientMessage(mechanic, COLOR_RED, "[MECHANIC] Payment failed."), 1;
+    if (!GiveCash(mechanic, 1200))
+    {
+        GiveCash(customer, 1500);
+        return SendClientMessage(mechanic, COLOR_RED, "[MECHANIC] Your wallet is full. Customer was refunded."), 1;
+    }
+    RepairVehicle(vehicle);
+    SetVehicleHealth(vehicle, 1000.0);
+    SavePlayer(customer);
+    SavePlayer(mechanic);
+    SendClientMessage(customer, COLOR_GREEN, "[MECHANIC] Vehicle repaired. Service cost: $1500.");
+    SendClientMessage(mechanic, COLOR_GREEN, "[MECHANIC] Repair completed. Your service payment: $1200.");
+    VX4_MechCancel(customer, "[MECHANIC] Service call completed.");
+    return 1;
+}
+
+stock VX4_BusStop(playerid, bool:notify)
+{
+    if (gVX4BusVehicle[playerid] != INVALID_VEHICLE_ID
+        && GetVehicleModel(gVX4BusVehicle[playerid]) != 0)
+    {
+        if (IsPlayerInAnyVehicle(playerid) && GetPlayerVehicleID(playerid) == gVX4BusVehicle[playerid])
+            RemovePlayerFromVehicle(playerid);
+        DestroyVehicle(gVX4BusVehicle[playerid]);
+    }
+    gVX4BusVehicle[playerid] = INVALID_VEHICLE_ID;
+    gVX4BusStage[playerid] = -1;
+    DisablePlayerCheckpoint(playerid);
+    if (notify) SendClientMessage(playerid, COLOR_YELLOW, "[BUS] Route stopped.");
+    return 1;
+}
+
+stock VX4_BusStart(playerid)
+{
+    if (gJob[playerid] != 3)
+        return SendClientMessage(playerid, COLOR_RED, "[BUS] Choose the Bus Driver job first with /job."), 1;
+    if (gVX4BusStage[playerid] >= 0 || gWorkStage[playerid] > 0 || gDrivingTestStage[playerid] > 0)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUS] Finish your current route or test first."), 1;
+    if (GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0
+        || IsPlayerInAnyVehicle(playerid) || !IsPlayerInRangeOfPoint(playerid, 25.0, 1810.0, -1900.0, 13.4))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUS] Start at the bus depot near the bus driver NPC."), 1;
+    new vehicle = CreateVehicle(431, 1816.0, -1897.0, 13.5, 90.0, 6, 6, -1);
+    if (vehicle == INVALID_VEHICLE_ID || GetVehicleModel(vehicle) == 0)
+        return SendClientMessage(playerid, COLOR_RED, "[BUS] Could not create the route bus. Try again."), 1;
+    gVX4BusVehicle[playerid] = vehicle;
+    gVX4BusStage[playerid] = 0;
+    gVehicleFuel[vehicle] = 100;
+    PutPlayerInVehicle(playerid, vehicle, 0);
+    SetPlayerCheckpoint(playerid, gVX4BusStops[0][0], gVX4BusStops[0][1], gVX4BusStops[0][2], 7.0);
+    SendClientMessage(playerid, COLOR_GREEN, "[BUS] City route started. Visit all 6 stops and return to the depot.");
+    return 1;
+}
+
+stock VX4_BusCheckpoint(playerid)
+{
+    if (gVX4BusStage[playerid] < 0) return 0;
+    new vehicle = gVX4BusVehicle[playerid];
+    if (vehicle == INVALID_VEHICLE_ID || GetVehicleModel(vehicle) == 0
+        || !IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != vehicle
+        || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+    {
+        VX4_BusStop(playerid, false);
+        SendClientMessage(playerid, COLOR_RED, "[BUS] Route cancelled: you left your assigned bus.");
+        return 1;
+    }
+    if (gVX4BusStage[playerid] < 5)
+    {
+        gVX4BusStage[playerid]++;
+        SetPlayerCheckpoint(playerid, gVX4BusStops[gVX4BusStage[playerid]][0],
+            gVX4BusStops[gVX4BusStage[playerid]][1], gVX4BusStops[gVX4BusStage[playerid]][2], 7.0);
+        new msg[80];
+        format(msg, sizeof msg, "[BUS] Stop %d/6 completed. Continue to the next stop.", gVX4BusStage[playerid]);
+        SendClientMessage(playerid, COLOR_GREEN, msg);
+        return 1;
+    }
+    new reward = 5200 + gLevel[playerid] * 50;
+    if (GiveCash(playerid, reward))
+    {
+        new msg[96];
+        format(msg, sizeof msg, "[BUS] Full route completed. Salary: $%d.", reward);
+        SendClientMessage(playerid, COLOR_GREEN, msg);
+        SavePlayer(playerid);
+    }
+    else SendClientMessage(playerid, COLOR_RED, "[BUS] Route completed, but your wallet is full. Contact an administrator.");
+    VX4_BusStop(playerid, false);
+    return 1;
+}
+
+stock VX4_Checkpoint(playerid)
+{
+    if (gVX4BusStage[playerid] >= 0) return VX4_BusCheckpoint(playerid);
+    new passenger = gVX4TaxiPassengerOf[playerid];
+    if (passenger >= 0 && passenger < MAX_PLAYERS && gVX4TaxiStatus[passenger] == 2)
+    {
+        DisablePlayerCheckpoint(playerid);
+        SendClientMessage(playerid, COLOR_GREEN, "[TAXI] Pickup point reached. Use /taxipickup.");
+        return 1;
+    }
+    new customer = gVX4MechTargetOf[playerid];
+    if (customer >= 0 && customer < MAX_PLAYERS && gVX4MechRequested[customer])
+    {
+        DisablePlayerCheckpoint(playerid);
+        SendClientMessage(playerid, COLOR_GREEN, "[MECHANIC] Customer location reached. Use /mechfix.");
+        return 1;
+    }
+    return 0;
+}
+
+stock VX4_BizOwned(playerid)
+{
+    new q[192], business = 0;
+    format(q, sizeof q, "SELECT id FROM vx_businesses WHERE owner='%q' ORDER BY id LIMIT 1", gName[playerid]);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r && db_num_rows(r)) business = db_get_field_int(r, 0);
+    if (r) db_free_result(r);
+    return business;
+}
+
+stock VX4_BizEmployee(playerid, &salary)
+{
+    new q[192], business = 0;
+    salary = 0;
+    format(q, sizeof q, "SELECT business_id,salary FROM vx4_biz_staff WHERE employee='%q'", gName[playerid]);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r && db_num_rows(r))
+    {
+        business = db_get_field_int(r, 0);
+        salary = db_get_field_int(r, 1);
+    }
+    if (r) db_free_result(r);
+    return business;
+}
+
+stock VX4_BizNear(playerid, business, Float:radius)
+{
+    if (business < 1 || business > 5 || GetPlayerInterior(playerid) != 0 || GetPlayerVirtualWorld(playerid) != 0) return 0;
+    return IsPlayerInRangeOfPoint(playerid, radius,
+        gVXBizPos[business - 1][0], gVXBizPos[business - 1][1], gVXBizPos[business - 1][2]);
+}
+
+stock VX4_BizHire(playerid, target, salary)
+{
+    new business = VX4_BizOwned(playerid);
+    if (!business || !VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_RED, "[BUSINESS] You must own a business and be at its location."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target) || target == playerid)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] Usage: /bizhire [player ID] [salary]."), 1;
+    if (salary < 100 || salary > 5000)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] Salary must be between $100 and $5000 per shift."), 1;
+    if (!VX4_BizNear(target, business, 20.0))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] The employee must be near your business too."), 1;
+    new q[224];
+    format(q, sizeof q, "SELECT COUNT(*) FROM vx4_biz_staff WHERE business_id=%d", business);
+    new DBResult:r = db_query(gDatabase, q), count = 0;
+    if (r && db_num_rows(r)) count = db_get_field_int(r, 0);
+    if (r) db_free_result(r);
+    if (count >= 5) return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] A business can employ up to 5 players."), 1;
+    format(q, sizeof q, "INSERT OR REPLACE INTO vx4_biz_staff(employee,business_id,salary) VALUES('%q',%d,%d)", gName[target], business, salary);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    SendClientMessage(playerid, COLOR_GREEN, "[BUSINESS] Employee hired.");
+    SendClientMessage(target, COLOR_GREEN, "[BUSINESS] You were hired. Use /bizstaff and /bizclockin.");
+    return 1;
+}
+
+stock VX4_BizFire(playerid, target)
+{
+    new business = VX4_BizOwned(playerid);
+    if (!business || !VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_RED, "[BUSINESS] You must own a business and be at its location."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] Usage: /bizfire [player ID]."), 1;
+    new q[224];
+    format(q, sizeof q, "DELETE FROM vx4_biz_staff WHERE business_id=%d AND employee='%q'", business, gName[target]);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    gVX4BizShiftActive[target] = 0;
+    gVX4BizShiftBusiness[target] = 0;
+    SendClientMessage(playerid, COLOR_GREEN, "[BUSINESS] Employee removed.");
+    SendClientMessage(target, COLOR_YELLOW, "[BUSINESS] Your employment was ended.");
+    return 1;
+}
+
+stock VX4_BizStaff(playerid)
+{
+    new business = VX4_BizOwned(playerid), salary = 0;
+    if (!business) business = VX4_BizEmployee(playerid, salary);
+    if (!business) return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] You do not own a business or work for one."), 1;
+    new q[192], body[1200], row[96], employee[25];
+    body[0] = '\0';
+    strcat(body, "Employee\tSalary / shift\n", sizeof body);
+    format(q, sizeof q, "SELECT employee,salary FROM vx4_biz_staff WHERE business_id=%d ORDER BY employee LIMIT 5", business);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r)
+    {
+        for (new i = 0; i < db_num_rows(r); i++)
+        {
+            db_get_field(r, 0, employee, sizeof employee);
+            format(row, sizeof row, "%s\t$%d\n", employee, db_get_field_int(r, 1));
+            strcat(body, row, sizeof body);
+            db_next_row(r);
+        }
+        db_free_result(r);
+    }
+    return VX_Show(playerid, VX_LOG, DIALOG_STYLE_TABLIST_HEADERS, "VEXORIUM | Business staff", body);
+}
+
+stock VX4_BizSalary(playerid, target, salary)
+{
+    new business = VX4_BizOwned(playerid);
+    if (!business || !VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_RED, "[BUSINESS] You must own a business and be at its location."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target) || salary < 100 || salary > 5000)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] Usage: /bizsalary [player ID] [100-5000]."), 1;
+    new q[224];
+    format(q, sizeof q, "UPDATE vx4_biz_staff SET salary=%d WHERE business_id=%d AND employee='%q'", salary, business, gName[target]);
+    if (!VX_SQL(q)) return VX_Error(playerid);
+    SendClientMessage(playerid, COLOR_GREEN, "[BUSINESS] Employee salary updated.");
+    SendClientMessage(target, COLOR_GREEN, "[BUSINESS] Your shift salary was updated.");
+    return 1;
+}
+
+stock VX4_BizClockIn(playerid)
+{
+    new salary = 0, business = VX4_BizEmployee(playerid, salary);
+    if (!business) return SendClientMessage(playerid, COLOR_RED, "[BUSINESS] You are not employed by a player business."), 1;
+    if (!VX4_BizNear(playerid, business, 12.0))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] Go to your workplace before clocking in."), 1;
+    if (gVX4BizShiftActive[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] Your shift is already active."), 1;
+    gVX4BizShiftActive[playerid] = 1;
+    gVX4BizShiftBusiness[playerid] = business;
+    gVX4BizShiftStarted[playerid] = gettime();
+    SendClientMessage(playerid, COLOR_GREEN, "[BUSINESS] Shift started. Work for at least 60 seconds, then use /bizclockout.");
+    return 1;
+}
+
+stock VX4_BizClockOut(playerid)
+{
+    new salary = 0, business = VX4_BizEmployee(playerid, salary);
+    if (!gVX4BizShiftActive[playerid] || !business || business != gVX4BizShiftBusiness[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] You do not have an active shift."), 1;
+    if (!VX4_BizNear(playerid, business, 15.0))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] Return to your workplace to clock out."), 1;
+    if (gettime() - gVX4BizShiftStarted[playerid] < 60)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[BUSINESS] A shift must last at least 60 seconds."), 1;
+    if (gMoney[playerid] > MAX_MONEY - salary)
+        return SendClientMessage(playerid, COLOR_RED, "[BUSINESS] Your cash balance is too high to receive this salary."), 1;
+    new q[192], till = 0;
+    format(q, sizeof q, "SELECT till FROM vx_businesses WHERE id=%d", business);
+    new DBResult:r = db_query(gDatabase, q);
+    if (r && db_num_rows(r)) till = db_get_field_int(r, 0);
+    if (r) db_free_result(r);
+    if (till < salary) return SendClientMessage(playerid, COLOR_RED, "[BUSINESS] The business till cannot cover your shift salary."), 1;
+    if (!VX_Begin()) return VX_Error(playerid);
+    format(q, sizeof q, "UPDATE vx_businesses SET till=till-%d WHERE id=%d AND till>=%d", salary, business, salary);
+    if (!VX_SQL(q) || !VX_Commit()) return VX_Error(playerid);
+    GiveCash(playerid, salary);
+    SavePlayer(playerid);
+    gVX4BizShiftActive[playerid] = 0;
+    gVX4BizShiftBusiness[playerid] = 0;
+    gVX4BizShiftStarted[playerid] = 0;
+    new msg[96];
+    format(msg, sizeof msg, "[BUSINESS] Shift complete. Salary received: $%d.", salary);
+    SendClientMessage(playerid, COLOR_GREEN, msg);
+    return 1;
+}
+
+stock VX4_EventInfo(playerid)
+{
+    new body[768], title[96];
+    if (!gVX4EventActive)
+        return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, "VEXORIUM | City events", "There is no active city event right now.\nCheck again later.", "OK", "Close");
+    format(title, sizeof title, "VEXORIUM | Event: %s", gVX4EventTitle);
+    body[0] = '\0';
+    strcat(body, gVX4EventStarted ? "Status: event in progress\n" : "Status: registration open\n", sizeof body);
+    strcat(body, "Commands: /eventjoin /eventleave\n", sizeof body);
+    strcat(body, "The event host can start or end the event.\n", sizeof body);
+    strcat(body, "Join only if you are ready to travel to the event location.", sizeof body);
+    return VX_Show(playerid, VX_LOG, DIALOG_STYLE_MSGBOX, title, body, "OK", "Close");
+}
+
+stock VX4_EventCreate(playerid, const title[])
+{
+    if (!IsOwner(playerid) && gAdmin[playerid] < 3)
+        return SendClientMessage(playerid, COLOR_RED, "[EVENT] Only admins can create city events."), 1;
+    if (gVX4EventActive)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] End the current event first with /eventend."), 1;
+    new cleanTitle[48];
+    VX_CleanText(title, cleanTitle, sizeof cleanTitle);
+    if (strlen(cleanTitle) < 3)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] Usage: /eventcreate [event name]."), 1;
+    if (IsPlayerInAnyVehicle(playerid))
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] Exit your vehicle before creating an event."), 1;
+    format(gVX4EventTitle, sizeof gVX4EventTitle, "%s", cleanTitle);
+    GetPlayerPos(playerid, gVX4EventPos[0], gVX4EventPos[1], gVX4EventPos[2]);
+    gVX4EventInterior = GetPlayerInterior(playerid);
+    gVX4EventWorld = GetPlayerVirtualWorld(playerid);
+    gVX4EventHost = playerid;
+    gVX4EventActive = true;
+    gVX4EventStarted = false;
+    new msg[128];
+    format(msg, sizeof msg, "[EVENT] New city event: %s. Use /event and /eventjoin.", gVX4EventTitle);
+    for (new i = 0; i < MAX_PLAYERS; i++) if (VX_Valid(i)) SendClientMessage(i, COLOR_ORANGE, msg);
+    return 1;
+}
+
+stock VX4_EventJoin(playerid)
+{
+    if (!gVX4EventActive || gVX4EventStarted)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] Registration is closed."), 1;
+    if (gVX4EventJoined[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] You already joined this event."), 1;
+    if (IsPlayerInAnyVehicle(playerid) || gVXHospital[playerid] || gIsJailed[playerid])
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] Exit your vehicle and leave restricted areas before joining."), 1;
+    GetPlayerPos(playerid, gVX4EventReturnPos[playerid][0], gVX4EventReturnPos[playerid][1], gVX4EventReturnPos[playerid][2]);
+    GetPlayerFacingAngle(playerid, gVX4EventReturnPos[playerid][3]);
+    gVX4EventReturnInterior[playerid] = GetPlayerInterior(playerid);
+    gVX4EventReturnWorld[playerid] = GetPlayerVirtualWorld(playerid);
+    gVX4EventJoined[playerid] = true;
+    SetPlayerInterior(playerid, gVX4EventInterior);
+    SetPlayerVirtualWorld(playerid, gVX4EventWorld);
+    SetPlayerPos(playerid, gVX4EventPos[0] + float(random(7) - 3), gVX4EventPos[1] + float(random(7) - 3), gVX4EventPos[2]);
+    SetPlayerFacingAngle(playerid, 0.0);
+    SetCameraBehindPlayer(playerid);
+    SendClientMessage(playerid, COLOR_GREEN, "[EVENT] You joined the city event. Use /eventleave to return to your previous location.");
+    return 1;
+}
+
+stock VX4_EventRestore(playerid)
+{
+    if (!gVX4EventJoined[playerid]) return 0;
+    gVX4EventJoined[playerid] = false;
+    SetPlayerInterior(playerid, gVX4EventReturnInterior[playerid]);
+    SetPlayerVirtualWorld(playerid, gVX4EventReturnWorld[playerid]);
+    SetPlayerPos(playerid, gVX4EventReturnPos[playerid][0], gVX4EventReturnPos[playerid][1], gVX4EventReturnPos[playerid][2]);
+    SetPlayerFacingAngle(playerid, gVX4EventReturnPos[playerid][3]);
+    SetCameraBehindPlayer(playerid);
+    return 1;
+}
+
+stock VX4_EventEnd(playerid)
+{
+    if (!gVX4EventActive)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] There is no active event."), 1;
+    if (playerid != gVX4EventHost && !IsOwner(playerid) && gAdmin[playerid] < 3)
+        return SendClientMessage(playerid, COLOR_RED, "[EVENT] Only the event host or an admin can end this event."), 1;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (VX_Valid(i) && gVX4EventJoined[i]) VX4_EventRestore(i);
+    }
+    gVX4EventActive = false;
+    gVX4EventStarted = false;
+    gVX4EventHost = INVALID_PLAYER_ID;
+    gVX4EventTitle[0] = '\0';
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (VX_Valid(i)) SendClientMessage(i, COLOR_YELLOW, "[EVENT] The city event has ended.");
+    return 1;
+}
+
+stock VX4_EventReward(playerid, target, amount)
+{
+    if (!gVX4EventActive || (playerid != gVX4EventHost && !IsOwner(playerid) && gAdmin[playerid] < 3))
+        return SendClientMessage(playerid, COLOR_RED, "[EVENT] Only the event host or an admin can award prizes."), 1;
+    if (target < 0 || target >= MAX_PLAYERS || !VX_Valid(target)
+        || !gVX4EventJoined[target] || amount < 1 || amount > 5000)
+        return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] Usage: /eventreward [joined player ID] [1-5000]."), 1;
+    if (!GiveCash(target, amount))
+        return SendClientMessage(playerid, COLOR_RED, "[EVENT] Prize could not be paid. Check the player's cash limit."), 1;
+    SavePlayer(target);
+    new msg[96];
+    format(msg, sizeof msg, "[EVENT] You received an event prize of $%d.", amount);
+    SendClientMessage(target, COLOR_GREEN, msg);
+    SendClientMessage(playerid, COLOR_GREEN, "[EVENT] Prize paid.");
+    return 1;
+}
+
+stock VX4_Command(playerid, const cmdtext[])
+{
+    new cmd[32], params[128], a[32], b[32];
+    GetToken(cmdtext, 0, cmd, sizeof cmd);
+    GetParams(cmdtext, params, sizeof params);
+    GetToken(params, 0, a, sizeof a);
+    GetToken(params, 1, b, sizeof b);
+
+    if (!strcmp(cmd, "/vex4", true))
+        return SendClientMessage(playerid, COLOR_YELLOW, "VEXORIUM 4.0: /taxicall /taxiaccept ID /taxipickup /taxidone /taxicancel /mechonduty /mechoff /mechcall /mechaccept ID /mechfix /mechcancel /busroute /busstop /bizhire /bizfire /bizstaff /bizsalary /bizclockin /bizclockout /event /eventcreate /eventjoin /eventleave /eventstart /eventend /eventreward"), 1;
+
+    if (!strcmp(cmd, "/taxicall", true) || !strcmp(cmd, "/taxiorder", true)) return VX4_TaxiCall(playerid);
+    if (!strcmp(cmd, "/taxiaccept", true)) return VX4_TaxiAccept(playerid, strval(a));
+    if (!strcmp(cmd, "/taxipickup", true)) return VX4_TaxiPickup(playerid);
+    if (!strcmp(cmd, "/taxidone", true)) return VX4_TaxiDone(playerid);
+    if (!strcmp(cmd, "/taxicancel", true))
+    {
+        if (gVX4TaxiPassengerOf[playerid] != INVALID_PLAYER_ID)
+            return VX4_TaxiCancel(gVX4TaxiPassengerOf[playerid], "[TAXI] Driver cancelled the ride.");
+        if (gVX4TaxiStatus[playerid] != 0) return VX4_TaxiCancel(playerid, "[TAXI] Ride request cancelled.");
+        return SendClientMessage(playerid, COLOR_YELLOW, "[TAXI] You have no active request or ride."), 1;
+    }
+
+    if (!strcmp(cmd, "/mechonduty", true)) return VX4_MechDuty(playerid, true);
+    if (!strcmp(cmd, "/mechoff", true)) return VX4_MechDuty(playerid, false);
+    if (!strcmp(cmd, "/mechcall", true)) return VX4_MechCall(playerid);
+    if (!strcmp(cmd, "/mechaccept", true)) return VX4_MechAccept(playerid, strval(a));
+    if (!strcmp(cmd, "/mechfix", true)) return VX4_MechFix(playerid);
+    if (!strcmp(cmd, "/mechcancel", true))
+    {
+        if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
+            return VX4_MechCancel(gVX4MechTargetOf[playerid], "[MECHANIC] Mechanic cancelled the call.");
+        if (gVX4MechRequested[playerid]) return VX4_MechCancel(playerid, "[MECHANIC] Service request cancelled.");
+        return SendClientMessage(playerid, COLOR_YELLOW, "[MECHANIC] You have no active service request."), 1;
+    }
+
+    if (!strcmp(cmd, "/busroute", true)) return VX4_BusStart(playerid);
+    if (!strcmp(cmd, "/busstop", true)) return VX4_BusStop(playerid, true);
+
+    if (!strcmp(cmd, "/bizhire", true)) return VX4_BizHire(playerid, strval(a), strval(b));
+    if (!strcmp(cmd, "/bizfire", true)) return VX4_BizFire(playerid, strval(a));
+    if (!strcmp(cmd, "/bizstaff", true)) return VX4_BizStaff(playerid);
+    if (!strcmp(cmd, "/bizsalary", true)) return VX4_BizSalary(playerid, strval(a), strval(b));
+    if (!strcmp(cmd, "/bizclockin", true)) return VX4_BizClockIn(playerid);
+    if (!strcmp(cmd, "/bizclockout", true)) return VX4_BizClockOut(playerid);
+
+    if (!strcmp(cmd, "/event", true) || !strcmp(cmd, "/eventinfo", true)) return VX4_EventInfo(playerid);
+    if (!strcmp(cmd, "/eventcreate", true)) return VX4_EventCreate(playerid, params);
+    if (!strcmp(cmd, "/eventjoin", true)) return VX4_EventJoin(playerid);
+    if (!strcmp(cmd, "/eventleave", true))
+    {
+        if (!VX4_EventRestore(playerid)) return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] You are not in an event."), 1;
+        return SendClientMessage(playerid, COLOR_GREEN, "[EVENT] You returned to your previous location."), 1;
+    }
+    if (!strcmp(cmd, "/eventstart", true))
+    {
+        if (!gVX4EventActive || (playerid != gVX4EventHost && !IsOwner(playerid) && gAdmin[playerid] < 3))
+            return SendClientMessage(playerid, COLOR_RED, "[EVENT] Only the event host or an admin can start it."), 1;
+        if (gVX4EventStarted) return SendClientMessage(playerid, COLOR_YELLOW, "[EVENT] The event has already started."), 1;
+        gVX4EventStarted = true;
+        for (new i = 0; i < MAX_PLAYERS; i++)
+            if (VX_Valid(i) && gVX4EventJoined[i]) SendClientMessage(i, COLOR_ORANGE, "[EVENT] The city event has started!");
+        return 1;
+    }
+    if (!strcmp(cmd, "/eventend", true)) return VX4_EventEnd(playerid);
+    if (!strcmp(cmd, "/eventreward", true)) return VX4_EventReward(playerid, strval(a), strval(b));
+    return 0;
+}
+
+stock VX4_Tick()
+{
+    for (new p = 0; p < MAX_PLAYERS; p++)
+    {
+        if (!IsPlayerConnected(p)) continue;
+        if (gVX4TaxiStatus[p] == 1 && gettime() - gVX4TaxiRequestedAt[p] > 120)
+            VX4_TaxiCancel(p, "[TAXI] Your taxi request expired.");
+        if (gVX4MechRequested[p] && gettime() - gVX4MechRequestedAt[p] > 180)
+            VX4_MechCancel(p, "[MECHANIC] Your service request expired.");
+    }
+    return 1;
+}
+
+stock VX4_PlayerDisconnect(playerid)
+{
+    if (gVX4TaxiPassengerOf[playerid] != INVALID_PLAYER_ID)
+        VX4_TaxiCancel(gVX4TaxiPassengerOf[playerid], "[TAXI] Driver disconnected. Ride cancelled.");
+    if (gVX4TaxiStatus[playerid] != 0)
+        VX4_TaxiCancel(playerid, "[TAXI] Passenger disconnected. Ride cancelled.");
+    if (gVX4MechTargetOf[playerid] != INVALID_PLAYER_ID)
+        VX4_MechCancel(gVX4MechTargetOf[playerid], "[MECHANIC] Mechanic disconnected. Request cancelled.");
+    if (gVX4MechRequested[playerid])
+        VX4_MechCancel(playerid, "[MECHANIC] Customer disconnected. Request cancelled.");
+    if (gVX4BusStage[playerid] >= 0) VX4_BusStop(playerid, false);
+    gVX4MechDuty[playerid] = false;
+    gVX4BizShiftActive[playerid] = 0;
+    gVX4EventJoined[playerid] = false;
+    if (gVX4EventActive && gVX4EventHost == playerid) VX4_EventEnd(playerid);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (gVX4TaxiDriverOf[i] == playerid) VX4_TaxiCancel(i, "[TAXI] Driver disconnected. Ride cancelled.");
+        if (gVX4MechAssignedTo[i] == playerid) VX4_MechCancel(i, "[MECHANIC] Mechanic disconnected. Request cancelled.");
     }
     return 1;
 }
