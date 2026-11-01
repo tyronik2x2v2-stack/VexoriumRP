@@ -4429,7 +4429,13 @@ public OnPlayerPickUpPickup(playerid, pickupid)
         // Do not reopen the license dialog while the player remains inside the marker.
         if (gLicenseMarketLocked[playerid]) return 1;
         gLicenseMarketLocked[playerid] = true;
-        ShowPlayerDialog(playerid, DIALOG_LICENSE_MARKET, DIALOG_STYLE_LIST, "VEXORIUM RP | ����� ��������", "�������� �� ������ � 30 000 ���.\n�������� �� ����� � 20 000 ���.\n�������� �� ������ � 40 000 ���.\n������������ ����� � ����� ��������", "�������", "�������");
+        new licenseList[512];
+        licenseList[0] = '\0';
+        strcat(licenseList, "�������� �� ������ � 30 000 ���.\n", sizeof licenseList);
+        strcat(licenseList, "�������� �� ����� � 20 000 ���.\n", sizeof licenseList);
+        strcat(licenseList, "�������� �� ������ � 40 000 ���.\n", sizeof licenseList);
+        strcat(licenseList, "������������ ����� � ����� ��������", sizeof licenseList);
+        ShowPlayerDialog(playerid, DIALOG_LICENSE_MARKET, DIALOG_STYLE_LIST, "VEXORIUM RP | ����� ��������", licenseList, "�������", "�������");
         return 1;
     }
     if (pickupid == gPassportPickup)
